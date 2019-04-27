@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Advanced Command Help</title>
+		
+		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://*; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+
+		<script type="application/javascript">
+			const {shell, remote} = require('electron')
+			const {systemPreferences, BrowserWindow, app} = remote
+			const fs = require('fs')
+			const path = require('path')
+			let appPath = app.getAppPath()
+			const less = require(appPath + '\\node_modules\\less')
+		</script>
+		<style type="text/css" id="metro-style"></style>
+		<style type="text/css">
+			body {
+				user-select: text;
+			}
+		</style>
+	</head>
+	<body>
+		<script type="application/javascript">
+			if (typeof module === 'object') {window.module = module; module = undefined;}
+			let body = document.querySelector('body')
+			let metroScriptElement = document.createElement('script')
+			metroScriptElement.setAttribute('type', 'application/javascript')
+			metroScriptElement.setAttribute('src', appPath + '/res/metro.js')
+			body.appendChild(metroScriptElement)
+		</script>
+		<script type="application/javascript">if (window.module) module = window.module;</script>
+
+		<h1>Advanced Command Help</h1>
+		<h4>Contents</h4>
+		<ol>
+			<li><a href="#chapter_1">Command trigger</a>
+				<ol>
+					<li><a href="#chapter_1_1">Classic user command</a></li>
+				</ol>
+			</li>
+		</ol>
+
+		<h2 id="chapter_1">1. Command trigger</h2>
+		<p>
+			Although the usual trigger is a user entering a command in chat, there are multiple ways to trigger a
+			command.
+		</p>
+		<h3 id="chapter_1_1">1.1. Classic user command</h3>
+		<p>
+			The classic user command is a simple phrase that is used in the beginning of a chat message by a user. Other
+			than common bots TTVST allows you to use spaces in this phrase, but it is highliy discuraged since this
+			might end up in confusion in the response creation. There's no special way to create this trigger, simply
+			enter your phrase into the command field. It is recommended that you use a symbol (e.g. !, ~) at the start
+			of your command to have it not trigger accidentaly. Slahes (/) cannot be used as they are recognized by
+			twitch as a command and will not be posted as a message. For this reason slashes are used by TTVST to mark
+			other triggers (see further below).
+		</p>
+	</body>
+</html>

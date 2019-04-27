@@ -1,0 +1,77 @@
+{
+	"Please note that these commands only work in your own channel.": {
+		"de": "Bitte beachte, dass diese Befehle nur in deinem eigenen Kanal ausgeführt werden."
+	},
+	"Command": {
+		"de": "Befehl"
+	},
+	"Response": {
+		"de": "Antwort"
+	},
+	"Action": {
+		"de": "Aktion"
+	},
+	"Edit": {
+		"de": "Bearbeiten"
+	},
+	"Delete": {
+		"de": "Löschen"
+	},
+	"New Command": {
+		"de": "Neuer Befehl"
+	},
+	"Edit Bot Command": {
+		"de": "Bot-Befehl bearbeiten"
+	},
+	"Are you sure to delete the command {{command}}?": {
+		"de": "Bist du sicher, dass du {{command}} löschen möchtest?"
+	},
+	"Permission": {
+		"de": "Berechtigung"
+	},
+	"Just me": {
+		"de": "Nur ich"
+	},
+	"Moderators": {
+		"de": "Moderatoren"
+	},
+	"VIP": {
+		"de": "VIP"
+	},
+	"Subscribers": {
+		"de": "Abonnenten"
+	},
+	"Everybody": {
+		"de": "Jeder"
+	},
+	"Cooldown (in seconds)": {
+		"de": "Abkühlzeit (in Sekunden)"
+	},
+	"Advanced Help": {
+		"de": "Erweiterte Hilfe"
+	},
+	"Save": {
+		"de": "Speichern"
+	},
+	"Cancel": {
+		"de": "Abbrechen"
+	},
+	"It's recommeded that you use a symbol (e.g. !, ~) in front of the command. Slashes (/) are not possible as they're consumed by Twitch. Spaces in the command are allowed but not recommended.": {
+		"de": "Es wird empfohlen ein Zeichen (z.B. !, ~) an den Anfang eines Befehls zu setzen. Slashes (/) sind nicht möglich, da sie von Twitch als Befehl erkannt und verarbeitet werden. Leerzeichen im Befehl sind erlaubt, aber nicht empfohlen."
+	},
+	"500 character limit": {
+		"de": "Maximal 500 Zeichen"
+	},
+	"Who can execute this command? Selection contains everyone in the groups above in the list (e.g. selection VIP also includes moderators and you).": {
+		"de": "Wer darf diesen Befehl ausführen? Die Auswahl beinhaltet automatisch alle Gruppen darüber (z.B. VIP beinhaltet auch Moderatoren und dich)."
+	},
+	"How much time has to pass until the command can be used again.": {
+		"de": "Wie viel Zeit muss vergehen bevor der Befehl erneut ausgeführt werden darf."
+	},
+	"mm.dd.yyyy": {
+		"de": "dd.mm.yyyy"
+	},
+	"hh:MMtt": {
+		"de": "HH:MM"
+	}
+}
