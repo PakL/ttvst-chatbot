@@ -52,6 +52,7 @@ class VarInterface {
 				this.value = {}
 			}
 			if(this.getType() === 'object' && typeof(value) === 'number') {
+				if(typeof(this.value[index]) === 'undefined') this.value[index] = 0
 				this.value[index] += value
 				return
 			}
@@ -61,6 +62,7 @@ class VarInterface {
 				this.value = []
 			}
 			if(this.getType() === 'array' && typeof(value) === 'number') {
+				if(typeof(this.value[index]) === 'undefined') this.value[index] = 0
 				this.value[index] += value
 			}
 		} else {
@@ -68,12 +70,24 @@ class VarInterface {
 				this.value += value
 			} else if(this.getType() === 'array') {
 				this.value.push(value)
+			} else if(this.getType() === 'undefined') {
+				this.value = value
 			}
 		}
 	}
 
 	getValue(index) {
-		if((typeof(index) == 'number' && this.getType() == 'array') || (typeof(index) == 'string' && this.getType() == 'object')) {
+		if(typeof(index) == 'number' && this.getType() == 'array') {
+			if(index >= this.value.length) index = Math.random()
+			if(index % 1 !== 0) {
+				if(index >= 1) index = index - Math.floor(index)
+				index = Math.floor(index * this.value.length)
+			}
+			if(index < 0) index = 0
+			return this.value[index]
+		}
+		if(typeof(index) == 'string' && this.getType() == 'object') {
+			if(!this.value.hasOwnProperty(index)) return null
 			return this.value[index]
 		}
 		return this.value

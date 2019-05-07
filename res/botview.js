@@ -99,9 +99,6 @@ window.addEventListener('load', () => {
 	command_timeout.value = command.timeout
 
 	command_response.addEventListener('keyup', (e) => {
-		if(command_response.value.length > 500) {
-			command_response.value = command_response.value.substr(0, 500)
-		}
 		charactersRemaining(command_response, 500, char_remain)
 	})
 	charactersRemaining(command_response, 500, char_remain)

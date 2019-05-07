@@ -70,7 +70,7 @@
 					fullscreenable: false,
 					icon: '/res/icon.ico',
 					width: 450,
-					height: 600,
+					height: 650,
 					minWidth: 300,
 					minHeight: 400,
 					webPreferences: {
