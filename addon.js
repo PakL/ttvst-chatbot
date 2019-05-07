@@ -47,10 +47,10 @@ class Bot extends UIPage {
 			}
 		}
 		this.onTimerListener = null
-		this.onFollowListener = (usr) => { self.onFollowListener(usr) }
+		this.onFollowListener = (usr, f) => { self.onFollow(usr, f) }
 		this.onSubscriberListener = (chn, usr, tags, msg) => { self.onSubscriber(chn, usr, tags, msg) }
-		this.onHostListener = () => {}
-		this.onWebsocketListener = () => {}
+		this.onHostListener = (chn, usr, viewers, msg, tags) => { self.onHost(chn, usr, viewers, msg, tags) }
+		this.onWebsocketListener = (command) => { self.onWebsocket(command) }
 
 		this.tool.on('load', () => {
 			self.contentElement = document.createElement('div')
@@ -202,11 +202,12 @@ class Bot extends UIPage {
 		return args
 	}
 
-	executeCommand(msg, cmd) {
+	executeCommand(msg, cmd, args) {
+		console.log('[chatbot] command ' + cmd.cmd + ' is being executed')
 		this.lastCommandExecution[cmd.id.toString()] = new Date().getTime()
 		let response = cmd.response
 		if(Bot.hasStatement(response)) {
-			if(args === null) args = this.messageToArgs(message)
+			if(typeof(args) === 'undefined') args = this.messageToArgs(msg.msg)
 			console.log('[chatbot] processing ' + response)
 			response = this.processStatements(response, args, msg)
 		}
@@ -223,11 +224,10 @@ class Bot extends UIPage {
 		let message = msg.msg
 		let commands = this.filterCommands(message, user)
 		if(commands.length > 0) {
-			let args = null
-			
+			let args = this.messageToArgs(message)
 			for(let i = 0; i < commands.length; i++) {
 				let cmd = commands[i]
-				this.executeCommand(msg, cmd)
+				this.executeCommand(msg, cmd, args)
 			}
 			return true
 		}
@@ -246,7 +246,11 @@ class Bot extends UIPage {
 		}
 	}
 
-	onFollow(usr) {
+	onFollow(usr, f) {
+		let nowDate = new Date().getTime()
+		let followDate = new Date(f.followed_at).getTime()
+		if(nowDate-process.uptime() > followDate) return // Follow is older than the application is running?
+
 		for(let i = 0; i < this.commands.length; i++) {
 			let cmd = this.commands[i]
 			if(!cmd.cmd.toLowerCase().startsWith('/follow')) continue
@@ -271,8 +275,32 @@ class Bot extends UIPage {
 			let cmd = this.commands[i]
 			if(!cmd.cmd.toLowerCase().startsWith('/sub')) continue
 
-			let msg = '/sub ' + (typeof(tags['msg-param-cumulative-months']) === 'undefined' ? (typeof(tags['msg-param-months']) === 'undefined' ? '1' : tags['msg-param-months']) : tags['msg-param-cumulative-months'])
-			this.executeCommand({'chn': chn, 'usr': usr, 'msg': msg, 'uuid': null}, msg)
+			let cmdargs = cmd.cmd.substr(4).trim()
+			let msg = '/sub ' + (typeof(tags['msg-param-cumulative-months']) === 'undefined' ? (typeof(tags['msg-param-months']) === 'undefined' ? '1' : tags['msg-param-months']) : tags['msg-param-cumulative-months']) + (cmdargs.length > 0 ? ' ' + cmdargs : '')
+			this.executeCommand({'chn': chn, 'usr': usr, 'msg': msg, 'uuid': null}, cmd)
+		}
+	}
+
+	onHost(chn, usr, viewers, msg, tags) {
+		if(chn.toLowerCase() != this.auth.username.toLowerCase()) return
+
+		for(let i = 0; i < this.commands.length; i++) {
+			let cmd = this.commands[i]
+			if(!cmd.cmd.toLowerCase().startsWith('/host')) continue
+
+			let cmdargs = cmd.cmd.substr(5).trim()
+			let msg = '/host ' + viewers + (cmdargs.length > 0 ? ' ' + cmdargs : '')
+			this.executeCommand({'chn': chn, 'usr': usr, 'msg': msg, 'uuid': null}, cmd)
+		}
+	}
+
+	onWebsocket(command) {
+		for(let i = 0; i < this.commands.length; i++) {
+			let cmd = this.commands[i]
+			if(!cmd.cmd.toLowerCase().startsWith('/cmd ')) continue
+			if(cmd.cmd.substr(5).trim() != command.trim()) continue
+
+			this.executeCommand({'chn': this.auth.username.toLowerCase(), 'msg': cmd.cmd, 'uuid': null}, cmd)
 		}
 	}
 
