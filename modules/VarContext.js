@@ -38,6 +38,10 @@ class VarContext extends VarInterface {
 				if(typeof(msg) === 'object' && typeof(msg.usr) === 'object' && typeof(msg.usr.name) === 'string')
 					this.value = msg.usr.name
 				break
+			case 'msg-uid':
+				if(typeof(msg) === 'object' && typeof(msg.uuid) === 'string')
+					this.value = msg.uuid
+				break
 			case 'date':
 				this.value = timestamp(null, true, false)
 				break
