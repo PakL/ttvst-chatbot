@@ -1,6 +1,6 @@
 {
-	"Please note that these commands only work in your own channel.": {
-		"de": "Bitte beachte, dass diese Befehle nur in deinem eigenen Kanal ausgeführt werden."
+	"Please note that these commands only work in your own channel. Commands will be executed in the order they appear.": {
+		"de": "Bitte beachte, dass diese Befehle nur in deinem eigenen Kanal ausgeführt werden. Befehle werden in der Reihenfolge ausgeführt, wie sie unten aufgelistet sind."
 	},
 	"Command": {
 		"de": "Befehl"
@@ -73,5 +73,11 @@
 	},
 	"hh:MMtt": {
 		"de": "HH:MM"
+	},
+	"Activated": {
+		"de": "Aktiviert"
+	},
+	"Sort": {
+		"de": "Sortieren"
 	}
 }

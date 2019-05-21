@@ -47,10 +47,10 @@ class Bot extends UIPage {
 			}
 		}
 		this.onTimerListener = null
-		this.onFollowListener = (usr, f) => { self.onFollow(usr, f) }
-		this.onSubscriberListener = (chn, usr, tags, msg) => { self.onSubscriber(chn, usr, tags, msg) }
-		this.onHostListener = (chn, usr, viewers, msg, tags) => { self.onHost(chn, usr, viewers, msg, tags) }
-		this.onWebsocketListener = (command) => { self.onWebsocket(command) }
+		this.onFollowListener = async (usr, f) => { self.onFollow(usr, f) }
+		this.onSubscriberListener = async (chn, usr, tags, msg) => { self.onSubscriber(chn, usr, tags, msg) }
+		this.onHostListener = async (chn, usr, viewers, msg, tags) => { self.onHost(chn, usr, viewers, msg, tags) }
+		this.onWebsocketListener = async (command) => { self.onWebsocket(command) }
 
 		this.tool.on('load', () => {
 			self.contentElement = document.createElement('div')
@@ -88,7 +88,6 @@ class Bot extends UIPage {
 		this.hasHostCmds = false
 		this.hasWebsocketCmds = false
 		for(let i = 0; i < this.commands.length; i++) {
-			this.commands[i].id = (i+1)
 			let c = this.commands[i].cmd.toLowerCase()
 
 			if(c.startsWith('/timer')) {
@@ -263,7 +262,7 @@ class Bot extends UIPage {
 		if(chn.toLowerCase() != this.auth.username.toLowerCase()) return
 		if(['sub', 'resub', 'subgift', 'anonsubgift'].indexOf(tags['msg-id']) < 0) return
 
-		if(['subgift', 'anonsubgift'].indexOf(tags['msg-id']) < 0) {
+		if(['subgift', 'anonsubgift'].indexOf(tags['msg-id']) >= 0) {
 			usr = {
 				user: tags['msg-param-recipient-user-name'],
 				name: tags['msg-param-recipient-display-name'],
@@ -305,7 +304,7 @@ class Bot extends UIPage {
 	}
 
 	static hasStatement(message){
-		if(message.match(/\{% (.*?) %\}/s)) {
+		if(message.match(/\{(% |\{)(.*?)( %|\})\}/s)) {
 			return true
 		}
 		return false
@@ -381,6 +380,24 @@ class Bot extends UIPage {
 			}
 		}
 		responseResult += response.substr(lastIndex)
+
+		response = responseResult
+		stmtRegex = /\{\{(.*?)\}\}/gs
+		match = null
+		responseResult = ''
+		lastIndex = 0
+		while(match = stmtRegex.exec(response)) {
+			responseResult += response.substr(lastIndex, (match.index - lastIndex))
+			lastIndex = match.index+match[0].length
+
+			let stmtArgs = this.messageToArgs(match[1].trim())
+			if(stmtArgs.length > 0) {
+				stmtArgs.unshift('print')
+				responseResult += this.processStmtPrint(stmtArgs, args, msg)
+			}
+		}
+		responseResult += response.substr(lastIndex)
+
 		return responseResult
 	}
 
