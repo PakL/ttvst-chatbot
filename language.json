@@ -79,5 +79,14 @@
 	},
 	"Sort": {
 		"de": "Sortieren"
+	},
+	"Command must not be empty in order to be able to be activated": {
+		"de": "Befehl darf nicht leer sein um aktivierbar zu sein"
+	},
+	"Go to variable editor": {
+		"de": "Zum Variableneditor wechseln"
+	},
+	"Back to command editor": {
+		"de": "Zurück zum Befehlseditor"
 	}
 }

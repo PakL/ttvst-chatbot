@@ -5,6 +5,10 @@ class VarInterface {
 		this.value = null
 	}
 
+	get type() {
+		return this.getType()
+	}
+
 	getType() {
 		let type = (this.value == null ? 'undefined' : typeof(this.value))
 		if(type === 'object' && Array.isArray(this.value)) {

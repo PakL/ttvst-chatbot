@@ -1,4 +1,5 @@
 const UIPage  = require(path.dirname(module.parent.filename) + '/../mod/uipage')
+const fs = require('fs')
 
 const VarInterface = require('./modules/VarInterface')
 const VarArgument = require('./modules/VarArgument')
@@ -52,29 +53,47 @@ class Bot extends UIPage {
 		this.onHostListener = async (chn, usr, viewers, msg, tags) => { self.onHost(chn, usr, viewers, msg, tags) }
 		this.onWebsocketListener = async (command) => { self.onWebsocket(command) }
 
-		this.tool.on('load', () => {
-			self.contentElement = document.createElement('div')
-			self.contentElement.setAttribute('id', 'content_bot')
-			document.querySelector('#contents').appendChild(self.contentElement)
+		let botcommandsTag = fs.readFileSync(__dirname.replace(/\\/g, '/') + '/res/botcommands.riot', { encoding: 'utf8' })
+		let bcCode = riot.compileFromString(botcommandsTag).code
+		riot.inject(bcCode, 'botcommands', document.location.href)
+		let botvariablesTag = fs.readFileSync(__dirname.replace(/\\/g, '/') + '/res/botvariables.riot', { encoding: 'utf8' })
+		let bvCode = riot.compileFromString(botvariablesTag).code
+		riot.inject(bvCode, 'botvariables', document.location.href)
 
-			let botcommandsScriptElement = document.createElement('script')
-			botcommandsScriptElement.setAttribute('type', 'application/javascript')
-			botcommandsScriptElement.setAttribute('src', '/' + __dirname.replace(/\\/g, '/') + '/res/botcommands.js')
-			botcommandsScriptElement.addEventListener('load', () => {
-				self.commandListElement = document.createElement('botcommands')
-				self.commandListElement.setAttribute('id', 'bot_commands')
-				self.contentElement.appendChild(self.commandListElement)
+		this.contentElement = document.createElement('div')
+		this.contentElement.setAttribute('id', 'content_bot')
+		this.vareditElement = document.createElement('div')
+		this.vareditElement.setAttribute('id', 'content_bot_varedit')
+		document.querySelector('#contents').appendChild(this.contentElement)
+		document.querySelector('#contents').appendChild(this.vareditElement)
 
-				riot.mount(self.commandListElement, {i18n: i18n, addonDirname: __dirname})
-			})
-			document.querySelector('body').appendChild(botcommandsScriptElement)
+		let vareditViewToggle = document.createElement('button')
+		vareditViewToggle.innerText = '🛡️ ' + i18n.__('Go to variable editor')
+		vareditViewToggle.addEventListener('click', () => { self.toggleVarEditView() })
+		vareditViewToggle.style.margin = '10px'
+		this.contentElement.appendChild(vareditViewToggle)
 
-			self.tool.cockpit.on('channelopen', () => {
-				this.hookEventlistener()
-			})
-			self.tool.cockpit.on('channelleft', () => {
-				this.removeEventListener()
-			})
+		vareditViewToggle = document.createElement('button')
+		vareditViewToggle.innerText = '⚔️ ' + i18n.__('Back to command editor')
+		vareditViewToggle.addEventListener('click', () => { self.toggleVarEditView() })
+		vareditViewToggle.style.margin = '10px'
+		this.vareditElement.appendChild(vareditViewToggle)
+
+		this.commandListElement = document.createElement('botcommands')
+		this.commandListElement.setAttribute('id', 'bot_commands')
+		this.contentElement.appendChild(this.commandListElement)
+		riot.mount(this.commandListElement, {i18n: i18n, addonDirname: __dirname, addon: this})
+
+		this.variablesListElement = document.createElement('botvariables')
+		this.variablesListElement.setAttribute('id', 'bot_variables')
+		this.vareditElement.appendChild(this.variablesListElement)
+		riot.mount(this.variablesListElement, {i18n: i18n, addonDirname: __dirname, addon: this})
+
+		this.tool.cockpit.on('channelopen', () => {
+			this.hookEventlistener()
+		})
+		this.tool.cockpit.on('channelleft', () => {
+			this.removeEventListener()
 		})
 	}
 
@@ -105,6 +124,15 @@ class Bot extends UIPage {
 
 		this.removeEventListener()
 		this.hookEventlistener()
+	}
+
+	getVariables() {
+		let vars = []
+		for(var index in window.localStorage) {
+			if(!index.startsWith('chatbotvar_') || !window.localStorage.hasOwnProperty(index) || typeof(window.localStorage[index]) !== 'string') continue
+			vars.push(new VarStorage(index.substr(11)))
+		}
+		return vars
 	}
 
 	hookEventlistener() {
@@ -164,6 +192,20 @@ class Bot extends UIPage {
 
 	close() {
 		this.contentElement.style.display = 'none'
+		this.vareditElement.style.display = 'none'
+	}
+
+	toggleVarEditView() {
+		if(this.contentElement.style.display == 'block') {
+			this.contentElement.style.display = 'none'
+			this.vareditElement.style.display = 'block'
+			if(typeof(this.variablesListElement) !== 'undefined' && this.variablesListElement.hasOwnProperty('_tag')) {
+				this.variablesListElement._tag.refreshVars()
+			}
+		} else if(this.vareditElement.style.display == 'block') {
+			this.contentElement.style.display = 'block'
+			this.vareditElement.style.display = 'none'
+		}
 	}
 
 	getPermissionLevels(badges) {
@@ -179,6 +221,7 @@ class Bot extends UIPage {
 		let permLevels = this.getPermissionLevels(user['badges'])
 		let filteredCmds = []
 		for(let i = 0; i < this.commands.length; i++) {
+			if(!this.commands[i].active) continue
 			if(message != this.commands[i].cmd && !message.startsWith(this.commands[i].cmd + ' ')) continue
 			if(typeof(this.lastCommandExecution[this.commands[i].id.toString()]) === 'number' && this.lastCommandExecution[this.commands[i].id.toString()] > new Date().getTime() - (this.commands[i].timeout * 1000)) continue
 			if(permLevels.indexOf(this.commands[i].permission) < 0) continue
@@ -236,7 +279,7 @@ class Bot extends UIPage {
 	async onTimer() {
 		for(let i = 0; i < this.commands.length; i++) {
 			let cmd = this.commands[i]
-			if(!cmd.cmd.toLowerCase().startsWith('/timer')) continue
+			if(!cmd.active || !cmd.cmd.toLowerCase().startsWith('/timer')) continue
 			let timeoutFix = Math.floor(cmd.timeout / 60)
 			if(timeoutFix <= 0 || timeoutFix > 59) timeoutFix = 59
 			if(new Date().getMinutes() % timeoutFix > 0) continue
@@ -252,7 +295,7 @@ class Bot extends UIPage {
 
 		for(let i = 0; i < this.commands.length; i++) {
 			let cmd = this.commands[i]
-			if(!cmd.cmd.toLowerCase().startsWith('/follow')) continue
+			if(!cmd.active || !cmd.cmd.toLowerCase().startsWith('/follow')) continue
 
 			this.executeCommand({'chn': this.tool.cockpit.openChannelObject.login, 'usr': usr, 'msg': cmd.cmd, 'uuid': null}, cmd)
 		}
@@ -272,7 +315,7 @@ class Bot extends UIPage {
 
 		for(let i = 0; i < this.commands.length; i++) {
 			let cmd = this.commands[i]
-			if(!cmd.cmd.toLowerCase().startsWith('/sub')) continue
+			if(!cmd.active || !cmd.cmd.toLowerCase().startsWith('/sub')) continue
 
 			let cmdargs = cmd.cmd.substr(4).trim()
 			let msg = '/sub ' + (typeof(tags['msg-param-cumulative-months']) === 'undefined' ? (typeof(tags['msg-param-months']) === 'undefined' ? '1' : tags['msg-param-months']) : tags['msg-param-cumulative-months']) + (cmdargs.length > 0 ? ' ' + cmdargs : '')
@@ -285,7 +328,7 @@ class Bot extends UIPage {
 
 		for(let i = 0; i < this.commands.length; i++) {
 			let cmd = this.commands[i]
-			if(!cmd.cmd.toLowerCase().startsWith('/host')) continue
+			if(!cmd.active || !cmd.cmd.toLowerCase().startsWith('/host')) continue
 
 			let cmdargs = cmd.cmd.substr(5).trim()
 			let msg = '/host ' + viewers + (cmdargs.length > 0 ? ' ' + cmdargs : '')
@@ -296,7 +339,7 @@ class Bot extends UIPage {
 	onWebsocket(command) {
 		for(let i = 0; i < this.commands.length; i++) {
 			let cmd = this.commands[i]
-			if(!cmd.cmd.toLowerCase().startsWith('/cmd ')) continue
+			if(!cmd.active || !cmd.cmd.toLowerCase().startsWith('/cmd ')) continue
 			if(cmd.cmd.substr(5).trim() != command.trim()) continue
 
 			this.executeCommand({'chn': this.auth.username.toLowerCase(), 'msg': cmd.cmd, 'uuid': null}, cmd)
@@ -360,10 +403,27 @@ class Bot extends UIPage {
 	}
 
 	processStatements(response, args, msg) {
-		let stmtRegex = /\{% (.*?) %\}/gs
+		let stmtRegex = /\{\{(.*?)\}\}/gs
 		let match = null
 		let responseResult = ''
 		let lastIndex = 0
+		while(match = stmtRegex.exec(response)) {
+			responseResult += response.substr(lastIndex, (match.index - lastIndex))
+			lastIndex = match.index+match[0].length
+
+			let stmtArgs = this.messageToArgs(match[1].trim())
+			if(stmtArgs.length > 0) {
+				stmtArgs.unshift('print')
+				responseResult += this.processStmtPrint(stmtArgs, args, msg)
+			}
+		}
+		responseResult += response.substr(lastIndex)
+
+		response = responseResult
+		stmtRegex = /\{% (.*?) %\}/gs
+		match = null
+		responseResult = ''
+		lastIndex = 0
 		while(match = stmtRegex.exec(response)) {
 			responseResult += response.substr(lastIndex, (match.index - lastIndex))
 			lastIndex = match.index+match[0].length
@@ -377,23 +437,6 @@ class Bot extends UIPage {
 				} else if(stmtArgs[0].toLowerCase() == 'print' && stmtArgs.length >= 2) {
 					responseResult += this.processStmtPrint(stmtArgs, args, msg)
 				}
-			}
-		}
-		responseResult += response.substr(lastIndex)
-
-		response = responseResult
-		stmtRegex = /\{\{(.*?)\}\}/gs
-		match = null
-		responseResult = ''
-		lastIndex = 0
-		while(match = stmtRegex.exec(response)) {
-			responseResult += response.substr(lastIndex, (match.index - lastIndex))
-			lastIndex = match.index+match[0].length
-
-			let stmtArgs = this.messageToArgs(match[1].trim())
-			if(stmtArgs.length > 0) {
-				stmtArgs.unshift('print')
-				responseResult += this.processStmtPrint(stmtArgs, args, msg)
 			}
 		}
 		responseResult += response.substr(lastIndex)

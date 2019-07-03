@@ -118,15 +118,16 @@ window.addEventListener('load', () => {
 		command.response = command_response.value
 		command.permission = command_permission.value
 		command.timeout = command_timeout.value
+		if(command.cmd.length <= 0) command.active = false
 		commands[cmdId] = command
 
-		commands.sort((a, b) => {
-			return a.cmd.localeCompare(b.cmd)
-		})
 		setJSON('bot_commands', commands)
 		window.close()
 	})
 	button_cancel.addEventListener('click', () => {
+		if(command.cmd.length <= 0) command.active = false
+		commands[cmdId] = command
+		setJSON('bot_commands', commands)
 		window.close()
 	})
 })

@@ -1,0 +1,55 @@
+<botvariables>
+	<table>
+		<thead>
+			<tr><th>{ lang_variable }</th><th>{ lang_type }</th><th>{ lang_content }</th></tr>
+		</thead>
+		<tbody>
+			<tr each={ v in variables }>
+				<td>{ v.name }</td>
+				<td>{ v.type }</td>
+				<td>
+					
+				</td>
+			</tr>
+		</tbody>
+		<tfoot>
+			<tr>
+				<td><button onclick={ createVariable }>{ lang_new }</button></td>
+			</tr>
+		</tfoot>
+	</table>
+	<style>
+		botvariables {
+			display: block;
+			padding: 10px;
+		}
+		botvariables table {
+			width: 100%;
+		}
+		botvariables table td {
+			vertical-align: top;
+		}
+	</style>
+	<script>
+		export default {
+			onBeforeMount() {
+				this.variables = []
+
+				this.lang_variable = this.props.i18n.__('Variable')
+				this.lang_type = this.props.i18n.__('Datatype')
+				this.lang_content = this.props.i18n.__('Content')
+				this.lang_new = this.props.i18n.__('New Variable')
+				this.makeAccessible()
+			},
+
+			refreshVars() {
+				this.variables = this.props.addon.getVariables()
+				this.update()
+			},
+
+			createVariable() {
+
+			}
+		}
+	</script>
+</botvariables>
