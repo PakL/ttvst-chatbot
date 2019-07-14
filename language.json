@@ -88,5 +88,53 @@
 	},
 	"Back to command editor": {
 		"de": "Zurück zum Befehlseditor"
+	},
+	"Edit Bot Variable": {
+		"de": "Bot-Variabel bearbeiten"
+	},
+	"Variable": {
+		"de": "Variabel"
+	},
+	"Datatype": {
+		"de": "Datentyp"
+	},
+	"Content": {
+		"de": "Inhalt"
+	},
+	"String": {
+		"de": "Zeichenkette"
+	},
+	"Number": {
+		"de": "Nummer"
+	},
+	"Associative array": {
+		"de": "Assoziative Datenfelder"
+	},
+	"List": {
+		"de": "Liste"
+	},
+	"New Variable": {
+		"de": "Neue Variabel"
+	},
+	"Once created, variable name cannot be changed.": {
+		"de": "Einmal angelegt kann der Name der Variabel nicht geändert werden."
+	},
+	"Once created, variable type cannot be changed.": {
+		"de": "Einmal angelegt kann der Datentyp der Variabel nicht geändert werden."
+	},
+	"Variable with this name already exists": {
+		"de": "Variabel mit diesem Namen existiert bereits"
+	},
+	"Variable name can only include letters (A-Z) and numbers (0-9)": {
+		"de": "Variabelname darf nur aus Buchstaben (A-Z) und Nummern (0-9) bestehen"
+	},
+	"Variable name must not be empty": {
+		"de": "Variablename darf nicht leer sein"
+	},
+	"Key": {
+		"de": "Schlüssel"
+	},
+	"Value": {
+		"de": "Wert"
 	}
 }

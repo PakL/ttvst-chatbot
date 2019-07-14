@@ -18,9 +18,7 @@ class VarInterface {
 	}
 
 	setTo(value, index) {
-		if(typeof(value) === 'string' && value.match(/^-?([0-9]+)$/)) {
-			value = parseInt(value)
-		} else if(typeof(value) === 'string' && value.match(/^-?([0-9]+)\.([0-9]+)$/)) {
+		if(typeof(value) === 'string' && (this.type == 'undefined' || this.type == 'number') && value.match(/^-?([0-9]+)(\.([0-9]+))?$/)) {
 			value = parseFloat(value)
 		}
 
@@ -95,6 +93,30 @@ class VarInterface {
 			return this.value[index]
 		}
 		return this.value
+	}
+
+	toString() {
+		if(this.type === 'object') {
+			let v = []
+			for(let index in this.value) {
+				if(v.length == 5) {
+					v.push('...')
+					break
+				}
+				v.push(index + ': ' + this.value[index])
+			}
+			return v.join(', ')
+		} else if(this.type === 'array') {
+			let v = this.value.slice(0, 5)
+			if(this.value.length > 5) v.push('...')
+			return v.join(', ')
+		} else if(this.type === 'number') {
+			return this.value.toString()
+		} else if(this.type === 'string') {
+			return this.value
+		} else {
+			return this.type
+		}
 	}
 
 } 

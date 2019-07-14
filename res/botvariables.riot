@@ -1,20 +1,19 @@
 <botvariables>
-	<table>
+	<table class="datatable">
 		<thead>
-			<tr><th>{ lang_variable }</th><th>{ lang_type }</th><th>{ lang_content }</th></tr>
+			<tr><th>{ lang_variable }</th><th>{ lang_type }</th><th>{ lang_content }</th><th>{ lang_action }</th></tr>
 		</thead>
 		<tbody>
 			<tr each={ v in variables }>
 				<td>{ v.name }</td>
 				<td>{ v.type }</td>
-				<td>
-					
-				</td>
+				<td>{ v.toString() }</td>
+				<td><button onclick={ editVariable } data-name={ v.name }>{ lang_edit }</button> <button onclick={ deleteVariable } data-name={ v.name }>{ lang_delete }</button></td>
 			</tr>
 		</tbody>
 		<tfoot>
 			<tr>
-				<td><button onclick={ createVariable }>{ lang_new }</button></td>
+				<td colspan="4"><button onclick={ createVariable }>{ lang_new }</button></td>
 			</tr>
 		</tfoot>
 	</table>
@@ -31,24 +30,76 @@
 		}
 	</style>
 	<script>
+		const {BrowserWindow} = remote
 		export default {
 			onBeforeMount() {
+				this.i18n = this.props.i18n
+				this.addon = this.props.addon
+				this.addonDirname = this.props.addonDirname
 				this.variables = []
 
-				this.lang_variable = this.props.i18n.__('Variable')
-				this.lang_type = this.props.i18n.__('Datatype')
-				this.lang_content = this.props.i18n.__('Content')
-				this.lang_new = this.props.i18n.__('New Variable')
+				this.lang_variable = this.i18n.__('Variable')
+				this.lang_type = this.i18n.__('Datatype')
+				this.lang_content = this.i18n.__('Content')
+				this.lang_action = this.i18n.__('Action')
+				this.lang_edit = this.i18n.__('Edit')
+				this.lang_delete = this.i18n.__('Delete')
+				this.lang_new = this.i18n.__('New Variable')
 				this.makeAccessible()
 			},
 
 			refreshVars() {
-				this.variables = this.props.addon.getVariables()
+				this.variables = this.addon.getVariables()
 				this.update()
 			},
 
-			createVariable() {
+			openEditWindow(varname) {
+				let top = BrowserWindow.getFocusedWindow()
+				if(top === null && BrowserWindow.getAllWindows().length > 0) {
+					top = BrowserWindow.getAllWindows()[0]
+				}
+				if(top !== null) {
+					let editWindow = new BrowserWindow({
+						title: this.i18n.__('Edit Bot Variable'),
+						parent: top,
+						modal: true,
+						autoHideMenuBar: true,
+						minimizable: false,
+						maximizable: false,
+						fullscreenable: false,
+						icon: this.addon.getAppIconPath(),
+						width: 450,
+						height: 650,
+						minWidth: 300,
+						minHeight: 400,
+						webPreferences: {
+							nodeIntegration: true
+						}
+					})
+					const self = this
+					editWindow.on('close', () => {
+						editWindow = null
+						self.refreshVars()
+					})
+					editWindow.loadURL('file://' + path.join(this.addonDirname, 'views/editvariable.html') + '#variable=' + varname)
+				}
+			},
 
+			editVariable(e) {
+				let vname = e.target.dataset.name
+				this.openEditWindow(vname)
+			},
+
+			deleteVariable(e) {
+				let vname = e.target.dataset.name
+				if(confirm(this.i18n.__('Are you sure to delete the variable {{variable}}?', {'variable': vname}))) {
+					Tool.settings.remove('chatbotvar_' + vname)
+					this.refreshVars()
+				}
+			},
+
+			createVariable() {
+				this.openEditWindow('')
 			}
 		}
 	</script>

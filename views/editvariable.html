@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title class="i18n" data-translate="Edit Bot Variable">Edit Bot Variable</title>
+		
+		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://*; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+
+		<script type="application/javascript">
+			const {shell, remote} = require('electron')
+			const {systemPreferences, BrowserWindow, app} = remote
+			const fs = require('fs')
+			const path = require('path')
+			let appPath = app.getAppPath()
+			const less = require(appPath + '\\node_modules\\less')
+		</script>
+		<style type="text/css" id="metro-style"></style>
+		<style type="text/css">
+			td input {
+				width: 100%;
+				box-sizing: border-box;
+			}
+			#variable_content_wrapper {
+				margin-bottom: 10px;
+			}
+			table + button {
+				margin-top: 5px;
+			}
+		</style>
+	</head>
+	<body>
+		<script type="application/javascript">
+			if (typeof module === 'object') {window.module = module; module = undefined;}
+			let body = document.querySelector('body')
+			let metroScriptElement = document.createElement('script')
+			metroScriptElement.setAttribute('type', 'application/javascript')
+			metroScriptElement.setAttribute('src', appPath + '/res/metro.js')
+			body.appendChild(metroScriptElement)
+		</script>
+		<script type="application/javascript" src="../res/botview_global.js"></script>
+		<script type="application/javascript" src="../res/botview_var.js"></script>
+		<script type="application/javascript">if (window.module) module = window.module;</script>
+
+		<label>
+			<span class="i18n" data-translate="Variable">Variable</span>
+			<input type="text" id="variable_name" readonly>
+			<small class="i18n" data-translate="Once created, variable name cannot be changed.">Once created, variable name cannot be changed.</small>
+		</label>
+		<label>
+			<span class="i18n" data-translate="Datatype">Datatype</span>
+			<select id="variable_type" disabled>
+				<option value="string" class="i18n" data-translate="String">String</option>
+				<option value="number" class="i18n" data-translate="Number">Number</option>
+				<option value="object" class="i18n" data-translate="Associative array">Associative array</option>
+				<option value="array" class="i18n" data-translate="List">List</option>
+			</select>
+			<small class="i18n" data-translate="Once created, variable type cannot be changed.">Once created, variable type cannot be changed.</small>
+		</label>
+
+		<span class="i18n" data-translate="Content">Content</span>
+		<div id="variable_content_wrapper">
+		</div>
+
+		<button id="button_save" class="i18n" data-translate="Save">Save</button>
+		<button id="button_cancel" class="i18n" data-translate="Cancel">Cancel</button>
+	</body>
+</html>

@@ -21,8 +21,9 @@ class Bot extends UIPage {
 		this.commands = []
 		this.lastCommandExecution = {}
 
-		this.lastTimerMinute = -1
+		this.timerTimeout = null
 		this.hasTimerCmds = false
+		this.timerCmds = []
 		this.hasFollowerCmds = false
 		this.hasSubscriberCmds = false
 		this.hasHostCmds = false
@@ -97,20 +98,29 @@ class Bot extends UIPage {
 		})
 	}
 
+	getAppIconPath() {
+		return path.normalize(path.dirname(module.parent.filename) + '/../res/icon.ico')
+	}
+
 	setCommands(commands) {
 		this.commands = commands
 		this.lastCommandExecution = {}
 
 		this.hasTimerCmds = false
+		this.timerCmds = []
 		this.hasFollowerCmds = false
 		this.hasSubscriberCmds = false
 		this.hasHostCmds = false
 		this.hasWebsocketCmds = false
 		for(let i = 0; i < this.commands.length; i++) {
+			if(!this.commands[i].active) continue
 			let c = this.commands[i].cmd.toLowerCase()
 
 			if(c.startsWith('/timer')) {
-				this.hasTimerCmds = true;
+				if(this.commands[i].timeout > 10) {
+					this.hasTimerCmds = true;
+					this.timerCmds.push(this.commands[i])
+				}
 			} else if(c.startsWith('/follow')) {
 				this.hasFollowerCmds = true;
 			} else if(c.startsWith('/sub')) {
@@ -142,15 +152,15 @@ class Bot extends UIPage {
 		this.chat.on('sendmessage', this.onSendmessageListener)
 
 		if(this.hasTimerCmds) {
-			this.lastTimerMinute = -1
+			this.timerTimeout = true
 			const self = this
 			this.onTimerListener = setTimeout(() => {
-				this.lastTimerMinute = new Date().getMinutes()
+				self.onTimer()
 				self.onTimerListener = setInterval(async () => {
-					this.lastTimerMinute = new Date().getMinutes()
-					// TODO: Execute event
-				}, 60000)
-			}, 60000 - (new Date().getTime() % 60000))
+					self.onTimer()
+				}, 1000)
+				self.timerTimeout = false
+			}, 1000 - (new Date().getTime() % 1000))
 		}
 		if(this.hasFollowerCmds) this.tool.follows.on('follow', this.onFollowListener)
 		if(this.hasSubscriberCmds) this.chat.on('usernotice', this.onSubscriberListener)
@@ -166,14 +176,14 @@ class Bot extends UIPage {
 		this.chat.removeListener('chatmessage', this.onChatmessageListener)
 		this.chat.removeListener('sendmessage', this.onSendmessageListener)
 
-		if(this.onTimerListener !== null) {
-			if(this.lastTimerMinute >= 0)
+		if(this.timerTimeout !== null) {
+			if(!this.timerTimeout)
 				clearInterval(this.onTimerListener)
 			else
 				clearTimeout(this.onTimerListener)
 			this.onTimerListener = null
 		}
-		this.lastTimerMinute = -1
+		this.timerTimeout = null
 
 		this.tool.follows.removeListener('follow', this.onFollowListener)
 		this.chat.removeListener('usernotice', this.onSubscriberListener)
@@ -277,13 +287,9 @@ class Bot extends UIPage {
 	}
 
 	async onTimer() {
-		for(let i = 0; i < this.commands.length; i++) {
-			let cmd = this.commands[i]
-			if(!cmd.active || !cmd.cmd.toLowerCase().startsWith('/timer')) continue
-			let timeoutFix = Math.floor(cmd.timeout / 60)
-			if(timeoutFix <= 0 || timeoutFix > 59) timeoutFix = 59
-			if(new Date().getMinutes() % timeoutFix > 0) continue
-
+		for(let i = 0; i < this.timerCmds.length; i++) {
+			let cmd = this.timerCmds[i]
+			if(Math.floor(new Date().getTime()/1000) % cmd.timeout != 0) continue
 			this.executeCommand({'chn': this.tool.cockpit.openChannelObject.login, 'msg': cmd.cmd, 'uuid': null}, cmd)
 		}
 	}
@@ -361,15 +367,20 @@ class Bot extends UIPage {
 	 * @returns {VarInterface}
 	 */
 	getVarInterface(expression, args, msg) {
-		let matches = expression.match(/^(%[0-9]+|\/[a-z]+|\$[a-z0-9]+)(\[.+\])?$/i)
+		let matches = expression.match(/^(%(\-?[0-9]+)(,\-?[0-9]{0,})?|\/[a-z]+|\$[a-z0-9]+)(\[.+\])?$/i)
 		if(matches !== null) {
-			if(matches[1].match(/^%[0-9]+$/)) {
-				let argIndex = parseInt(expression.substr(1))
-				if(args.length > argIndex) {
-					return new VarArgument(args[argIndex])
-				} else {
-					return null
+			let argMatches = matches[1].match(/^%(\-?[0-9]+)(,\-?[0-9]{0,})?$/)
+			if(argMatches) {
+				let argIndex1 = parseInt(argMatches[1])
+				let argIndex2 = (typeof(argMatches[2]) === 'string' ? argMatches[2].substr(1) : (argIndex1+1 == 0 ? undefined : argIndex1+1))
+				if(typeof(argIndex2) === 'string') {
+					if(argIndex2.length == 0 || (argIndex2.length == 1 && argIndex2 == '-')) {
+						argIndex2 = args.length
+					}
 				}
+
+				let argSlice = args.slice(argIndex1, argIndex2)
+				return new VarArgument(argSlice.join(' '))
 			} else if(matches[1].match(/^\/[a-z]+$/i)) {
 				return new VarContext(matches[1].substr(1).toLowerCase(), msg)
 			} else if(matches[1].match(/^\$[a-z0-9]+$/i)) {
