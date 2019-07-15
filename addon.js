@@ -263,8 +263,9 @@ class Bot extends UIPage {
 			console.log('[chatbot] processing ' + response)
 			response = this.processStatements(response, args, msg)
 		}
-		response = response.replace('\n', ' ')
-		response = response.replace('\r', '')
+		response = response.replace(/\n/g, ' ')
+		response = response.replace(/\r/g, '')
+		response = response.replace(/ +/g, ' ')
 		response = response.trim()
 		if(response.length > 0) {
 			this.chat.sendmsg(this.auth.username, response, this.tool.cockpit.emoticons_data)
@@ -353,7 +354,7 @@ class Bot extends UIPage {
 	}
 
 	static hasStatement(message){
-		if(message.match(/\{(% |\{)(.*?)( %|\})\}/s)) {
+		if(message.match(/\{(% ?|\{)(.*?)( ?%|\})\}/s)) {
 			return true
 		}
 		return false
@@ -413,6 +414,65 @@ class Bot extends UIPage {
 		return null
 	}
 
+	processConditionals(response, args, msg) {
+		let ifRegex = /\{% ?if (.*?) ?%\}/igs
+		let elseRegex = /\{% ?else ?%\}/igs
+		let endifRegex = /\{% ?endif ?%\}/igs
+
+		let conditionals = []
+		while(match = ifRegex.exec(response))		{ match.g = 1; conditionals.push(match) }
+		while(match = elseRegex.exec(response))		{ match.g = 2; conditionals.push(match) }
+		while(match = endifRegex.exec(response))	{ match.g = 3; conditionals.push(match) }
+
+		conditionals.sort((a, b) => {
+			return a.index - b.index
+		})
+
+		let responseAfter = ''
+		let ifDepth = -1
+		let lastIndex = 0
+		let lastIf = []
+		for(let i = 0; i < conditionals.length; i++) {
+			let cond = conditionals[i]
+			responseAfter += this.processLowPrioStatements(response.substring(lastIndex, cond.index), args, msg)
+			let conditionMet = false
+			switch(cond.g) {
+				case 1:
+					ifDepth++
+					let ifArgs = this.messageToArgs(cond[1])
+					let condResult = this.processStmtCondition(ifArgs, args, msg)
+					lastIf.push(condResult)
+					conditionMet = condResult
+					break
+				case 2:
+					if((ifDepth >= 0 && lastIf.length > ifDepth && !lastIf[ifDepth]) || ifDepth < 0) {
+						conditionMet = true
+					}
+					break
+				case 3:
+					if(ifDepth > -1) {
+						ifDepth--
+						lastIf.pop()
+					}
+					break
+			}
+
+			lastIndex = cond.index + cond[0].length
+
+			if(!conditionMet && cond.g < 3) {
+				if(conditionals.length <= (i+1)) {
+					conditionals.push({g:3, index: response.length-1})
+				}
+				let condNextIndex = conditionals[i+1].index
+				lastIndex = condNextIndex
+			}
+			
+		}
+		responseAfter += this.processLowPrioStatements(response.substring(lastIndex), args, msg)
+
+		return responseAfter
+	}
+
 	processStatements(response, args, msg) {
 		let stmtRegex = /\{\{(.*?)\}\}/gs
 		let match = null
@@ -430,11 +490,16 @@ class Bot extends UIPage {
 		}
 		responseResult += response.substr(lastIndex)
 
-		response = responseResult
-		stmtRegex = /\{% (.*?) %\}/gs
-		match = null
-		responseResult = ''
-		lastIndex = 0
+		responseResult = this.processConditionals(responseResult, args, msg)
+
+		return responseResult
+	}
+
+	processLowPrioStatements(response, args, msg) {
+		let stmtRegex = /\{% ?(.*?) ?%\}/gs
+		let match = null
+		let responseResult = ''
+		let lastIndex = 0
 		while(match = stmtRegex.exec(response)) {
 			responseResult += response.substr(lastIndex, (match.index - lastIndex))
 			lastIndex = match.index+match[0].length
@@ -451,7 +516,6 @@ class Bot extends UIPage {
 			}
 		}
 		responseResult += response.substr(lastIndex)
-
 		return responseResult
 	}
 
@@ -493,6 +557,32 @@ class Bot extends UIPage {
 			return value.toString()
 
 		return ''
+	}
+
+	processStmtCondition(stmt, args, msg) {
+		let var1 = this.getVarInterface(stmt[0], args, msg)
+		let var1Index = this.getVarIndex(stmt[0], args, msg)
+		let var2 = this.getVarInterface(stmt[2], args, msg)
+		let var2Index = this.getVarIndex(stmt[2], args, msg)
+
+		if(var1 === null || var2 === null) return false
+
+		let var1Value = (var1 === null ? null : var1.getValue(var1Index))
+		let var2Value = (var2 === null ? null : var2.getValue(var2Index))
+		if(stmt[1] == '>') {
+			return var1Value > var2Value
+		} else if(stmt[1] == '<') {
+			return var1Value < var2Value
+		} else if(stmt[1] == '>=') {
+			return var1Value >= var2Value
+		} else if(stmt[1] == '<=') {
+			return var1Value <= var2Value
+		} else if(['=', '=='].indexOf(stmt[1]) >= 0) {
+			return var1Value == var2Value
+		} else if(['!=', '!'].indexOf(stmt[1]) >= 0) {
+			return var1Value != var2Value
+		}
+		return false
 	}
 
 }
