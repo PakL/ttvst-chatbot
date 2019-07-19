@@ -15,13 +15,25 @@ class VarStorage extends VarInterface {
 	}
 
 	setTo(value, index) {
-		super.setTo(value, index)
-		this.save()
+		const self = this
+		return new Promise(async (y, n) => {
+			try {
+				super.setTo(value, index)
+			} catch(e) { console.error(e) }
+			self.save()
+			y()
+		})
 	}
 
 	addTo(value, index) {
-		super.addTo(value, index)
-		this.save()
+		const self = this
+		return new Promise(async (y, n) => {
+			try {
+				super.addTo(value, index)
+			} catch(e) { console.error(e) }
+			self.save()
+			y()
+		})
 	}
 
 } 

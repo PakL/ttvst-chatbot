@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Erweiterte Hilfe für Befehle</title>
+		
+		<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://*; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+
+		<script type="application/javascript">
+			const {shell, remote} = require('electron')
+			const {systemPreferences, BrowserWindow, app} = remote
+			const fs = require('fs')
+			const path = require('path')
+			let appPath = app.getAppPath()
+			const less = require(appPath + '\\node_modules\\less')
+		</script>
+		<style type="text/css" id="metro-style"></style>
+		<style type="text/css">
+			body {
+				user-select: text;
+			}
+			code, pre {
+				background: #000000;
+				padding: 3px;
+				border-radius: 3px;
+			}
+		</style>
+	</head>
+	<body>
+		<script type="application/javascript">
+			if (typeof module === 'object') {window.module = module; module = undefined;}
+			let body = document.querySelector('body')
+			let metroScriptElement = document.createElement('script')
+			metroScriptElement.setAttribute('type', 'application/javascript')
+			metroScriptElement.setAttribute('src', appPath + '/res/metro.js')
+			body.appendChild(metroScriptElement)
+		</script>
+		<script type="application/javascript">if (window.module) module = window.module;</script>
+
+		<h1>Erweiterte Hilfe für Befehle</h1>
+		<h4>Inhalt</h4>
+		<ol>
+			<li><a href="#chapter_1">Befehlsauslöser</a>
+				<ol>
+					<li><a href="#chapter_1_1">Klassischer Benutzerbefehl</a></li>
+					<li><a href="#chapter_1_2">Neuer "Follower"</a></li>
+					<li><a href="#chapter_1_3">Abonnement</a></li>
+					<li><a href="#chapter_1_4">Host</a></li>
+					<li><a href="#chapter_1_5">Overlay-Befehl</a></li>
+				</ol>
+			</li>
+			<li><a href="#chapter_2">Dynamische Ausgabe</a>
+				<ol>
+					<li><a href="#chapter_2_1">Anweisungen</a>
+						<ol>
+							<li><a href="#chapter_2_1_1"><code>print</code></a></li>
+							<li><a href="#chapter_2_1_2"><code>set</code></a></li>
+							<li><a href="#chapter_2_1_3"><code>add</code></a></li>
+							<li><a href="#chapter_2_1_4">Bedingungen</a></li>
+						</ol>
+					</li>
+					<li><a href="#chapter_2_2">Variabeln</a>
+						<ol>
+							<li><a href="#chapter_2_2_1">Argument</a></li>
+							<li><a href="#chapter_2_2_2">Umgebung</a></li>
+							<li><a href="#chapter_2_2_3">Ablage</a></li>
+							<li><a href="#chapter_2_2_4">HTTP-Abfrage</a></li>
+						</ol>
+					</li>
+					<li><a href="#chapter_2_3">Vorverarbeitung</a></li>
+				</ol>
+			</li>
+		</ol>
+
+		<h2 id="chapter_1">1. Befehlsauslöser</h2>
+		<p>
+			Obwohl vermutlich der übliche Auslöser ein vom Benutzer eingegebener Befehl ist, gibt es ein paar mehr
+			Möglichkeiten einen Befehl auslösen zu lassen.
+		</p>
+		<h3 id="chapter_1_1">1.1. Klassischer Benutzerbefehl</h3>
+		<p>
+			Der klassische Benutzerbefehl ist eine simple Phrase, die am Anfang einer Chatnachricht eines Benutzers
+			steht. Anders als übliche Bots, erlaubt TTVST dir auch Leerzeichen in dieser Phrase. Es wird aber stark
+			davon abgeraten um Verwirrung zu vermeiden. Es gibt keine spezielle Art und Weise einen solchen Auslöser
+			zu erstellen. Trag einfach deine Phrase in das Befehlsfeld. Es wird dringend empfohlen ein Symbol (z.B. !, ~)
+			an den Start zu hängen, damit der Befehl nicht aus versehen ausgeführt wird. Slashes (/) können nicht verwendet
+			werden, da diese von Twitch als Befehl erkennt und nicht als Nachricht verarbeitet. Aus diesem Grund werden
+			Slashes von TTVST verwendet um andere Auslöser zu erstellen.
+		</p>
+		<h3 id="chapter_1_2">1.2. Neuer "Follower"</h3>
+		<p>
+			Dieser Auslöser wird bei jedem neuen "Follower" aktiv. Es gibt nichts weiter zu beachten. Als Befehl wird
+			einfach <code>/follow</code> eingegeben.
+		</p>
+		<h3 id="chapter_1_3">1.3. Abonnement</h3>
+		<p>
+			Dieser Auslöser wird bei jedem neuen Abonnent aktiv. Ähnlich wie bei den Followern gibt es nichts weiter zu
+			beachten. Informationen über das Abonnement können über die <a href="#chapter_2_2_1">Argument-Variabeln</a>
+			abgerufen werden. Als Befehl wird einfach <code>/sub</code> eingegeben.
+		</p>
+		<h3 id="chapter_1_4">1.4. Host</h3>
+		<p>
+			Dieser Auslöser wird bei jedem Host oder Raid aktiv. Ähnlich wie bei den Followern und Abonnements gibt es
+			nichts weiter zu beachten. Die Anzahl der Zuschauer kann über die <a href="#chapter_2_2_1">Argument-Variabeln</a> abgerufen werden. Als
+			Befehl wird einfach <code>/host</code> eingegeben.
+		</p>
+		<h3 id="chapter_1_5">1.5. Overlay-Befehl</h3>
+		<p>
+			Dieser Auslöser "missbraucht" die Overlay-Befehle um Chatbot.Befehle auszuführen. Damit ist es möglich
+			Nachrichten per Hotkey zu versenden. Um einen Overlay-Befehl (egal ob via Hotkey oder HTTP-Request) abzufangen
+			wird im Befehl mit <code>/cmd</code> begonnen und dahinter der Overlay-Befehl geschrieben. Hierbei spielt
+			es keine Rolle, ob ein Overlay tatsächlich etwas mit dem Befehl anfangen kann oder nicht.<br>
+			Um den Befehl <code>/cmd foobar</code> auszulösen benötigt man entweder einen Hotkey mit dem Befehl
+			<code>foobar</code> oder macht einen HTTP-Request auf <code>http://localhost:8090/send?foobar</code>
+		</p>
+		
+		<h2 id="chapter_2">2. Dynamische Ausgabe</h2>
+		<p>
+			Neben einer einfachen Ausgabe können in der Befehlsausgabe auch Anweisungen benutzt werden um dynamische
+			Ausgaben zu generieren.
+		</p>
+		<h3 id="chapter_2_1">2.1. Anweisungen</h3>
+		<p>
+			Anweisungen werden von geschweiften Klammern mit Prozentzeichen umgeben:
+			<code>{% <i>(Anweisung)</i> %}</code> . Egal ob die Anweisung korrekt ist oder nicht wird diese nie in der
+			finalen Ausgabe ausgegeben. Damit können sie natürlich auch als Kommentare genutzt werden. Die Anweisungen
+			werden weder auf Fehler geprüft noch werden Fehlermeldungen ausgegeben. Sollte eine Anweisung nicht
+			ausgeführt werden sollte immer erst die Syntax geprüft werden, bevor ein Programfehler in Betracht kommt.
+		</p>
+		<h3 id="chapter_2_1_1">2.1.1. <code>print</code></h3>
+		<p>
+			Die <code>print</code>-Anweisung unterstützt nur ein Argument und ist zur Ausgabe von Variabeln gedacht.<br>
+			<strong>Beispiel:</strong><br>
+			<code>{% print %1 %}</code> - Gibt Argument #1 aus.
+		</p>
+		<h3 id="chapter_2_1_2">2.1.2. <code>set</code></h3>
+		<p>
+			Die <code>set</code>-Anweisung setzt eine Variabel auf einen Wert und benötigt 3 Argumente: Quelle, Richtung
+			und Ziel. Die Richtung muss immer das mittlere Argument sein und immer auf das Ziel zeigen. Mögliche
+			Richtungsargumente sind:
+			<ul>
+				<li><code style="display:inline-block;text-align:left;width:40px;">&gt;</code><span style="width:20px;display:inline-block"></span>von links nach rechts</li>
+				<li><code style="display:inline-block;text-align:left;width:40px;">-&gt;</code><span style="width:20px;display:inline-block"></span>von links nach rechts</li>
+				<li><code style="display:inline-block;text-align:left;width:40px;">into</code><span style="width:20px;display:inline-block"></span>von links nach rechts</li>
+				<li><code style="display:inline-block;text-align:left;width:40px;">&lt;</code><span style="width:20px;display:inline-block"></span>von rechts nach links</li>
+				<li><code style="display:inline-block;text-align:left;width:40px;">&lt;-</code><span style="width:20px;display:inline-block"></span>von rechts nach links</li>
+			</ul>
+			<strong>Beispiel:</strong><br>
+			<code>{% set 123 into $num %}</code> - Setzt Variabel <code>$num</code> auf <code>123</code><br>
+			<code>{% set $str &lt; "Kurzer Text" %}</code> - Setzt Variabel <code>$str</code> auf <code>Kurzer Text</code>
+		</p>
+		<h3 id="chapter_2_1_3">2.1.3. <code>add</code></h3>
+		<p>
+			Die <code>add</code>-Anweisung addiert einen Wert auf eine Nummer-Variabel oder fügt ein Element einer Liste
+			hinzu und benötigt 3 Argumente: Quelle, Richtung und Ziel. Die Richtung muss immer das mittlere Argument
+			sein und immer auf das Ziel zeigen. Mögliche Richtungsargumente sind:
+			<ul>
+				<li><code style="display:inline-block;text-align:left;width:30px;">&gt;</code><span style="width:20px;display:inline-block"></span>von links nach rechts</li>
+				<li><code style="display:inline-block;text-align:left;width:30px;">-&gt;</code><span style="width:20px;display:inline-block"></span>von links nach rechts</li>
+				<li><code style="display:inline-block;text-align:left;width:30px;">to</code><span style="width:20px;display:inline-block"></span>von links nach rechts</li>
+				<li><code style="display:inline-block;text-align:left;width:30px;">&lt;</code><span style="width:20px;display:inline-block"></span>von rechts nach links</li>
+				<li><code style="display:inline-block;text-align:left;width:30px;">&lt;-</code><span style="width:20px;display:inline-block"></span>von rechts nach links</li>
+			</ul>
+			<strong>Beispiel:</strong><br>
+			<code>{% add 123 to $num %}</code> - (Wenn $num eine Nummer ist) Addiert <code>123</code> zu Variabel <code>$num</code><br>
+			<code>{% add $list &lt; "Kurzer Text" %}</code> - (Wenn $list eine Liste ist) Fügt <code>Kurzer Text</code> der Liste <code>$list</code> hinzu<br>
+			<code>{% add -123 to $num %}</code> - (Wenn $num eine Nummer ist) Subtrahiert <code>123</code> von Variabel <code>$num</code>
+		</p>
+		<h3 id="chapter_2_1_4">2.1.4. Bedingungen</h3>
+		<p>
+			Mit Bedingungen können Abschnitte unter bestimmten Vorraussetzungen ausgeführt und/oder ausgegeben werden.
+			Hierbei werden zwei Variabeln mit einander verglichen. Die <code>if</code>-Anweisung benötigt 3 Argumente:
+			2 Variabeln die verglichen werden sollen und einen Vergleichsoperator. Der Vergleichsoperator steht immer
+			zwischen den beiden Variabeln. Ein Abschnitt wird mit einer <code>endif</code>- oder
+			<code>else</code>-Anweisung beendet. Die <code>else</code>-Anweisung startet sofort ein neuer Abschnitt, der
+			ausgeführt und/oder ausgegeben wird, wenn die vorherige <code>if</code>-Anweisung nicht wahr war.<br>
+			Mögliche Vergleichsoperatoren:<br>
+			Für Nummern:
+			<ul>
+				<li><code style="display:inline-block;text-align:left;width:30px;">&gt;</code><span style="width:20px;display:inline-block"></span>Variabel 1 größer als Variabel 2</li>
+				<li><code style="display:inline-block;text-align:left;width:30px;">&lt;</code><span style="width:20px;display:inline-block"></span>Variabel 1 kleiner als Variabel 2</li>
+				<li><code style="display:inline-block;text-align:left;width:30px;">&gt;=</code><span style="width:20px;display:inline-block"></span>Variabel 1 größer als oder gleich Variabel 2</li>
+				<li><code style="display:inline-block;text-align:left;width:30px;">&lt;=</code><span style="width:20px;display:inline-block"></span>Variabel 1 kleiner als oder gleich Variabel 2</li>
+				<li><code style="display:inline-block;text-align:left;width:30px;">=</code><span style="width:20px;display:inline-block"></span>Variabel 1 gleich Variabel 2</li>
+				<li><code style="display:inline-block;text-align:left;width:30px;">==</code><span style="width:20px;display:inline-block"></span>Variabel 1 gleich Variabel 2</li>
+				<li><code style="display:inline-block;text-align:left;width:30px;">!</code><span style="width:20px;display:inline-block"></span>Variabel 1 ungleich Variabel 2</li>
+				<li><code style="display:inline-block;text-align:left;width:30px;">!=</code><span style="width:20px;display:inline-block"></span>Variabel 1 ungleich Variabel 2</li>
+			</ul>
+			Für Zeichenketten:
+			<ul>
+				<li><code style="display:inline-block;text-align:left;width:100px;">=</code><span style="width:20px;display:inline-block"></span>Variabel 1 gleich Variabel 2</li>
+				<li><code style="display:inline-block;text-align:left;width:100px;">==</code><span style="width:20px;display:inline-block"></span>Variabel 1 gleich Variabel 2</li>
+				<li><code style="display:inline-block;text-align:left;width:100px;">!</code><span style="width:20px;display:inline-block"></span>Variabel 1 ungleich Variabel 2</li>
+				<li><code style="display:inline-block;text-align:left;width:100px;">!=</code><span style="width:20px;display:inline-block"></span>Variabel 1 ungleich Variabel 2</li>
+				<li><code style="display:inline-block;text-align:left;width:100px;">includes</code><span style="width:20px;display:inline-block"></span>Variabel 1 beinhaltet Variabel 2</li>
+				<li><code style="display:inline-block;text-align:left;width:100px;">startsWith</code><span style="width:20px;display:inline-block"></span>Variabel 1 beginnt mit Variabel 2</li>
+				<li><code style="display:inline-block;text-align:left;width:100px;">endsWith</code><span style="width:20px;display:inline-block"></span>Variabel 1 endet mit Variabel 2</li>
+			</ul>
+			<strong>Beispiel:</strong><br>
+<pre>{% if $num &gt; 5 %}
+	{% print $num %} ist größer als 5
+{% else %}
+	{% if $num &lt; 3 %}
+		{% print $num %} ist sogar kleiner als 3
+	{% else %}
+		{% print $num %} ist kleiner oder gleich 5
+	{% endif %}
+{% endif %}</pre>
+		</p>
+		<h3 id="chapter_2_2">2.2. Variabeln</h3>
+		<p>
+			Variabeln sind Platzhalter, die Zeichenketten, Nummern, assoziative Datenfelder und Listen beinhalten können.
+			Es gibt verschiedene Arten der Variabeln, die üblicherweise mit unterschiedlichen Vorzeichen unterschieden
+			werden. Zeichenketten und Nummern können ohne Variabeln-Vorzeichen als Variabel genutzt werden. Zeichenketten
+			mit Leerstellen müssen jedoch mit Anführungszeichen (") umgeben werden, damit sie als ein einzelnes Argument
+			erkannt werden.
+		</p>
+		<h3 id="chapter_2_2_1">2.2.1. Argument</h3>
+		<p>
+			Argumente sind abhängig vom Auslöser. Bei klassischen Benutzerbefehl beinhalten sie Zeichenketten die mit dem
+			Befehl angegeben werden und durch Leerstellen getrennt sind. Argumente mit Leerzeichen können auch mit
+			Anführungszeichen (") umgeben zu einem zusammengefasst werden.<br>
+			Argumente können nicht mit <code>add</code> oder <code>set</code> überschrieben werden.<br>
+			Argumente werden mit dem Vorzeichen <code>%</code> und dem darauffolgende Positionsnummer des Arguments.
+			Positionsnummern beginnen mit 0. Der Befehlsauslöser ist in den Argumenten inbegriffen, und kann über mehrere
+			Argumente verteilt sein, sollte dieser Leerzeichen beinhalten. Bei negativen Positionsnummern werden Argumente
+			beginnend von hinten gewählt. Es kann ein Ausschnitt mit mehreren Argumenten abgerufen werden, indem man
+			eine weitere Position mit Komma getrennt angibt. Es wird dann ein Ausschnitt beginnend mit der ersten Position
+			bis (aber nicht einschließlich) zur zweiten Position ausgegeben und mit Leerzeichen verbunden. ist die zweite
+			Position leer, wird alles bis zum Ende abgerufen.<br>
+			<strong>Beispiel:</strong><br>
+			Benutzereingabe: <code>!test Dies ist ein "Test Befehl"</code><br>
+			<code>%0</code> ➡ <code>!test</code><br>
+			<code>%2</code> ➡ <code>ist</code><br>
+			<code>%4</code> ➡ <code>Test Befehl</code><br>
+			<code>%1,3</code> ➡ <code>Dies ist</code><br>
+			<code>%-3,-1</code> ➡ <code>ist ein</code><br>
+			<code>%-3,</code> ➡ <code>ist ein Test Befehl</code><br>
+			<br>
+			Bei Abonnement-Auslöser ist <code>%1</code> die Anzahl Monate, die der Benutzer den Kanal bereits Abonniert
+			hat.<br>
+			Bei Host-Auslöser ist <code>%1</code> die Anzahl der Zuschauern, mit denen gehostet wurde.
+		</p>
+		<h3 id="chapter_2_2_2">2.2.2. Umgebung</h3>
+		<p>
+			Umgebungsvariabeln sind unabhängig von Benutzereingaben und können nicht mit <code>add</code> oder <code>set</code>
+			geändert werden. Umgebungsvariabeln beginnen mit einem Slash (/). Folgende Umgebungsvariabeln sind verfügbar:<br>
+			<ul>
+				<li><code>/game</code> : Der Name des aktuellen Spiels, das im Stream hinterlegt ist. Kann leer sein.</li>
+				<li><code>/sender</code> : Der Name des Benutzers, der einen Befehl ausgelöst hat. Bei Hosts ist dies der Hostende, bei Follows der Follower und bei Abonnements der Abonnent.</li>
+				<li><code>/msg-uid</code> : Die eindeutige Nachrichts-ID. Ist nur bei klassischen Benutzerbefehlen verfügbar und nur bei Nachrichten, die nicht vom Tool aus gesendet wurden.</li>
+				<li><code>/date</code> : Das aktuelle Datum. Formatierung ist basierent auf Spracheinstellungen.</li>
+				<li><code>/time</code> : Die aktuelle Uhrzeit. Formatierung ist basierent auf Spracheinstellungen.</li>
+				<li><code>/datetime</code> : Das aktuelle Datum mit der aktuellen Uhrzeit. Formatierung ist basierent auf Spracheinstellungen.</li>
+				<li><code>/random</code> : Eine Gleitkommazahl zwischen 0 und 1 (exklusive). Wird /random als Listen-Index genutzt wird ein zufälliger Listeneintrag gewählt.</li>
+			</ul>
+		</p>
+		<h3 id="chapter_2_2_3">2.2.3. Ablage</h3>
+		<p>
+			Ablagen-Variabeln sind die vielseitigsten Variabeln. Sie können selbst definiert werden und sind Befehlübergreifend.
+			Sie sind die einzigen die bearbeitet werden können und Listen und assoziative Datenfelder unterstützen.
+			Ablagen-Variabeln beginnen mit einem <code>$</code> und sind frei wählbar, dürfen aber nur Buchstaben und
+			Zahlen enthalten. Um auf Listen oder Datenfelder zuzugreifen wird eine Variabel in eckigen Klammern dahinter
+			geschrieben (z.B. <code>$list[2]</code> oder <code>$list[/random]</code>).<br>
+			Ablagen-Variabeln können über den Variabelneditor bearbeitet werden.
+		</p>
+		<h3 id="chapter_2_2_4">2.2.4. HTTP-Abfrage</h3>
+		<p>
+			HTTP-Abfragen können genutzt werden um die Möglichkeiten des Chatbots noch weiter zu verbessern. Bei HTTP-Abfragen
+			wird eine HTTP-Anfrage an die angegebene URL gesendet und die Antwort so wie sie ist zurückgegeben. Es sollte
+			also darauf geachtet werden, dass diese immer reiner Text ist und keine Formatierungen enthält. Die Ergebnisse
+			werden nicht zwischgespeichert. Wenn die selbe URL in einer weiteren Anweisung benutzt wird, wird eine neue
+			Abfrage gestartet. Um das Ergebnis zwischenzuspeichern kann eine Ablagen-Variabel genutzt werden.
+		</p>
+		<h3 id="chapter_2_3">2.3. Vorverarbeitung</h3>
+		<p>
+			Um noch etwas komplexere Ausgaben zu generieren können spezielle <code>print</code> Anweisungen ausgeführt
+			werden, bevor der Rest verarbeitet wird. Hierfür werden Variabeln einfach in doppelte geschweifte Klammern
+			gesetzt.<br>
+			<strong>Beispiel:</strong><br>
+			<code>{{ /game }}</code><br>
+			<code>{{$num}}</code><br>
+			<br>
+			Damit ist ist unter anderem auch möglich komplette Anweisung aus Variabeln zu importieren. Für die HTTP-Abfrage
+			können damit auch URLs generiert werden. Um hier keine Probleme zu bekommen sollten URL-Komponenten kodiert werden.
+			Um die Ausgabe einer Vor-Anweisung für URLs zu kodieren schließt man die Anweisung nach den geschweiften
+			Klammern zusätzlich noch mit § ein (z.B. <code>{{§ $string §}}</code>).
+		</p>
+	</body>
+</html>

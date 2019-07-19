@@ -5,6 +5,7 @@ const VarInterface = require('./modules/VarInterface')
 const VarArgument = require('./modules/VarArgument')
 const VarStorage = require('./modules/VarStorage')
 const VarContext = require('./modules/VarContext')
+const VarRequest = require('./modules/VarRequest')
 
 class Bot extends UIPage {
 
@@ -254,33 +255,60 @@ class Bot extends UIPage {
 		return args
 	}
 
-	executeCommand(msg, cmd, args) {
+	async executeCommand(msg, cmd, args, cmdstack) {
 		console.log('[chatbot] command ' + cmd.cmd + ' is being executed')
 		this.lastCommandExecution[cmd.id.toString()] = new Date().getTime()
 		let response = cmd.response
 		if(Bot.hasStatement(response)) {
 			if(typeof(args) === 'undefined') args = this.messageToArgs(msg.msg)
-			console.log('[chatbot] processing ' + response)
-			response = this.processStatements(response, args, msg)
+			console.log('[chatbot] processing: ' + response)
+			try {
+				response = await this.processStatements(response, args, msg)
+			} catch(e) {
+				console.error(e)
+				response = ''
+			}
 		}
 		response = response.replace(/\n/g, ' ')
+		response = response.replace(/\t/g, ' ')
 		response = response.replace(/\r/g, '')
 		response = response.replace(/ +/g, ' ')
 		response = response.trim()
 		if(response.length > 0) {
-			this.chat.sendmsg(this.auth.username, response, this.tool.cockpit.emoticons_data)
-			console.log('[chatbot] ' + response)
+			cmdstack.push(cmd.id)
+
+			let msgtags = this.chat.usertags[this.auth.username]
+			msgtags.emotes = findEmoticons(response, this.tool.cockpit.emoticons_data)
+			let userobj = this.chat.getUserObjByTags(this.auth.username, msgtags)
+
+			console.log('[chatbot] response: ' + response)
+			let cs = this.onMessage(userobj, {'chn': this.auth.username, 'usr': userobj, 'msg': response, 'uuid': null}, cmdstack)
+			if(cs === false) {
+				this.chat.sendmsg(this.auth.username, response, this.tool.cockpit.emoticons_data)
+			} else if(cs === null) {
+				this.chat.showmsg('', '', this.auth.username, this.i18n.__('A command loop was detected and stopped.'), {color: '#999999'}, 1)
+			}
+		} else {
+			console.log('[chatbot] response: ')
+			this.chat.showmsg('', '', this.auth.username, this.i18n.__('The command response was empty.'), {color: '#999999'}, 1)
 		}
 	}
 
-	onMessage(user, msg) {
+	onMessage(user, msg, cmdstack) {
+		if(typeof(cmdstack) === 'undefined')
+			cmdstack = []
+
 		let message = msg.msg
 		let commands = this.filterCommands(message, user)
 		if(commands.length > 0) {
+			if(cmdstack.indexOf(commands[0].id) >= 0) {
+				console.log('[chatbot] detected loop and stopped')
+				return null
+			}
 			let args = this.messageToArgs(message)
 			for(let i = 0; i < commands.length; i++) {
 				let cmd = commands[i]
-				this.executeCommand(msg, cmd, args)
+				this.executeCommand(msg, cmd, args, cmdstack)
 			}
 			return true
 		}
@@ -310,6 +338,10 @@ class Bot extends UIPage {
 
 	onSubscriber(chn, usr, tags, msg) {
 		if(chn.toLowerCase() != this.auth.username.toLowerCase()) return
+		if(tags['msg-id'] == 'raid') {
+			onHost(chn, usr, tags['msg-param-viewerCount'], msg, tags)
+			return
+		}
 		if(['sub', 'resub', 'subgift', 'anonsubgift'].indexOf(tags['msg-id']) < 0) return
 
 		if(['subgift', 'anonsubgift'].indexOf(tags['msg-id']) >= 0) {
@@ -325,7 +357,7 @@ class Bot extends UIPage {
 			if(!cmd.active || !cmd.cmd.toLowerCase().startsWith('/sub')) continue
 
 			let cmdargs = cmd.cmd.substr(4).trim()
-			let msg = '/sub ' + (typeof(tags['msg-param-cumulative-months']) === 'undefined' ? (typeof(tags['msg-param-months']) === 'undefined' ? '1' : tags['msg-param-months']) : tags['msg-param-cumulative-months']) + (cmdargs.length > 0 ? ' ' + cmdargs : '')
+			let msg = '/sub ' + (typeof(tags['msg-param-cumulative-months']) === 'undefined' ? '1' : tags['msg-param-cumulative-months']) + (cmdargs.length > 0 ? ' ' + cmdargs : '')
 			this.executeCommand({'chn': chn, 'usr': usr, 'msg': msg, 'uuid': null}, cmd)
 		}
 	}
@@ -368,7 +400,7 @@ class Bot extends UIPage {
 	 * @returns {VarInterface}
 	 */
 	getVarInterface(expression, args, msg) {
-		let matches = expression.match(/^(%(\-?[0-9]+)(,\-?[0-9]{0,})?|\/[a-z]+|\$[a-z0-9]+)(\[.+\])?$/i)
+		let matches = expression.match(/^(%(\-?[0-9]+)(,\-?[0-9]{0,})?|\/[a-z]+|\$[a-z0-9]+|(🔗|🌎|🌍|🌏)(https?:\/\/.+))(\[.+\])?$/i)
 		if(matches !== null) {
 			let argMatches = matches[1].match(/^%(\-?[0-9]+)(,\-?[0-9]{0,})?$/)
 			if(argMatches) {
@@ -386,6 +418,8 @@ class Bot extends UIPage {
 				return new VarContext(matches[1].substr(1).toLowerCase(), msg)
 			} else if(matches[1].match(/^\$[a-z0-9]+$/i)) {
 				return new VarStorage(matches[1].substr(1))
+			} else if(matches[1].match(/^(🔗|🌎|🌍|🌏)https?:\/\/.+$/i)) {
+				return new VarRequest(matches[5])
 			}
 		} else {
 			return new VarArgument(expression)
@@ -414,175 +448,278 @@ class Bot extends UIPage {
 		return null
 	}
 
-	processConditionals(response, args, msg) {
-		let ifRegex = /\{% ?if (.*?) ?%\}/igs
-		let elseRegex = /\{% ?else ?%\}/igs
-		let endifRegex = /\{% ?endif ?%\}/igs
-
-		let conditionals = []
-		while(match = ifRegex.exec(response))		{ match.g = 1; conditionals.push(match) }
-		while(match = elseRegex.exec(response))		{ match.g = 2; conditionals.push(match) }
-		while(match = endifRegex.exec(response))	{ match.g = 3; conditionals.push(match) }
-
-		conditionals.sort((a, b) => {
-			return a.index - b.index
-		})
-
-		let responseAfter = ''
-		let ifDepth = -1
-		let lastIndex = 0
-		let lastIf = []
-		for(let i = 0; i < conditionals.length; i++) {
-			let cond = conditionals[i]
-			responseAfter += this.processLowPrioStatements(response.substring(lastIndex, cond.index), args, msg)
-			let conditionMet = false
-			switch(cond.g) {
-				case 1:
-					ifDepth++
-					let ifArgs = this.messageToArgs(cond[1])
-					let condResult = this.processStmtCondition(ifArgs, args, msg)
-					lastIf.push(condResult)
-					conditionMet = condResult
-					break
-				case 2:
-					if((ifDepth >= 0 && lastIf.length > ifDepth && !lastIf[ifDepth]) || ifDepth < 0) {
-						conditionMet = true
-					}
-					break
-				case 3:
-					if(ifDepth > -1) {
-						ifDepth--
-						lastIf.pop()
-					}
-					break
-			}
-
-			lastIndex = cond.index + cond[0].length
-
-			if(!conditionMet && cond.g < 3) {
-				if(conditionals.length <= (i+1)) {
-					conditionals.push({g:3, index: response.length-1})
-				}
-				let condNextIndex = conditionals[i+1].index
-				lastIndex = condNextIndex
-			}
-			
-		}
-		responseAfter += this.processLowPrioStatements(response.substring(lastIndex), args, msg)
-
-		return responseAfter
-	}
 
 	processStatements(response, args, msg) {
-		let stmtRegex = /\{\{(.*?)\}\}/gs
-		let match = null
-		let responseResult = ''
-		let lastIndex = 0
-		while(match = stmtRegex.exec(response)) {
-			responseResult += response.substr(lastIndex, (match.index - lastIndex))
-			lastIndex = match.index+match[0].length
+		const self = this
+		return new Promise(async (resolve, reject) => {
+			let stmtRegex = /\{\{(.*?)\}\}/gs
+			let match = null
+			let responseResult = ''
+			let lastIndex = 0
+			while(match = stmtRegex.exec(response)) {
+				responseResult += response.substr(lastIndex, (match.index - lastIndex))
+				lastIndex = match.index+match[0].length
 
-			let stmtArgs = this.messageToArgs(match[1].trim())
-			if(stmtArgs.length > 0) {
-				stmtArgs.unshift('print')
-				responseResult += this.processStmtPrint(stmtArgs, args, msg)
+				let statment = match[1]
+				let encodeAfter = false
+				if(statment.startsWith('§') && statment.endswith('§'))
+					encodeAfter = true
+	
+				let stmtArgs = self.messageToArgs()
+				if(stmtArgs.length > 0) {
+					stmtArgs.unshift('print')
+					try {
+						let stmtResult = await self.processStmtPrint(stmtArgs, args, msg)
+						if(encodeAfter) {
+							stmtResult = encodeURIComponent(stmtResult)
+						}
+						responseResult += stmtResult
+					} catch(e) {
+						console.error(e)
+					}
+				}
 			}
-		}
-		responseResult += response.substr(lastIndex)
+			responseResult += response.substr(lastIndex)
+	
+			responseResult = self.processConditionals(responseResult, args, msg)
 
-		responseResult = this.processConditionals(responseResult, args, msg)
+			resolve(responseResult)
+		})
+	}
 
-		return responseResult
+	processConditionals(response, args, msg) {
+		const self = this
+		return new Promise(async (resolve, reject) => {
+			let ifRegex = /\{% ?if (.*?) ?%\}/igs
+			let elseRegex = /\{% ?else ?%\}/igs
+			let endifRegex = /\{% ?endif ?%\}/igs
+
+			let conditionals = []
+			while(match = ifRegex.exec(response))		{ match.g = 1; conditionals.push(match) }
+			while(match = elseRegex.exec(response))		{ match.g = 2; conditionals.push(match) }
+			while(match = endifRegex.exec(response))	{ match.g = 3; conditionals.push(match) }
+
+			conditionals.sort((a, b) => {
+				return a.index - b.index
+			})
+
+			let responseAfter = ''
+			let ifDepth = -1
+			let lastIndex = 0
+			let lastIf = []
+			for(let i = 0; i < conditionals.length; i++) {
+				let cond = conditionals[i]
+				try {
+					responseAfter += await self.processLowPrioStatements(response.substring(lastIndex, cond.index), args, msg)
+				} catch(e) { console.error(e) }
+				let conditionMet = false
+				switch(cond.g) {
+					case 1:
+						ifDepth++
+						let ifArgs = self.messageToArgs(cond[1])
+						let condResult = false
+						try {
+							condResult = await self.processStmtCondition(ifArgs, args, msg)
+						} catch(e) { console.error(e) }
+						lastIf.push(condResult)
+						conditionMet = condResult
+						break
+					case 2:
+						if((ifDepth >= 0 && lastIf.length > ifDepth && !lastIf[ifDepth]) || ifDepth < 0) {
+							conditionMet = true
+						}
+						break
+					case 3:
+						if(ifDepth > -1) {
+							ifDepth--
+							lastIf.pop()
+						}
+						break
+				}
+
+				lastIndex = cond.index + cond[0].length
+
+				if(!conditionMet && cond.g < 3) {
+					if(conditionals.length <= (i+1)) {
+						conditionals.push({g:3, index: response.length-1})
+					}
+					let condNextIndex = conditionals[i+1].index
+					lastIndex = condNextIndex
+				}
+				
+			}
+			try {
+				responseAfter += await self.processLowPrioStatements(response.substring(lastIndex), args, msg)
+			} catch(e) { console.error(e) }
+
+			resolve(responseAfter)
+		})
 	}
 
 	processLowPrioStatements(response, args, msg) {
-		let stmtRegex = /\{% ?(.*?) ?%\}/gs
-		let match = null
-		let responseResult = ''
-		let lastIndex = 0
-		while(match = stmtRegex.exec(response)) {
-			responseResult += response.substr(lastIndex, (match.index - lastIndex))
-			lastIndex = match.index+match[0].length
+		const self = this
+		return new Promise(async (resolve, reject) => {
+			let stmtRegex = /\{% ?(.*?) ?%\}/gs
+			let match = null
+			let responseResult = ''
+			let lastIndex = 0
+			while(match = stmtRegex.exec(response)) {
+				responseResult += response.substr(lastIndex, (match.index - lastIndex))
+				lastIndex = match.index+match[0].length
 
-			let stmtArgs = this.messageToArgs(match[1])
-			if(stmtArgs.length > 0) {
-				if(stmtArgs[0].toLowerCase() == 'set' && stmtArgs.length >= 4) {
-					this.processStmtSet(stmtArgs, args, msg)
-				} else if(stmtArgs[0].toLowerCase() == 'add' && stmtArgs.length >= 4) {
-					this.processStmtAdd(stmtArgs, args, msg)
-				} else if(stmtArgs[0].toLowerCase() == 'print' && stmtArgs.length >= 2) {
-					responseResult += this.processStmtPrint(stmtArgs, args, msg)
+				try {
+					let stmtArgs = self.messageToArgs(match[1])
+					if(stmtArgs.length > 0) {
+						if(stmtArgs[0].toLowerCase() == 'set' && stmtArgs.length >= 4) {
+							await self.processStmtSet(stmtArgs, args, msg)
+						} else if(stmtArgs[0].toLowerCase() == 'add' && stmtArgs.length >= 4) {
+							await self.processStmtAdd(stmtArgs, args, msg)
+						} else if(stmtArgs[0].toLowerCase() == 'print' && stmtArgs.length >= 2) {
+							responseResult += await self.processStmtPrint(stmtArgs, args, msg)
+						}
+					}
+				} catch(e) {
+					console.error(e)
 				}
 			}
-		}
-		responseResult += response.substr(lastIndex)
-		return responseResult
+
+			responseResult += response.substr(lastIndex)
+			resolve(responseResult)
+		})
 	}
 
 	processStmtSet(stmt, args, msg) {
-		let var1 = this.getVarInterface(stmt[1], args, msg)
-		let var1Index = this.getVarIndex(stmt[1], args, msg)
-		let var2 = this.getVarInterface(stmt[3], args, msg)
-		let var2Index = this.getVarIndex(stmt[3], args, msg)
+		const self = this
+		return new Promise(async (resolve, reject) => {
+			try {
+				let var1 = self.getVarInterface(stmt[1], args, msg)
+				let var1Index = self.getVarIndex(stmt[1], args, msg)
+				let var2 = self.getVarInterface(stmt[3], args, msg)
+				let var2Index = self.getVarIndex(stmt[3], args, msg)
 
-		if(var1 === null || var2 === null) return
-		if(['into', '>', '->'].indexOf(stmt[2]) >= 0) {
-			var2.setTo(var1.getValue(var1Index), var2Index)
-		} else if(['<', '<-'].indexOf(stmt[2]) >= 0) {
-			var1.setTo(var2.getValue(var2Index), var1Index)
-		}
+				if(var1 === null || var2 === null) {
+					resolve()
+					return
+				}
+				if(['into', '>', '->'].indexOf(stmt[2]) >= 0) {
+					await var2.setTo(await var1.getValue(var1Index), var2Index)
+				} else if(['<', '<-'].indexOf(stmt[2]) >= 0) {
+					await var1.setTo(await var2.getValue(var2Index), var1Index)
+				}
+			} catch(e) {
+				console.error(e)
+			}
+
+			resolve()
+		})
 	}
 
 	processStmtAdd(stmt, args, msg) {
-		let var1 = this.getVarInterface(stmt[1], args, msg)
-		let var1Index = this.getVarIndex(stmt[1], args, msg)
-		let var2 = this.getVarInterface(stmt[3], args, msg)
-		let var2Index = this.getVarIndex(stmt[3], args, msg)
+		const self = this
+		return new Promise(async (resolve, reject) => {
+			try {
+				let var1 = self.getVarInterface(stmt[1], args, msg)
+				let var1Index = self.getVarIndex(stmt[1], args, msg)
+				let var2 = self.getVarInterface(stmt[3], args, msg)
+				let var2Index = self.getVarIndex(stmt[3], args, msg)
 
-		if(var1 === null || var2 === null) return
-		if(['>', '->', 'to'].indexOf(stmt[2]) >= 0) {
-			var2.addTo(var1.getValue(var1Index), var2Index)
-		} else if(['<', '<-'].indexOf(stmt[2]) >= 0) {
-			var1.addTo(var2.getValue(var2Index), var1Index)
-		}
+				if(var1 === null || var2 === null) {
+					resolve()
+					return
+				}
+				if(['>', '->', 'to'].indexOf(stmt[2]) >= 0) {
+					await var2.addTo(await var1.getValue(var1Index), var2Index)
+				} else if(['<', '<-'].indexOf(stmt[2]) >= 0) {
+					await var1.addTo(await var2.getValue(var2Index), var1Index)
+				}
+			} catch(e) {
+				console.error(e)
+			}
+
+			resolve()
+		})
 	}
 
 	processStmtPrint(stmt, args, msg) {
-		let var1 = this.getVarInterface(stmt[1], args, msg)
-		let var1Index = this.getVarIndex(stmt[1], args, msg)
-
-		if(var1 === null) return ''
-		let value = var1.getValue(var1Index)
-		if(typeof(value) === 'string' || typeof(value) === 'number')
-			return value.toString()
-
-		return ''
+		const self = this
+		return new Promise(async (resolve, reject) => {
+			try {
+				let var1 = self.getVarInterface(stmt[1], args, msg)
+				let var1Index = self.getVarIndex(stmt[1], args, msg)
+		
+				if(var1 === null) {
+					resolve('')
+					return
+				}
+				let value = await var1.getValue(var1Index)
+				if(typeof(value) === 'string' || typeof(value) === 'number') {
+					resolve(value.toString())
+					return
+				}
+			} catch(e) {
+				console.error(e)
+			}
+	
+			resolve('')
+		})
 	}
 
 	processStmtCondition(stmt, args, msg) {
-		let var1 = this.getVarInterface(stmt[0], args, msg)
-		let var1Index = this.getVarIndex(stmt[0], args, msg)
-		let var2 = this.getVarInterface(stmt[2], args, msg)
-		let var2Index = this.getVarIndex(stmt[2], args, msg)
+		const self = this
+		return new Promise(async (resolve, reject) => {
+			try {
+				let var1 = self.getVarInterface(stmt[0], args, msg)
+				let var1Index = self.getVarIndex(stmt[0], args, msg)
+				let var2 = self.getVarInterface(stmt[2], args, msg)
+				let var2Index = self.getVarIndex(stmt[2], args, msg)
 
-		if(var1 === null || var2 === null) return false
+				if(var1 === null && var2 === null) {
+					resolve(false)
+					return
+				}
 
-		let var1Value = (var1 === null ? null : var1.getValue(var1Index))
-		let var2Value = (var2 === null ? null : var2.getValue(var2Index))
-		if(stmt[1] == '>') {
-			return var1Value > var2Value
-		} else if(stmt[1] == '<') {
-			return var1Value < var2Value
-		} else if(stmt[1] == '>=') {
-			return var1Value >= var2Value
-		} else if(stmt[1] == '<=') {
-			return var1Value <= var2Value
-		} else if(['=', '=='].indexOf(stmt[1]) >= 0) {
-			return var1Value == var2Value
-		} else if(['!=', '!'].indexOf(stmt[1]) >= 0) {
-			return var1Value != var2Value
-		}
-		return false
+				let var1Value = (var1 === null ? null : await var1.getValue(var1Index))
+				let var2Value = (var2 === null ? null : await var2.getValue(var2Index))
+				if(stmt[1] == '>') {
+					resolve(var1Value > var2Value)
+				} else if(stmt[1] == '<') {
+					resolve(var1Value < var2Value)
+				} else if(stmt[1] == '>=') {
+					resolve(var1Value >= var2Value)
+				} else if(stmt[1] == '<=') {
+					resolve(var1Value <= var2Value)
+				} else if(['=', '=='].indexOf(stmt[1]) >= 0) {
+					resolve(var1Value == var2Value)
+				} else if(['!=', '!'].indexOf(stmt[1]) >= 0) {
+					resolve(var1Value != var2Value)
+				} else if(stmt[1].toLowerCase() == 'includes') {
+					if(typeof(var1Value) === 'string' && (typeof(var2Value) === 'string' || typeof(var2Value) === 'number')) {
+						resolve(var1Value.includes(var2Value))
+					} else {
+						resolve(false)
+					}
+				} else if(stmt[1].toLowerCase() == 'startswith') {
+					if(typeof(var1Value) === 'string' && (typeof(var2Value) === 'string' || typeof(var2Value) === 'number')) {
+						resolve(var1Value.startsWith(var2Value))
+					} else {
+						resolve(false)
+					}
+				} else if(stmt[1].toLowerCase() == 'endswith') {
+					if(typeof(var1Value) === 'string' && (typeof(var2Value) === 'string' || typeof(var2Value) === 'number')) {
+						resolve(var1Value.endswith(var2Value))
+					} else {
+						resolve(false)
+					}
+				} else {
+					resolve(false)
+				}
+				return
+			} catch(e) {
+				console.error(e)
+			}
+
+			resolve(false)
+		})
 	}
 
 }
