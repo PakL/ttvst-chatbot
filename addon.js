@@ -400,7 +400,7 @@ class Bot extends UIPage {
 	 * @returns {VarInterface}
 	 */
 	getVarInterface(expression, args, msg) {
-		let matches = expression.match(/^(%(\-?[0-9]+)(,\-?[0-9]{0,})?|\/[a-z]+|\$[a-z0-9]+|(🔗|🌎|🌍|🌏)(https?:\/\/.+))(\[.+\])?$/i)
+		let matches = expression.match(/^(%(\-?[0-9]+)(,\-?[0-9]{0,})?|\/[a-z]+|\$[a-z0-9]+|(🔗|🌎|🌍|🌏)(https?:\/\/.+))(\[(.*?)\])?$/i)
 		if(matches !== null) {
 			let argMatches = matches[1].match(/^%(\-?[0-9]+)(,\-?[0-9]{0,})?$/)
 			if(argMatches) {
@@ -430,22 +430,27 @@ class Bot extends UIPage {
 	 * @param {string} expression 
 	 * @param {string[]} args 
 	 * @param {object} msg 
-	 * @returns {string|number}
+	 * @returns {Promise}
 	 */
 	getVarIndex(expression, args, msg) {
-		let matches = expression.match(/^(%[0-9]+|\/[a-z]+|\$[a-z0-9]+)(\[.+\])?$/i)
-		if(matches !== null && typeof(matches[2]) !== 'undefined') {
-			let indexStr = matches[2].substr(1, matches[2].length-2)
-			let interf = this.getVarInterface(indexStr, args, msg)
-			let interfaceIndex = this.getVarIndex(indexStr, args, msg)
-			if(interf === null) {
-				return null
+		return new Promise(async (resolve, reject) => {
+			try {
+				let matches = expression.match(/^(%(\-?[0-9]+)(,\-?[0-9]{0,})?|\/[a-z]+|\$[a-z0-9]+|(🔗|🌎|🌍|🌏)(https?:\/\/.+))(\[(.*?)\])?$/i)
+				if(matches !== null && typeof(matches[6]) !== 'undefined') {
+					let indexStr = matches[6].substr(1, matches[6].length-2)
+					let interf = this.getVarInterface(indexStr, args, msg)
+					if(interf === null) {
+						resolve(null)
+					} else {
+						resolve(await interf.getValue(indexStr))
+					}
+				} else {
+					resolve(null)
+				}
+			} catch(e) {
+				resolve(null)
 			}
-
-			return interf.getValue(interfaceIndex)
-		}
-
-		return null
+		})
 	}
 
 
@@ -481,7 +486,7 @@ class Bot extends UIPage {
 			}
 			responseResult += response.substr(lastIndex)
 	
-			responseResult = self.processConditionals(responseResult, args, msg)
+			responseResult = await self.processConditionals(responseResult, args, msg)
 
 			resolve(responseResult)
 		})
@@ -606,9 +611,9 @@ class Bot extends UIPage {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let var1 = self.getVarInterface(stmt[1], args, msg)
-				let var1Index = self.getVarIndex(stmt[1], args, msg)
+				let var1Index = await self.getVarIndex(stmt[1], args, msg)
 				let var2 = self.getVarInterface(stmt[3], args, msg)
-				let var2Index = self.getVarIndex(stmt[3], args, msg)
+				let var2Index = await self.getVarIndex(stmt[3], args, msg)
 
 				if(var1 === null || var2 === null) {
 					resolve()
@@ -632,9 +637,9 @@ class Bot extends UIPage {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let var1 = self.getVarInterface(stmt[1], args, msg)
-				let var1Index = self.getVarIndex(stmt[1], args, msg)
+				let var1Index = await self.getVarIndex(stmt[1], args, msg)
 				let var2 = self.getVarInterface(stmt[3], args, msg)
-				let var2Index = self.getVarIndex(stmt[3], args, msg)
+				let var2Index = await self.getVarIndex(stmt[3], args, msg)
 
 				if(var1 === null || var2 === null) {
 					resolve()
@@ -658,8 +663,8 @@ class Bot extends UIPage {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let var1 = self.getVarInterface(stmt[1], args, msg)
-				let var1Index = self.getVarIndex(stmt[1], args, msg)
-		
+				let var1Index = await self.getVarIndex(stmt[1], args, msg)
+
 				if(var1 === null) {
 					resolve('')
 					return
@@ -682,9 +687,9 @@ class Bot extends UIPage {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let var1 = self.getVarInterface(stmt[0], args, msg)
-				let var1Index = self.getVarIndex(stmt[0], args, msg)
+				let var1Index = await self.getVarIndex(stmt[0], args, msg)
 				let var2 = self.getVarInterface(stmt[2], args, msg)
-				let var2Index = self.getVarIndex(stmt[2], args, msg)
+				let var2Index = await self.getVarIndex(stmt[2], args, msg)
 
 				if(var1 === null && var2 === null) {
 					resolve(false)

@@ -98,11 +98,16 @@ class VarInterface {
 					index = Math.floor(index * self.value.length)
 				}
 				if(index < 0) index = 0
-				return self.value[index]
+				resolve(self.value[index])
+				return
 			}
 			if(typeof(index) == 'string' && self.getType() == 'object') {
-				if(!self.value.hasOwnProperty(index)) return null
-				return self.value[index]
+				if(!self.value.hasOwnProperty(index)) {
+					resolve(null)
+				} else {
+					resolve(self.value[index])
+				}
+				return
 			}
 
 			resolve(self.value)
