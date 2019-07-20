@@ -509,6 +509,7 @@ class Bot extends UIPage {
 			let lastIf = []
 			for(let i = 0; i < conditionals.length; i++) {
 				let cond = conditionals[i]
+				if(cond.index < lastIndex) continue
 				try {
 					responseAfter += await self.processLowPrioStatements(response.substring(lastIndex, cond.index), args, msg)
 				} catch(e) { console.error(e) }
@@ -540,11 +541,23 @@ class Bot extends UIPage {
 				lastIndex = cond.index + cond[0].length
 
 				if(!conditionMet && cond.g < 3) {
-					if(conditionals.length <= (i+1)) {
-						conditionals.push({g:3, index: response.length-1})
+					lastIndex = response.length
+					let curDepth = ifDepth
+					i++
+					while(i < conditionals.length) {
+						if(conditionals[i].g == 1) {
+							curDepth++
+						} else if(conditionals[i].g == 3 || (cond.g == 1 && conditionals[i].g == 2)) {
+							curDepth--
+						}
+						if(conditionals[i].g != 1) {
+							if(curDepth < ifDepth) {
+								lastIndex = conditionals[i].index
+								break
+							}
+						}
+						i++
 					}
-					let condNextIndex = conditionals[i+1].index
-					lastIndex = condNextIndex
 				}
 				
 			}
