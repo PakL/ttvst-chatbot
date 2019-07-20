@@ -21,6 +21,14 @@ let timestamp = function(ts, date, time){
 	return dateFormat(d, (date ? _i18n.__('mm.dd.yyyy') : '') + (date && time ? ' ' : '') + (time ? _i18n.__('hh:MMtt') : ''))
 }
 
+let timesince = function(ts){
+	let seconds = Math.floor((new Date().getTime() - ts) / 1000)
+	let minutes = Math.floor(seconds / 60); seconds -= (minutes * 60)
+	let hours = Math.floor(minutes / 60); minutes -= (hours * 60)
+
+	return _i18n.__('{{hours}} {{hours||hours}} {{minutes}} {{minutes||minutes}} {{seconds}} {{seconds||seconds}}', {'hours': hours, 'minutes': minutes, 'seconds': seconds})
+}
+
 class VarContext extends VarInterface {
 
 	constructor(name, msg) {
@@ -50,6 +58,13 @@ class VarContext extends VarInterface {
 				break
 			case 'datetime':
 				this.value = timestamp(null, true, true)
+				break
+			case 'uptime':
+				let ts = new Date().getTime()
+				if(Tool.channel.streamobject !== null && typeof(Tool.channel.streamobject.started_at) === 'string') {
+					ts = new Date(Tool.channel.streamobject.started_at).getTime()
+				}
+				this.value = timesince(ts)
 				break
 			case 'random':
 				this.value = Math.random()

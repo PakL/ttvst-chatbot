@@ -142,5 +142,38 @@
 	},
 	"The command response was empty.": {
 		"de": "Der Befehl hatte eine leere Ausgabe."
+	},
+	"{{hours}} {{hours||hours}} {{minutes}} {{minutes||minutes}} {{seconds}} {{seconds||seconds}}": {
+		"de": "{{hours}} {{hours||hours}} {{minutes}} {{minutes||minutes}} {{seconds}} {{seconds||seconds}}"
+	},
+	"hours": {
+		"en": {
+			"0": "hour",
+			"1": "hours"
+		},
+		"de": {
+			"0": "Stunde",
+			"1": "Stunden"
+		}
+	},
+	"minutes": {
+		"en": {
+			"0": "minute",
+			"1": "minutes"
+		},
+		"de": {
+			"0": "Minute",
+			"1": "Minuten"
+		}
+	},
+	"seconds": {
+		"en": {
+			"0": "second",
+			"1": "seconds"
+		},
+		"de": {
+			"0": "Sekunde",
+			"1": "Sekunden"
+		}
 	}
 }
