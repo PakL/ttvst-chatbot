@@ -13,6 +13,10 @@
 			const path = require('path')
 			let appPath = app.getAppPath()
 			const less = require(appPath + '\\node_modules\\less')
+
+			const openLinkExternal = function(url) {
+				shell.openExternal(url)
+			}
 		</script>
 		<style type="text/css" id="metro-style"></style>
 		<style type="text/css">
@@ -47,6 +51,7 @@
 					<li><a href="#chapter_1_3">Subscription</a></li>
 					<li><a href="#chapter_1_4">Host</a></li>
 					<li><a href="#chapter_1_5">Overlay command</a></li>
+					<li><a href="#chapter_1_6">Timer</a></li>
 				</ol>
 			</li>
 			<li><a href="#chapter_2">Dynamic output</a>
@@ -83,7 +88,8 @@
 			confusion. There is no specific way to create such a trigger. Just put your phrase in the command box. It is
 			strongly recommended to hang a symbol (e.g. !, ~) at the start so that the command is not executed. Slashes
 			(/) cannot be used because they are recognized by Twitch as a command and not are processed as a message.
-			For this reason slashes are used by TTVST to create other triggers.
+			For this reason slashes are used by TTVST to create other triggers.<br>
+			Classic user commands can also be triggered by any other command.
 		</p>
 		<h3 id="chapter_1_2">1.2. New follower</h3>
 		<p>
@@ -110,6 +116,13 @@
 			actually does something with the command or not. To trigger the command <code>/cmd foobar</code> you either
 			need a hotkey with the <code>foobar</code> command or make an http request on
 			<code>http://localhost:8090/send?foobar</code>
+		</p>
+		<h3 id="chapter_1_6">1.6. Timer</h3>
+		<p>
+			Timed commands can be executed with <code>/timer</code>. The clock is controlled over the cooldown time.
+			The distance must be at least 10 seconds.<br>
+			A <a onlick="openLinkExternal('https://time.is/Unix_time_converter')">Unix timestamp</a> can be used to run
+			the command once at a specific time.
 		</p>
 		
 		<h2 id="chapter_2">2. Dynamic output</h2>
@@ -270,7 +283,11 @@
 			HTTP request can be used to further enhance the possibilities of the chatbot. For HTTP requests, an HTTP
 			request is sent to the specified URL and the response is returned as it is. It should therefore be ensured
 			that this is always pure text and contains no formatting. The results are not cached. If the same URL is
-			used in another statement, a new query is started. To buffer the result, a storage variable can be used.
+			used in another statement, a new query is started. To buffer the result, a storage variable can be used.<br>
+			HTTP queries will be preceded by one of these 4 emojis: 🔗, 🌎, 🌍 or 🌏. HTTP queries are canceled after
+			10 seconds.<br>
+			<strong>Example:</strong><br>
+			<code>{% print 🔗https://twitch.center/customapi/quote?token=xxxxx&data={{§%1,§}} %}</code>
 		</p>
 		<h3 id="chapter_2_3">2.3. Preprocessing</h3>
 		<p>

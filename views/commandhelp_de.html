@@ -13,6 +13,10 @@
 			const path = require('path')
 			let appPath = app.getAppPath()
 			const less = require(appPath + '\\node_modules\\less')
+			
+			const openLinkExternal = function(url) {
+				shell.openExternal(url)
+			}
 		</script>
 		<style type="text/css" id="metro-style"></style>
 		<style type="text/css">
@@ -47,6 +51,7 @@
 					<li><a href="#chapter_1_3">Abonnement</a></li>
 					<li><a href="#chapter_1_4">Host</a></li>
 					<li><a href="#chapter_1_5">Overlay-Befehl</a></li>
+					<li><a href="#chapter_1_6">Timer</a></li>
 				</ol>
 			</li>
 			<li><a href="#chapter_2">Dynamische Ausgabe</a>
@@ -85,7 +90,8 @@
 			zu erstellen. Trag einfach deine Phrase in das Befehlsfeld. Es wird dringend empfohlen ein Symbol (z.B. !, ~)
 			an den Start zu hängen, damit der Befehl nicht aus versehen ausgeführt wird. Slashes (/) können nicht verwendet
 			werden, da diese von Twitch als Befehl erkennt und nicht als Nachricht verarbeitet. Aus diesem Grund werden
-			Slashes von TTVST verwendet um andere Auslöser zu erstellen.
+			Slashes von TTVST verwendet um andere Auslöser zu erstellen.<br>
+			Klassische Benutzerbefehle können außerdem von jedem anderen Befehl ausgelöst werden.
 		</p>
 		<h3 id="chapter_1_2">1.2. Neuer "Follower"</h3>
 		<p>
@@ -112,6 +118,13 @@
 			es keine Rolle, ob ein Overlay tatsächlich etwas mit dem Befehl anfangen kann oder nicht.<br>
 			Um den Befehl <code>/cmd foobar</code> auszulösen benötigt man entweder einen Hotkey mit dem Befehl
 			<code>foobar</code> oder macht einen HTTP-Request auf <code>http://localhost:8090/send?foobar</code>
+		</p>
+		<h3 id="chapter_1_6">1.6. Timer</h3>
+		<p>
+			Mit <code>/timer</code> können zeitgesteuerte Befehle ausgeführt werden. Der Takt wird über die Abkühlzeit
+			gesteuert. Der Abstand muss mindestens 10 Sekunden betragen.<br>
+			Es kann ein <a onlick="openLinkExternal('https://time.is/Unix_time_converter')">Unix-Timestamp</a> genutzt
+			werden um den Befehl einmalig zu einem bestimmten Zeitpunkt ausführen zu lassen.
 		</p>
 		
 		<h2 id="chapter_2">2. Dynamische Ausgabe</h2>
@@ -270,7 +283,11 @@
 			wird eine HTTP-Anfrage an die angegebene URL gesendet und die Antwort so wie sie ist zurückgegeben. Es sollte
 			also darauf geachtet werden, dass diese immer reiner Text ist und keine Formatierungen enthält. Die Ergebnisse
 			werden nicht zwischgespeichert. Wenn die selbe URL in einer weiteren Anweisung benutzt wird, wird eine neue
-			Abfrage gestartet. Um das Ergebnis zwischenzuspeichern kann eine Ablagen-Variabel genutzt werden.
+			Abfrage gestartet. Um das Ergebnis zwischenzuspeichern kann eine Ablagen-Variabel genutzt werden.<br>
+			HTTP-Abfragen werden eines dieser 4 Emojis vorangestellt: 🔗, 🌎, 🌍 oder 🌏. HTTP-Abfragen werden nach 10
+			Sekunden abgebrochen.<br>
+			<strong>Beispiel:</strong><br>
+			<code>{% print 🔗https://twitch.center/customapi/quote?token=xxxxx&data={{§%1,§}} %}</code>
 		</p>
 		<h3 id="chapter_2_3">2.3. Vorverarbeitung</h3>
 		<p>
