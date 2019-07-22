@@ -467,10 +467,14 @@ class Bot extends UIPage {
 
 				let statment = match[1]
 				let encodeAfter = false
-				if(statment.startsWith('§') && statment.endswith('§'))
+				if(statment.startsWith('§') && statment.endsWith('§')) {
 					encodeAfter = true
-	
-				let stmtArgs = self.messageToArgs()
+					statment = statment.substr(1, statment.length-2)
+				}
+				
+				statment.trim()
+
+				let stmtArgs = self.messageToArgs(statment)
 				if(stmtArgs.length > 0) {
 					stmtArgs.unshift('print')
 					try {
