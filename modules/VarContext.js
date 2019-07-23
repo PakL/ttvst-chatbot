@@ -29,6 +29,8 @@ let timesince = function(ts){
 	return _i18n.__('{{hours}} {{hours||hours}} {{minutes}} {{minutes||minutes}} {{seconds}} {{seconds||seconds}}', {'hours': hours, 'minutes': minutes, 'seconds': seconds})
 }
 
+let _contextRegister = {}
+
 class VarContext extends VarInterface {
 
 	constructor(name, msg) {
@@ -37,6 +39,11 @@ class VarContext extends VarInterface {
 		if(_i18n === null) {
 			_i18n = Tool.addons.getAddon('chatbot').i18n
 		}
+
+		if(typeof(_contextRegister[name]) === 'function') {
+			this.value = _contextRegister[name](msg)
+		}
+
 		switch(name) {
 			case 'game':
 				this.value = (Tool.channel.streamobject !== null && typeof(Tool.channel.streamobject.gamename) === 'string' ? Tool.channel.streamobject.gamename :
@@ -69,6 +76,13 @@ class VarContext extends VarInterface {
 			case 'random':
 				this.value = Math.random()
 				break
+		}
+	}
+
+	static registerContext(name, callback) {
+		if(typeof(name) === 'string' && typeof(callback) === 'function') {
+			_contextRegister[name] = callback
+			console.log('[chatbot] registered context ' + name)
 		}
 	}
 

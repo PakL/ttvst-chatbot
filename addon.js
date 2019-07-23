@@ -400,7 +400,7 @@ class Bot extends UIPage {
 	 * @returns {VarInterface}
 	 */
 	getVarInterface(expression, args, msg) {
-		let matches = expression.match(/^(%(\-?[0-9]+)(,\-?[0-9]{0,})?|\/[a-z]+|\$[a-z0-9]+|(🔗|🌎|🌍|🌏)(https?:\/\/.+))(\[(.*?)\])?$/i)
+		let matches = expression.match(/^(%(\-?[0-9]+)(,\-?[0-9]{0,})?|\/[a-z0-9]+|\$[a-z0-9]+|(🔗|🌎|🌍|🌏)(https?:\/\/.+))(\[(.*?)\])?$/i)
 		if(matches !== null) {
 			let argMatches = matches[1].match(/^%(\-?[0-9]+)(,\-?[0-9]{0,})?$/)
 			if(argMatches) {
@@ -414,7 +414,7 @@ class Bot extends UIPage {
 
 				let argSlice = args.slice(argIndex1, argIndex2)
 				return new VarArgument(argSlice.join(' '))
-			} else if(matches[1].match(/^\/[a-z]+$/i)) {
+			} else if(matches[1].match(/^\/[a-z0-9]+$/i)) {
 				return new VarContext(matches[1].substr(1).toLowerCase(), msg)
 			} else if(matches[1].match(/^\$[a-z0-9]+$/i)) {
 				return new VarStorage(matches[1].substr(1))
@@ -435,7 +435,7 @@ class Bot extends UIPage {
 	getVarIndex(expression, args, msg) {
 		return new Promise(async (resolve, reject) => {
 			try {
-				let matches = expression.match(/^(%(\-?[0-9]+)(,\-?[0-9]{0,})?|\/[a-z]+|\$[a-z0-9]+|(🔗|🌎|🌍|🌏)(https?:\/\/.+))(\[(.*?)\])?$/i)
+				let matches = expression.match(/^(%(\-?[0-9]+)(,\-?[0-9]{0,})?|\/[a-z0-9]+|\$[a-z0-9]+|(🔗|🌎|🌍|🌏)(https?:\/\/.+))(\[(.*?)\])?$/i)
 				if(matches !== null && typeof(matches[6]) !== 'undefined') {
 					let indexStr = matches[6].substr(1, matches[6].length-2)
 					let interf = this.getVarInterface(indexStr, args, msg)
@@ -742,6 +742,10 @@ class Bot extends UIPage {
 
 			resolve(false)
 		})
+	}
+
+	registerContext(name, callback) {
+		VarContext.registerContext(name, callback)
 	}
 
 }
