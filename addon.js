@@ -256,6 +256,9 @@ class Bot extends UIPage {
 	}
 
 	async executeCommand(msg, cmd, args, cmdstack) {
+		if(typeof(cmdstack) === 'undefined')
+			cmdstack = []
+
 		console.log('[chatbot] command ' + cmd.cmd + ' is being executed')
 		this.lastCommandExecution[cmd.id.toString()] = new Date().getTime()
 		let response = cmd.response
@@ -380,6 +383,7 @@ class Bot extends UIPage {
 			let cmd = this.commands[i]
 			if(!cmd.active || !cmd.cmd.toLowerCase().startsWith('/cmd ')) continue
 			if(cmd.cmd.substr(5).trim() != command.trim()) continue
+			if(typeof(this.lastCommandExecution[cmd.id.toString()]) === 'number' && this.lastCommandExecution[cmd.id.toString()] > new Date().getTime() - (cmd.timeout * 1000)) continue
 
 			this.executeCommand({'chn': this.auth.username.toLowerCase(), 'msg': cmd.cmd, 'uuid': null}, cmd)
 		}
