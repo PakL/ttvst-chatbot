@@ -4,12 +4,13 @@
 	</p>
 	<table class="datatable">
 		<thead>
-			<tr><th>{ lang_command }</th><th>{ lang_response }</th><th>{ lang_action }</th><th>{ lang_active }</th><th>{ lang_sort }</th></tr>
+			<tr><th>{ lang_command }</th><th>{ lang_response }</th><th>{ lang_perm }</th><th>{ lang_action }</th><th>{ lang_active }</th><th>{ lang_sort }</th></tr>
 		</thead>
 		<tbody>
 			<tr each={ c in commands }>
 				<td>{ c.cmd }</td>
 				<td>{ c.response }</td>
+				<td>{ permissions[c.permission] }</td>
 				<td><button onclick={ editCommand } data-cid={ c.id }>{ lang_edit }</button> <button onclick={ deleteCommand } data-cid={ c.id }>{ lang_delete }</button></td>
 				<td><label class="win10-switch"><input type="checkbox" checked={ c.active } onchange={ deactivateCommand } data-cid={ c.id }></label></td>
 				<td><button onclick={ moveUp } data-cid={ c.id }>⬆</button> <button onclick={ moveDown } data-cid={ c.id }>⬇</button></td>
@@ -17,7 +18,7 @@
 		</tbody>
 		<tfoot>
 			<tr>
-				<td colspan="5"><button onclick={ createCommand }>{ lang_new }</button></td>
+				<td colspan="6"><button onclick={ createCommand }>{ lang_new }</button></td>
 			</tr>
 		</tfoot>
 	</table>
@@ -52,6 +53,15 @@
 				this.lang_new = this.i18n.__('New Command')
 				this.lang_active = this.i18n.__('Activated')
 				this.lang_sort = this.i18n.__('Sort')
+				this.lang_perm = this.i18n.__('Permission')
+
+				this.permissions = {
+					'broadcaster': this.i18n.__('Just me'),
+					'moderators': this.i18n.__('Moderators'),
+					'vip': this.i18n.__('VIP'),
+					'subscribers': this.i18n.__('Subscribers'),
+					'everybody': this.i18n.__('Everybody')
+				}
 				this.makeAccessible()
 			},
 
