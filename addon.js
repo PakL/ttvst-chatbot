@@ -7,6 +7,8 @@ const VarStorage = require('./modules/VarStorage')
 const VarContext = require('./modules/VarContext')
 const VarRequest = require('./modules/VarRequest')
 
+const Sync = require('./sync')
+
 class Bot extends UIPage {
 
 	constructor(tool, i18n) {
@@ -29,6 +31,8 @@ class Bot extends UIPage {
 		this.hasSubscriberCmds = false
 		this.hasHostCmds = false
 		this.hasWebsocketCmds = false
+
+		this.sync = new Sync(this)
 
 
 		// Executing this event listener asynchronous will prevent blocking the message from showing (esp. on errors)
@@ -133,6 +137,7 @@ class Bot extends UIPage {
 			}
 		}
 
+		this.sync.syncCommands()
 		this.removeEventListener()
 		this.hookEventlistener()
 	}
