@@ -199,7 +199,7 @@ class Bot extends UIPage {
 	}
 
 	get icon() {
-		return '🤖'
+		return 'Robot'
 	}
 
 	open() {
