@@ -1,4 +1,7 @@
 const UIPage  = require(path.dirname(module.parent.filename) + '/../mod/uipage')
+const TMI = require(path.dirname(module.parent.filename) + '/../lib/twitchchat')
+const Helix = require(path.dirname(module.parent.filename) + '/../lib/twitchhelix')
+const TwitchAuth = require(path.dirname(module.parent.filename) + '/../mod/auth')
 const fs = require('fs')
 
 const VarInterface = require('./modules/VarInterface')
@@ -21,6 +24,8 @@ class Bot extends UIPage {
 		this.settings = this.tool.settings
 		this.i18n = i18n
 
+		this.alttmi = null
+
 		this.commands = []
 		this.lastCommandExecution = {}
 
@@ -34,6 +39,8 @@ class Bot extends UIPage {
 
 		this.sync = new Sync(this)
 
+
+		this.settings.cloudDontSync.push('chatbot_token')
 
 		// Executing this event listener asynchronous will prevent blocking the message from showing (esp. on errors)
 		this.onChatmessageListener = async (chn, ts, usr, msg_html, msg, type, uuid) => {
@@ -78,6 +85,12 @@ class Bot extends UIPage {
 		vareditViewToggle.addEventListener('click', () => { self.toggleVarEditView() })
 		vareditViewToggle.style.margin = '10px'
 		this.contentElement.appendChild(vareditViewToggle)
+
+		this.altAccountLoginBtn = document.createElement('button')
+		this.altAccountLoginBtn.innerHTML = '<span class="icon icon-twitch"></span> ' + (this.altAccountLoginToken.length > 0 ? i18n.__('Logout alternate account') : i18n.__('Use alternate account to post responses'))
+		this.altAccountLoginBtn.addEventListener('click', () => { self.altAccountLogin() })
+		this.altAccountLoginBtn.style.margin = '10px'
+		this.contentElement.appendChild(this.altAccountLoginBtn)
 
 		vareditViewToggle = document.createElement('button')
 		vareditViewToggle.innerText = '⚔️ ' + i18n.__('Back to command editor')
@@ -175,6 +188,21 @@ class Bot extends UIPage {
 			this.chat.on('autohostingyou', this.onHostListener)
 		}
 		if(this.hasWebsocketCmds) this.tool.overlays.on('command', this.onWebsocketListener)
+
+		if(this.altAccountLoginToken.length > 0) {
+			let username = this.settings.getString('chatbot_username', '')
+			if(username.length > 0) {
+				const self = this
+				this.alttmi = new TMI()
+				this.alttmi.on('connect', () => {
+					self.alttmi.auth(username, self.altAccountLoginToken)
+				})
+				this.alttmi.on('registered', () => {
+					self.alttmi.join(self.auth.username.toLowerCase())
+				})
+				this.alttmi.connect()
+			}
+		}
 	}
 
 	removeEventListener() {
@@ -196,6 +224,11 @@ class Bot extends UIPage {
 		this.chat.removeListener('hostingyou', this.onHostListener)
 		this.chat.removeListener('autohostingyou', this.onHostListener)
 		this.tool.overlays.removeListener('command', this.onWebsocketListener)
+
+		if(this.alttmi !== null) {
+			this.alttmi.disconnect()
+			this.alttmi = null
+		}
 	}
 
 	get icon() {
@@ -221,6 +254,46 @@ class Bot extends UIPage {
 		} else if(this.vareditElement.style.display == 'block') {
 			this.contentElement.style.display = 'block'
 			this.vareditElement.style.display = 'none'
+		}
+	}
+
+	get altAccountLoginToken()
+	{
+		return this.settings.getString('chatbot_token', '')
+	}
+
+	altAccountLogin()
+	{
+		if(this.altAccountLoginToken.length <= 0) {
+			let authresponseStash = TwitchAuth.prototype.authresponse
+			const self = this
+			TwitchAuth.prototype.authresponse = async (hash) => {
+				let token = ''
+				let username = ''
+				if(typeof(hash.access_token) != 'undefined' && typeof(hash.state) != 'undefined') {
+					if(self.tool.twitchapi.verifyState(hash.state)) {
+						try {
+							let h = new Helix({ token: hash.access_token })
+							let user = await h.getUsers()
+							username = user.data[0].login
+							token = hash.access_token
+						} catch(e) {}
+					}
+				}
+				self.settings.setString('chatbot_username', username)
+				self.settings.setString('chatbot_token', token)
+				self.altAccountLoginBtn.innerHTML = '<span class="icon icon-twitch"></span> ' + (self.altAccountLoginToken.length > 0 ? self.i18n.__('Logout alternate account') : self.i18n.__('Use alternate account to post responses'))
+				TwitchAuth.prototype.authresponse = authresponseStash
+				self.removeEventListener()
+				self.hookEventlistener()
+			}
+			this.auth.auth()
+		} else {
+			this.settings.setString('chatbot_username', '')
+			this.settings.setString('chatbot_token', '')
+			this.altAccountLoginBtn.innerHTML = '<span class="icon icon-twitch"></span> ' + this.i18n.__('Use alternate account to post responses')
+			this.removeEventListener()
+			this.hookEventlistener()
 		}
 	}
 
@@ -292,7 +365,11 @@ class Bot extends UIPage {
 			console.log('[chatbot] response: ' + response)
 			let cs = this.onMessage(userobj, {'chn': this.auth.username, 'usr': userobj, 'msg': response, 'uuid': null}, cmdstack)
 			if(cs === false) {
-				this.chat.sendmsg(this.auth.username, response, this.tool.cockpit.emoticons_data)
+				if(this.alttmi !== null) {
+					this.alttmi.say(this.auth.username, response)
+				} else {
+					this.chat.sendmsg(this.auth.username, response, this.tool.cockpit.emoticons_data)
+				}
 			} else if(cs === null) {
 				this.chat.showmsg('', '', this.auth.username, this.i18n.__('A command loop was detected and stopped.'), {color: '#999999'}, 1)
 			}

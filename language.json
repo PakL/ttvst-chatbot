@@ -175,5 +175,11 @@
 			"0": "Sekunde",
 			"1": "Sekunden"
 		}
+	},
+	"Logout alternate account": {
+		"de": "Alternativen Account ausloggen"
+	},
+	"Use alternate account to post responses": {
+		"de": "Alternativen Account für Antworten benutzen"
 	}
 }
