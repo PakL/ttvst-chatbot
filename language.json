@@ -181,5 +181,8 @@
 	},
 	"Use alternate account to post responses": {
 		"de": "Alternativen Account für Antworten benutzen"
+	},
+	"Filter commands": {
+		"de": "Befehle filtern"
 	}
 }

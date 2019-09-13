@@ -5,10 +5,11 @@
 	<table class="datatable">
 		<thead>
 			<tr><th>{ lang_command }</th><th>{ lang_response }</th><th>{ lang_perm }</th><th>{ lang_action }</th><th>{ lang_active }</th><th>{ lang_sort }</th></tr>
+			<tr><th colspan="6"><input class="cmd_filter" type="search" value="" placeholder={ lang_filter } onkeyup={ filterCmds } onclick={ filterCmds }></th></tr>
 		</thead>
 		<tbody>
 			<tr each={ c in commands }>
-				<td>{ c.cmd }</td>
+				<td class="cmd">{ c.cmd }</td>
 				<td>{ c.response }</td>
 				<td>{ permissions[c.permission] }</td>
 				<td><button onclick={ editCommand } data-cid={ c.id }>{ lang_edit }</button> <button onclick={ deleteCommand } data-cid={ c.id }>{ lang_delete }</button></td>
@@ -34,6 +35,9 @@
 		botcommands table td {
 			vertical-align: top;
 		}
+		botcommands input.cmd_filter {
+			width: 100%;
+		}
 	</style>
 	<script>
 		const {BrowserWindow} = remote
@@ -54,6 +58,7 @@
 				this.lang_active = this.i18n.__('Activated')
 				this.lang_sort = this.i18n.__('Sort')
 				this.lang_perm = this.i18n.__('Permission')
+				this.lang_filter = '🔍 ' + this.i18n.__('Filter commands')
 
 				this.permissions = {
 					'broadcaster': this.i18n.__('Just me'),
@@ -68,7 +73,10 @@
 			onMounted() {
 				this.loadCommands()
 			},
-			
+			onUpdated() {
+				this.filterCmds()
+			},
+
 			loadCommands() {
 				this.commands = []
 				this.update()
@@ -185,6 +193,23 @@
 				})
 				this.saveCommands()
 				this.openEditWindow(this.commands.length -1)
+			},
+
+			filterCmds() {
+				let query = this.$('input.cmd_filter').value.toLowerCase()
+				let cmdRows = this.$$('table tbody tr')
+				for(let i = 0; i < cmdRows.length; i++)
+				{
+					if(query.length <= 0) {
+						cmdRows[i].style.display = ''
+					} else {
+						if(cmdRows[i].querySelector('td.cmd').innerText.toLowerCase().indexOf(query) >= 0) {
+							cmdRows[i].style.display = ''
+						} else {
+							cmdRows[i].style.display = 'none'
+						}
+					}
+				}
 			}
 		}
 	</script>
