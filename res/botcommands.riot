@@ -5,12 +5,12 @@
 	<table class="datatable">
 		<thead>
 			<tr><th>{ lang_command }</th><th>{ lang_response }</th><th>{ lang_perm }</th><th>{ lang_action }</th><th>{ lang_active }</th><th>{ lang_sort }</th></tr>
-			<tr><th colspan="6"><input class="cmd_filter" type="search" value="" placeholder={ lang_filter } onkeyup={ filterCmds } onclick={ filterCmds }></th></tr>
+			<tr><th colspan="6"><input class="cmd_filter" type="search" value="" placeholder={ lang_filter } onkeyup={ filterCmds } onsearch={ filterCmds }></th></tr>
 		</thead>
 		<tbody>
 			<tr each={ c in commands }>
 				<td class="cmd">{ c.cmd }</td>
-				<td>{ c.response }</td>
+				<td onclick={ uncropResponse } data-cid={ c.id }>{ c.response.substr(0, 72) }<template if={ c.response.length > 72 }>…</template></td>
 				<td>{ permissions[c.permission] }</td>
 				<td><button onclick={ editCommand } data-cid={ c.id }>{ lang_edit }</button> <button onclick={ deleteCommand } data-cid={ c.id }>{ lang_delete }</button></td>
 				<td><label class="win10-switch"><input type="checkbox" checked={ c.active } onchange={ deactivateCommand } data-cid={ c.id }></label></td>
@@ -209,6 +209,17 @@
 							cmdRows[i].style.display = 'none'
 						}
 					}
+				}
+			},
+
+			uncropResponse(e) {
+				let cmd = this.getCommandByButton(e.target)
+				if(e.target.classList.contains('uncropped')) {
+					e.target.innerHTML = cmd.response.replace(/</g, '&lt;').replace(/>/g, '&gt;').substr(0, 72) + '…'
+					e.target.classList.remove('uncropped')
+				} else if(cmd.response.length > 72) {
+					e.target.innerHTML = cmd.response.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+					e.target.classList.add('uncropped')
 				}
 			}
 		}
