@@ -32,6 +32,9 @@
 		botcommands table {
 			width: 100%;
 		}
+		botcommands table tbody tr:hover {
+			background: rgba(255, 255, 255, 0.1);
+		}
 		botcommands table td {
 			vertical-align: top;
 		}
@@ -61,10 +64,10 @@
 				this.lang_filter = '🔍 ' + this.i18n.__('Filter commands')
 
 				this.permissions = {
-					'broadcaster': this.i18n.__('Just me'),
-					'moderators': this.i18n.__('Moderators'),
-					'vip': this.i18n.__('VIP'),
-					'subscribers': this.i18n.__('Subscribers'),
+					'broadcaster': '⛔ ' + this.i18n.__('Just me'),
+					'moderators': '⚔ ' + this.i18n.__('Moderators'),
+					'vip': '💎 ' + this.i18n.__('VIP'),
+					'subscribers': '⭐ ' + this.i18n.__('Subscribers'),
 					'everybody': this.i18n.__('Everybody')
 				}
 				this.makeAccessible()
