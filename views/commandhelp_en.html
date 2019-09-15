@@ -60,7 +60,7 @@
 						<ol>
 							<li><a href="#chapter_2_1_1"><code>print</code></a></li>
 							<li><a href="#chapter_2_1_2"><code>set</code></a></li>
-							<li><a href="#chapter_2_1_3"><code>add</code></a></li>
+							<li><a href="#chapter_2_1_3"><code>add</code> / <code>sub</code></a></li>
 							<li><a href="#chapter_2_1_4">Conditions</a></li>
 						</ol>
 					</li>
@@ -158,7 +158,7 @@
 			<code>{% set 123 into $num %}</code> - Set variable <code>$num</code> to <code>123</code><br>
 			<code>{% set $str &lt; "Short text" %}</code> - Set variable <code>$str</code> to <code>Short text</code>
 		</p>
-		<h3 id="chapter_2_1_3">2.1.3. <code>add</code></h3>
+		<h3 id="chapter_2_1_3">2.1.3. <code>add</code> / <code>sub</code></h3>
 		<p>
 			The <code>add</code> statement adds a value to a number variable or adds an element to a list and requires 3
 			arguments: source, direction, and destination. The direction must always be the middle argument and always
@@ -170,11 +170,15 @@
 				<li><code style="display:inline-block;text-align:left;width:30px;">&lt;</code><span style="width:20px;display:inline-block"></span>from right to left</li>
 				<li><code style="display:inline-block;text-align:left;width:30px;">&lt;-</code><span style="width:20px;display:inline-block"></span>from right to left</li>
 			</ul>
-			
 			<strong>Example:</strong><br>
 			<code>{% add 123 to $num %}</code> - (If $num is a number) Add <code>123</code> to variable <code>$num</code><br>
 			<code>{% add $list &lt; "Short text" %}</code> - (If $list is a list) Adds <code>Short text</code> to list <code>$list</code><br>
 			<code>{% add -123 to $num %}</code> - (If $num is a number) Subtract <code>123</code> from variable <code>$num</code>
+		</p>
+		<p>
+			To subtract a number use a <code>sub</code> statement like this:<br>
+			<strong>Example:</strong><br>
+			<code>{% sub 123 from $num %}</code> - ($num has to be a number) Subtract <code>123</code> from variable <code>$num</code>
 		</p>
 		<h3 id="chapter_2_1_4">2.1.4. Conditions</h3>
 		<p>
@@ -253,12 +257,14 @@
 			<ul>
 				<li><code>/game</code> : The name of the current game, which is associated with the stream. Can be empty.</li>
 				<li><code>/sender</code> : The name of the user who issued a command. For hosts, this is the hoster, follower for follows, and subscribers for subscriptions.</li>
+				<li><code>/senderlogin</code> : The login name of the user who issued a command. For hosts, this is the hoster, follower for follows, and subscribers for subscriptions.</li>
 				<li><code>/msg-uid</code> : The unique message ID. Available only with classic user commands and only with messages that were not sent from the tool.</li>
 				<li><code>/date</code> : The current date. Formatting is based on language settings.</li>
 				<li><code>/time</code> : The current time. Formatting is based on language settings.</li>
 				<li><code>/datetime</code> : The current date with the current time. Formatting is based on language settings.</li>
 				<li><code>/random</code> : A floating-point number between 0 and 1 (exclusive). If /random is used as a list index, a random list entry is selected.</li>
 				<li><code>/uptime</code> : Gives you hours, minutes and seconds since the stream started, formated based on your language setting.</li>
+				<li><code>/points</code> : Contains user points as associative array. The login name of the user is used as index. Eg.: <code>/points[/senderlogin]</code></li>
 			</ul>
 		</p>
 		<h3 id="chapter_2_2_3">2.2.3. Storage</h3>

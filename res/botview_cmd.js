@@ -22,6 +22,7 @@ window.addEventListener('load', () => {
 	let command_response = document.querySelector('#command_response')
 	let command_permission = document.querySelector('#command_permission')
 	let command_timeout = document.querySelector('#command_timeout')
+	let command_points = document.querySelector('#command_points')
 	let button_help = document.querySelector('#button_help')
 	let button_save = document.querySelector('#button_save')
 	let button_cancel = document.querySelector('#button_cancel')
@@ -31,6 +32,7 @@ window.addEventListener('load', () => {
 	command_response.value = command.response
 	command_permission.value = command.permission
 	command_timeout.value = command.timeout
+	command_points.value = (typeof(command.points) !== 'undefined' ? command.points : '0')
 
 	command_response.addEventListener('keyup', (e) => {
 		charactersRemaining(command_response, 500, char_remain)
@@ -51,7 +53,8 @@ window.addEventListener('load', () => {
 		command.cmd = command_cmd.value
 		command.response = command_response.value
 		command.permission = command_permission.value
-		command.timeout = command_timeout.value
+		command.timeout = parseFloat(command_timeout.value)
+		command.points = parseFloat(command_points.value)
 		if(command.cmd.length <= 0) command.active = false
 		commands[cmdId] = command
 

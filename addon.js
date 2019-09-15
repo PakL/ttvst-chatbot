@@ -4,6 +4,8 @@ const Helix = require(path.dirname(module.parent.filename) + '/../lib/twitchheli
 const TwitchAuth = require(path.dirname(module.parent.filename) + '/../mod/auth')
 const fs = require('fs')
 
+const { BrowserWindow } = require('electron').remote
+
 const VarInterface = require('./modules/VarInterface')
 const VarArgument = require('./modules/VarArgument')
 const VarStorage = require('./modules/VarStorage')
@@ -24,10 +26,18 @@ class Bot extends UIPage {
 		this.settings = this.tool.settings
 		this.i18n = i18n
 
+		this.settings.cloudDontSync.push('chatbot_token')
+		this.settings.cloudDontSync.push('chatbot_points')
+
 		this.alttmi = null
 
 		this.commands = []
 		this.lastCommandExecution = {}
+
+		this.points = this.settings.getJSON('chatbot_points', {})
+		this.pointsSettings = this.settings.getJSON('chatbot_points_settings', { active: false, ppm: 10, submult: 1, vipmult: 1, modmult: 1 })
+		this.pointsTimerTimeout = null
+		this.pointsOnTimerListener = null
 
 		this.timerTimeout = null
 		this.hasTimerCmds = false
@@ -38,9 +48,6 @@ class Bot extends UIPage {
 		this.hasWebsocketCmds = false
 
 		this.sync = new Sync(this)
-
-
-		this.settings.cloudDontSync.push('chatbot_token')
 
 		// Executing this event listener asynchronous will prevent blocking the message from showing (esp. on errors)
 		this.onChatmessageListener = async (chn, ts, usr, msg_html, msg, type, uuid) => {
@@ -92,6 +99,12 @@ class Bot extends UIPage {
 		this.altAccountLoginBtn.style.margin = '10px'
 		this.contentElement.appendChild(this.altAccountLoginBtn)
 
+		let pointSettingsBtn = document.createElement('button')
+		pointSettingsBtn.innerHTML = '💰 ' +  i18n.__('Points system settings')
+		pointSettingsBtn.addEventListener('click', () => { self.openPointSettings() })
+		pointSettingsBtn.style.margin = '10px'
+		this.contentElement.appendChild(pointSettingsBtn)
+
 		vareditViewToggle = document.createElement('button')
 		vareditViewToggle.innerText = '⚔️ ' + i18n.__('Back to command editor')
 		vareditViewToggle.addEventListener('click', () => { self.toggleVarEditView() })
@@ -117,7 +130,7 @@ class Bot extends UIPage {
 	}
 
 	getAppIconPath() {
-		return path.normalize(path.dirname(module.parent.filename) + '/../res/icon.ico')
+		return path.normalize(path.dirname(module.parent.filename) + '/../res/img/icon.ico')
 	}
 
 	setCommands(commands) {
@@ -203,6 +216,18 @@ class Bot extends UIPage {
 				this.alttmi.connect()
 			}
 		}
+
+		if(this.pointsSettings.active) {
+			this.pointsTimerTimeout = true
+			const self = this
+			this.pointsOnTimerListener = setTimeout(async () => {
+				self.onPointsTimer()
+				self.pointsOnTimerListener = setInterval(async () => {
+					self.onPointsTimer()
+				}, 60000)
+				self.pointsTimerTimeout = false
+			}, 60000 - (new Date().getTime() % 60000))
+		}
 	}
 
 	removeEventListener() {
@@ -229,6 +254,15 @@ class Bot extends UIPage {
 			this.alttmi.disconnect()
 			this.alttmi = null
 		}
+
+		if(this.pointsTimerTimeout !== null) {
+			if(!this.pointsTimerTimeout)
+				clearInterval(this.pointsOnTimerListener)
+			else
+				clearTimeout(this.pointsOnTimerListener)
+			this.pointsOnTimerListener = null
+		}
+		this.pointsTimerTimeout = null
 	}
 
 	get icon() {
@@ -393,7 +427,12 @@ class Bot extends UIPage {
 			let args = this.messageToArgs(message)
 			for(let i = 0; i < commands.length; i++) {
 				let cmd = commands[i]
-				this.executeCommand(msg, cmd, args, cmdstack)
+				let points = this.getPoints(user.user)
+				if(typeof(cmd.points) !== 'number') cmd.points = 0
+				if(points >= cmd.points) {
+					this.addPoints(user.user, cmd.points * -1)
+					this.executeCommand(msg, cmd, args, cmdstack)
+				}
 			}
 			return true
 		}
@@ -605,27 +644,32 @@ class Bot extends UIPage {
 			for(let i = 0; i < conditionals.length; i++) {
 				let cond = conditionals[i]
 				if(cond.index < lastIndex) continue
-				try {
-					responseAfter += await self.processLowPrioStatements(response.substring(lastIndex, cond.index), args, msg)
-				} catch(e) { console.error(e) }
 				let conditionMet = false
 				switch(cond.g) {
 					case 1:
 						ifDepth++
-						let ifArgs = self.messageToArgs(cond[1])
-						let condResult = false
-						try {
-							condResult = await self.processStmtCondition(ifArgs, args, msg)
-						} catch(e) { console.error(e) }
-						lastIf.push(condResult)
-						conditionMet = condResult
+						if(lastIf.indexOf(false) < 0) {
+							let ifArgs = self.messageToArgs(cond[1])
+							let condResult = false
+							try {
+								condResult = await self.processStmtCondition(ifArgs, args, msg)
+							} catch(e) { console.error(e) }
+							lastIf.push(condResult)
+							conditionMet = condResult
+						} else {
+							lastIf.push(false)
+						}
 						break
 					case 2:
 						if((ifDepth >= 0 && lastIf.length > ifDepth && !lastIf[ifDepth]) || ifDepth < 0) {
 							conditionMet = true
+							for(let i = 0; i < ifDepth; i++) {
+								if(!lastIf[i]) conditionMet = false
+							}
 						}
 						break
 					case 3:
+						conditionMet = true
 						if(ifDepth > -1) {
 							ifDepth--
 							lastIf.pop()
@@ -635,25 +679,16 @@ class Bot extends UIPage {
 
 				lastIndex = cond.index + cond[0].length
 
-				if(!conditionMet && cond.g < 3) {
-					lastIndex = response.length
-					let curDepth = ifDepth
-					i++
-					while(i < conditionals.length) {
-						if(conditionals[i].g == 1) {
-							curDepth++
-						} else if(conditionals[i].g == 3 || (cond.g == 1 && conditionals[i].g == 2)) {
-							curDepth--
-						}
-						if(conditionals[i].g != 1) {
-							if(curDepth < ifDepth) {
-								lastIndex = conditionals[i].index
-								break
-							}
-						}
-						i++
-					}
+				let nextIndex = -1
+				if(conditionals.length > i+1) nextIndex = conditionals[i+1].index
+				else nextIndex = response.length
+
+				if(conditionMet) {
+					try {
+						responseAfter += await self.processLowPrioStatements(response.substring(lastIndex, nextIndex), args, msg)
+					} catch(e) { console.error(e) }
 				}
+				lastIndex = nextIndex
 				
 			}
 			try {
@@ -680,7 +715,7 @@ class Bot extends UIPage {
 					if(stmtArgs.length > 0) {
 						if(stmtArgs[0].toLowerCase() == 'set' && stmtArgs.length >= 4) {
 							await self.processStmtSet(stmtArgs, args, msg)
-						} else if(stmtArgs[0].toLowerCase() == 'add' && stmtArgs.length >= 4) {
+						} else if((stmtArgs[0].toLowerCase() == 'add' || stmtArgs[0].toLowerCase() == 'sub') && stmtArgs.length >= 4) {
 							await self.processStmtAdd(stmtArgs, args, msg)
 						} else if(stmtArgs[0].toLowerCase() == 'print' && stmtArgs.length >= 2) {
 							responseResult += await self.processStmtPrint(stmtArgs, args, msg)
@@ -735,10 +770,19 @@ class Bot extends UIPage {
 					resolve()
 					return
 				}
-				if(['>', '->', 'to'].indexOf(stmt[2]) >= 0) {
+				if(stmt[0].toLowerCase() == 'add' && ['>', '->', 'to'].indexOf(stmt[2]) >= 0) {
 					await var2.addTo(await var1.getValue(var1Index), var2Index)
-				} else if(['<', '<-'].indexOf(stmt[2]) >= 0) {
+				} else if(stmt[0].toLowerCase() == 'add' && ['<', '<-'].indexOf(stmt[2]) >= 0) {
 					await var1.addTo(await var2.getValue(var2Index), var1Index)
+				} else if(stmt[0].toLowerCase() == 'sub' && stmt[2] == 'from'){
+					let val = await var1.getValue(var1Index)
+					if((typeof(val) === 'string' && val.match(/^-?([0-9]+)(\.([0-9]+))?$/))) {
+						val = parseFloat(val)
+					}
+					if(typeof(val) === 'number') {
+						val = val * -1;
+						await var2.addTo(val, var2Index)
+					}
 				}
 			} catch(e) {
 				console.error(e)
@@ -832,6 +876,87 @@ class Bot extends UIPage {
 
 	registerContext(name, callback) {
 		VarContext.registerContext(name, callback)
+	}
+
+	openPointSettings()
+	{
+		let top = BrowserWindow.getFocusedWindow()
+		if(top === null && BrowserWindow.getAllWindows().length > 0) {
+			top = BrowserWindow.getAllWindows()[0]
+		}
+		if(top !== null) {
+			let pointsWindow = new BrowserWindow({
+				title: this.i18n.__('Points system settings'),
+				parent: top,
+				modal: true,
+				autoHideMenuBar: true,
+				minimizable: false,
+				maximizable: false,
+				fullscreenable: false,
+				icon: this.getAppIconPath(),
+				width: 450,
+				height: 650,
+				minWidth: 300,
+				minHeight: 400,
+				x: top.getPosition()[0] + Math.floor(top.getSize()[0]/2) - 225,
+				y: top.getPosition()[1] + 60,
+				webPreferences: {
+					nodeIntegration: true
+				}
+			})
+			const self = this
+			pointsWindow.on('close', () => {
+				pointsWindow = null
+				self.pointsSettings = self.settings.getJSON('chatbot_points_settings', { active: false, ppm: 10, submult: 1, vipmult: 1, modmult: 1 })
+				self.removeEventListener()
+				self.hookEventlistener()
+			})
+			pointsWindow.loadURL('file://' + path.join(__dirname, 'views/pointssettings.html'))
+		}
+	}
+
+	setPoints(username, points)
+	{
+		if(typeof(username) !== 'string' || username.length <= 0 || typeof(points) !== 'number') return
+		if(typeof(this.points[username]) !== 'number') this.points[username] = 0
+		this.points[username] = points
+
+		this.settings.setJSON('chatbot_points', this.points)
+	}
+
+	addPoints(username, points)
+	{
+		if(typeof(username) !== 'string' || username.length <= 0 || typeof(points) !== 'number') return
+		if(typeof(this.points[username]) !== 'number') this.points[username] = 0
+		this.points[username] += points
+
+		this.settings.setJSON('chatbot_points', this.points)
+	}
+
+	getPoints(username)
+	{
+		if(typeof(username) !== 'string' || username.length <= 0 || typeof(this.points[username]) !== 'number') return 0
+		if(username.toLowerCase() == Tool.auth.username.toLowerCase()) return Number.MAX_SAFE_INTEGER
+		return this.points[username]
+	}
+
+	onPointsTimer() {
+		if(!this.pointsSettings.active) return
+		let ppm = this.pointsSettings.ppm
+		for(let u in this.tool.cockpit.userselement._tag.userDictonary) {
+			if(!this.tool.cockpit.userselement._tag.userDictonary.hasOwnProperty(u)) continue
+			let user = this.tool.cockpit.userselement._tag.userDictonary[u]
+
+			let points = ppm
+			let permissions = this.getPermissionLevels(typeof(user.badges) === 'string' ? user.badges : '')
+			let mult = 1
+			if(permissions.indexOf('subscribers') >= 0 && mult < this.pointsSettings.submult) mult = this.pointsSettings.submult
+			if(permissions.indexOf('vip') >= 0 && mult < this.pointsSettings.vipmult) mult = this.pointsSettings.vipmult
+			if(permissions.indexOf('moderators') >= 0 && mult < this.pointsSettings.modmult) mult = this.pointsSettings.modmult
+			points = points * mult
+
+			this.addPoints(user.user, points)
+		}
 	}
 
 }

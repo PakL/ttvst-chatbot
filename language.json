@@ -184,5 +184,44 @@
 	},
 	"Filter commands": {
 		"de": "Befehle filtern"
+	},
+	"Points system settings": {
+		"de": "Punktesystem-Einstellungen"
+	},
+	"Whether or not points are credited to users by being in chat.": {
+		"de": "Ob das automatische Guthaben-System für Benutzer im Chat aktiv sein soll."
+	},
+	"Points per Minute": {
+		"de": "Punkte pro Minute"
+	},
+	"How many points should a user get per minute (while in chat)?": {
+		"de": "Wie viele Punkte soll ein Benutzer pro Minute bekommen (während er im Chat ist)?"
+	},
+	"Subscriber multiplier": {
+		"de": "Abonnenten Multiplikator"
+	},
+	"Multiply points per minute for subscribers by this much.": {
+		"de": "Mulipliziere Punkte pro Minute für Abonnenten mit diesem Faktor."
+	},
+	"VIP multiplier": {
+		"de": "VIP Multiplikator"
+	},
+	"Multiply points per minute for VIPs by this much.": {
+		"de": "Mulipliziere Punkte pro Minute für VIPs mit diesem Faktor."
+	},
+	"Moderator multiplier": {
+		"de": "Moderator Multiplikator"
+	},
+	"Multiply points per minute for moderators by this much.": {
+		"de": "Mulipliziere Punkte pro Minute für Moderatoren mit diesem Faktor."
+	},
+	"Multiplier will not stack, the highest will be used. Multiplier will only apply when the user wrote at least one message in chat.": {
+		"de": "Multiplikatoren werden nicht aufaddiert, stattdessen wird der höchste verwendet. Multiplikatoren werden erst angewendet, wenn der Benutzer zumindest eine Nachricht im Chat geschrieben hat."
+	},
+	"Required points": {
+		"de": "Benötigte Punkte"
+	},
+	"How many points a user needs to execute the command. The required points will be taken from that user account.": {
+		"de": "Wie viele Punkte an Benutzer benötigt um einen Befehl auszuführen. Die benötigten Punkte werden vom Account des Benutzers abgezogen."
 	}
 }

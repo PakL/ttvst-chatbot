@@ -2,6 +2,7 @@ const app = require('electron').remote.app
 const VarInterface = require('./VarInterface')
 const dateFormat = require(app.getAppPath() + '/node_modules/dateformat')
 
+let _addon = null
 let _i18n = null
 let timestamp = function(ts, date, time){
 	var d = new Date()
@@ -36,8 +37,11 @@ class VarContext extends VarInterface {
 	constructor(name, msg) {
 		super(name)
 
+		if(_addon === null) {
+			_addon = Tool.addons.getAddon('chatbot')
+		}
 		if(_i18n === null) {
-			_i18n = Tool.addons.getAddon('chatbot').i18n
+			_i18n = _addon.i18n
 		}
 
 		if(typeof(_contextRegister[name]) === 'function') {
@@ -52,6 +56,10 @@ class VarContext extends VarInterface {
 			case 'sender':
 				if(typeof(msg) === 'object' && typeof(msg.usr) === 'object' && typeof(msg.usr.name) === 'string')
 					this.value = msg.usr.name
+				break
+			case 'senderlogin':
+				if(typeof(msg) === 'object' && typeof(msg.usr) === 'object' && typeof(msg.usr.user) === 'string')
+					this.value = msg.usr.user
 				break
 			case 'msg-uid':
 				if(typeof(msg) === 'object' && typeof(msg.uuid) === 'string')
@@ -76,6 +84,9 @@ class VarContext extends VarInterface {
 			case 'random':
 				this.value = Math.random()
 				break
+			case 'points':
+				this.value = _addon.points
+				break
 		}
 	}
 
@@ -86,9 +97,48 @@ class VarContext extends VarInterface {
 		}
 	}
 
-	setTo(value, index) { return new Promise((y, n) => { y() }) }
+	async getValue(index) {
+		if(this.name == 'points') index = index.toLowerCase()
+		let val = await super.getValue(index)
+		if(this.name != 'points') return val
+		if(index == Tool.auth.username.toLowerCase()) return Number.MAX_SAFE_INTEGER
+		if(val === null) return 0
+		return val
+	}
 
-	addTo(value, index) { return new Promise((y, n) => { y() }) }
+	setTo(value, index) {
+		const self = this
+		return new Promise((y, n) => {
+			if(self.name == 'points') {
+				if(typeof(value) === 'number' || (typeof(value) === 'string' && value.match(/^-?([0-9]+)(\.([0-9]+))?$/))) {
+					value = parseFloat(value)
+					index = index.toLowerCase()
+					_addon.setPoints(index, value)
+				}
+				y()
+			} else {
+				y()
+			}
+		})
+	}
+
+	addTo(value, index) {
+		const self = this
+		return new Promise((y, n) => {
+			if(self.name == 'points') {
+				if(typeof(value) === 'string' && value.match(/^-?([0-9]+)(\.([0-9]+))?$/)) {
+					value = parseFloat(value)
+				}
+				if(typeof(value) === 'number') {
+					index = index.toLowerCase()
+					_addon.addPoints(index, value)
+				}
+				y()
+			} else {
+				y()
+			}
+		})
+	}
 
 } 
 module.exports = VarContext

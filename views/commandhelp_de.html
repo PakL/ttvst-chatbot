@@ -60,7 +60,7 @@
 						<ol>
 							<li><a href="#chapter_2_1_1"><code>print</code></a></li>
 							<li><a href="#chapter_2_1_2"><code>set</code></a></li>
-							<li><a href="#chapter_2_1_3"><code>add</code></a></li>
+							<li><a href="#chapter_2_1_3"><code>add</code> / <code>sub</code></a></li>
 							<li><a href="#chapter_2_1_4">Bedingungen</a></li>
 						</ol>
 					</li>
@@ -162,7 +162,7 @@
 			<code>{% set 123 into $num %}</code> - Setzt Variabel <code>$num</code> auf <code>123</code><br>
 			<code>{% set $str &lt; "Kurzer Text" %}</code> - Setzt Variabel <code>$str</code> auf <code>Kurzer Text</code>
 		</p>
-		<h3 id="chapter_2_1_3">2.1.3. <code>add</code></h3>
+		<h3 id="chapter_2_1_3">2.1.3. <code>add</code> / <code>sub</code></h3>
 		<p>
 			Die <code>add</code>-Anweisung addiert einen Wert auf eine Nummer-Variabel oder fügt ein Element einer Liste
 			hinzu und benötigt 3 Argumente: Quelle, Richtung und Ziel. Die Richtung muss immer das mittlere Argument
@@ -178,6 +178,11 @@
 			<code>{% add 123 to $num %}</code> - (Wenn $num eine Nummer ist) Addiert <code>123</code> zu Variabel <code>$num</code><br>
 			<code>{% add $list &lt; "Kurzer Text" %}</code> - (Wenn $list eine Liste ist) Fügt <code>Kurzer Text</code> der Liste <code>$list</code> hinzu<br>
 			<code>{% add -123 to $num %}</code> - (Wenn $num eine Nummer ist) Subtrahiert <code>123</code> von Variabel <code>$num</code>
+		</p>
+		<p>
+			Um einen Nummer zu subtrahieren können Sie eine <code>sub</code>-Anweisung verwenden, wie in diesem Beispiel:<br>
+			<strong>Beispiel:</strong><br>
+			<code>{% sub 123 from $num %}</code> - ($num muss eine Nummer sein) Subtrahiert <code>123</code> von Variabel <code>$num</code>
 		</p>
 		<h3 id="chapter_2_1_4">2.1.4. Bedingungen</h3>
 		<p>
@@ -261,12 +266,14 @@
 			<ul>
 				<li><code>/game</code> : Der Name des aktuellen Spiels, das im Stream hinterlegt ist. Kann leer sein.</li>
 				<li><code>/sender</code> : Der Name des Benutzers, der einen Befehl ausgelöst hat. Bei Hosts ist dies der Hostende, bei Follows der Follower und bei Abonnements der Abonnent.</li>
+				<li><code>/senderlogin</code> : Der Loginname des Benutzers, der einen Befehl ausgelöst hat. Bei Hosts ist dies der Hostende, bei Follows der Follower und bei Abonnements der Abonnent.</li>
 				<li><code>/msg-uid</code> : Die eindeutige Nachrichts-ID. Ist nur bei klassischen Benutzerbefehlen verfügbar und nur bei Nachrichten, die nicht vom Tool aus gesendet wurden.</li>
 				<li><code>/date</code> : Das aktuelle Datum. Formatierung ist basierent auf Spracheinstellungen.</li>
 				<li><code>/time</code> : Die aktuelle Uhrzeit. Formatierung ist basierent auf Spracheinstellungen.</li>
 				<li><code>/datetime</code> : Das aktuelle Datum mit der aktuellen Uhrzeit. Formatierung ist basierent auf Spracheinstellungen.</li>
 				<li><code>/random</code> : Eine Gleitkommazahl zwischen 0 und 1 (exklusive). Wird /random als Listen-Index genutzt wird ein zufälliger Listeneintrag gewählt.</li>
 				<li><code>/uptime</code> : Gibt Stunden, Minuten und Sekunden aus seit der Stream startete, formatiert basierent auf Spracheinstellungen.</li>
+				<li><code>/points</code> : Beinhaltet die Punktekonten als assoziative Datenfelder. Als Index wird der Loginname des Benutzers verwendet. Bsp.: <code>/points[/senderlogin]</code></li>
 			</ul>
 		</p>
 		<h3 id="chapter_2_2_3">2.2.3. Ablage</h3>
