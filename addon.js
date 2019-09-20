@@ -11,6 +11,7 @@ const VarArgument = require('./modules/VarArgument')
 const VarStorage = require('./modules/VarStorage')
 const VarContext = require('./modules/VarContext')
 const VarRequest = require('./modules/VarRequest')
+const VarFile = require('./modules/VarFile')
 
 const Sync = require('./sync')
 
@@ -525,7 +526,7 @@ class Bot extends UIPage {
 	 * @returns {VarInterface}
 	 */
 	getVarInterface(expression, args, msg) {
-		let matches = expression.match(/^(%(\-?[0-9]+)(,\-?[0-9]{0,})?|\/[a-z0-9]+|\$[a-z0-9]+|(🔗|🌎|🌍|🌏)(https?:\/\/.+))(\[(.*?)\])?$/i)
+		let matches = expression.match(/^(%(\-?[0-9]+)(,\-?[0-9]{0,})?|\/[a-z0-9]+|\$[a-z0-9]+|(🔗|🌎|🌍|🌏)(https?:\/\/.+)|📝([a-z]:(.*?)))(\[(.*?)\])?$/i)
 		if(matches !== null) {
 			let argMatches = matches[1].match(/^%(\-?[0-9]+)(,\-?[0-9]{0,})?$/)
 			if(argMatches) {
@@ -545,6 +546,8 @@ class Bot extends UIPage {
 				return new VarStorage(matches[1].substr(1))
 			} else if(matches[1].match(/^(🔗|🌎|🌍|🌏)https?:\/\/.+$/i)) {
 				return new VarRequest(matches[5])
+			} else if(matches[1].match(/^📝([a-z]:(.*?))$/i)) {
+				return new VarFile(matches[6])
 			}
 		} else {
 			return new VarArgument(expression)
@@ -560,9 +563,9 @@ class Bot extends UIPage {
 	getVarIndex(expression, args, msg) {
 		return new Promise(async (resolve, reject) => {
 			try {
-				let matches = expression.match(/^(%(\-?[0-9]+)(,\-?[0-9]{0,})?|\/[a-z0-9]+|\$[a-z0-9]+|(🔗|🌎|🌍|🌏)(https?:\/\/.+))(\[(.*?)\])?$/i)
-				if(matches !== null && typeof(matches[6]) !== 'undefined') {
-					let indexStr = matches[6].substr(1, matches[6].length-2)
+				let matches = expression.match(/^(%(\-?[0-9]+)(,\-?[0-9]{0,})?|\/[a-z0-9]+|\$[a-z0-9]+|(🔗|🌎|🌍|🌏)(https?:\/\/.+)|📝([a-z]:(.*?)))(\[(.*?)\])?$/i)
+				if(matches !== null && typeof(matches[8]) !== 'undefined') {
+					let indexStr = matches[8].substr(1, matches[8].length-2)
 					let interf = this.getVarInterface(indexStr, args, msg)
 					if(interf === null) {
 						resolve(null)

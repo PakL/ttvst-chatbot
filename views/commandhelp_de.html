@@ -70,6 +70,7 @@
 							<li><a href="#chapter_2_2_2">Umgebung</a></li>
 							<li><a href="#chapter_2_2_3">Ablage</a></li>
 							<li><a href="#chapter_2_2_4">HTTP-Abfrage</a></li>
+							<li><a href="#chapter_2_2_5">Datei lesen/schreiben</a></li>
 						</ol>
 					</li>
 					<li><a href="#chapter_2_3">Vorverarbeitung</a></li>
@@ -296,6 +297,17 @@
 			Sekunden abgebrochen.<br>
 			<strong>Beispiel:</strong><br>
 			<code>{% print 🔗https://twitch.center/customapi/quote?token=xxxxx&data={{§%1,§}} %}</code>
+		</p>
+		<h3 id="chapter_2_2_5">2.2.5. Datei lesen/schreiben</h3>
+		<p>
+			Ähnlich wie die HTTP-Abfragen kannst du Dateien auslesen indem das Emoji 📝 vor einen absoluten Dateipfad
+			gesetzt wird. Anders als HTTP-Abfragen kann eine Datei aber auch beschrieben werden. Da Zeilenumbrüche
+			nicht unterstützt werden kann ein Index verwendet werden um spezifische Zeilen aus der Datei zu lesen.
+			Keinen Index zu definieren bedeutet Zeile 1.<br>
+			<strong>Beispiel:</strong><br>
+			<code>{% print 📝C:\Pfad\zu\Datei.txt %}</code> - Gibt den Inhalt der ersten Zeile aus der Datei aus<br>
+			<code>{% set $num > 📝C:\Pfad\zu\Datei.txt[1] %}</code> - Schreibt den Inhalt von $num in die zweite Zeile der Datei<br>
+			<code>{% add $str > 📝C:\Pfad\zu\Datei.txt %}</code> - Hängt den Inhalt von $str an die erste Zeile der Datei an
 		</p>
 		<h3 id="chapter_2_3">2.3. Vorverarbeitung</h3>
 		<p>
