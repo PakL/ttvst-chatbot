@@ -322,7 +322,7 @@ class Bot extends UIPage {
 				self.removeEventListener()
 				self.hookEventlistener()
 			}
-			this.auth.auth()
+			this.auth.auth('chatbot-alt')
 		} else {
 			this.settings.setString('chatbot_username', '')
 			this.settings.setString('chatbot_token', '')
