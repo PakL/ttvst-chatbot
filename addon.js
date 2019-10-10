@@ -149,7 +149,7 @@ class Bot extends UIPage {
 			let c = this.commands[i].cmd.toLowerCase()
 
 			if(c.startsWith('/timer')) {
-				if(this.commands[i].timeout > 10) {
+				if(this.commands[i].timeout >= 10) {
 					this.hasTimerCmds = true;
 					this.timerCmds.push(this.commands[i])
 				}
@@ -442,9 +442,15 @@ class Bot extends UIPage {
 	}
 
 	async onTimer() {
+		if(Tool.channel.streamobject === null || typeof(Tool.channel.streamobject.started_at) !== 'string') return
+
+		let uptime = Math.floor(( (new Date().getTime())-(new Date(Tool.channel.streamobject.started_at).getTime()) ) / 1000)
 		for(let i = 0; i < this.timerCmds.length; i++) {
 			let cmd = this.timerCmds[i]
-			if(Math.floor(new Date().getTime()/1000) % cmd.timeout != 0) continue
+			if(
+				(cmd.timeout <= 86400 && uptime % cmd.timeout != 0) ||
+				(cmd.timeout > 86400 && Math.floor(new Date().getTime() / 1000) != cmd.timeout)
+			) continue
 			this.executeCommand({'chn': this.tool.cockpit.openChannelObject.login, 'msg': cmd.cmd, 'uuid': null}, cmd)
 		}
 	}
