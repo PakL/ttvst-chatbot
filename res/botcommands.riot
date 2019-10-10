@@ -8,7 +8,7 @@
 			<tr><th colspan="6"><input class="cmd_filter" type="search" value="" placeholder={ lang_filter } onkeyup={ filterCmds } onsearch={ filterCmds }></th></tr>
 		</thead>
 		<tbody>
-			<tr each={ c in commands }>
+			<tr each={ c in commands } id="cmd_{ c.id }" draggable="true" ondragstart={ dragStart } ondragover={ dragOver } ondrop={ dropCommand }>
 				<td class="cmd">{ c.cmd }</td>
 				<td onclick={ uncropResponse } data-cid={ c.id }>{ c.response.substr(0, 72) }<template if={ c.response.length > 72 }>…</template></td>
 				<td>{ permissions[c.permission] }</td>
@@ -37,6 +37,9 @@
 		}
 		botcommands table td {
 			vertical-align: top;
+		}
+		botcommands table tr.dragover {
+			border-top: 2px solid #ffffff;
 		}
 		botcommands input.cmd_filter {
 			width: 100%;
@@ -74,6 +77,8 @@
 			},
 
 			onMounted() {
+				const self = this
+
 				this.loadCommands()
 			},
 			onUpdated() {
@@ -215,6 +220,34 @@
 						}
 					}
 				}
+			},
+
+			getRowOfTarget(target) {
+				let el = target
+				while(el.tagName !== 'TR') {
+					if(el.tagName == 'BODY') return null
+					el = el.parentNode
+				}
+				return el
+			},
+			dragStart(e) {
+				e.dataTransfer.setData('text/plain', e.target.id);
+				e.dataTransfer.effectAllowed = 'move'
+			},
+			dragOver(e) {
+				e.preventDefault()
+			},
+			dropCommand(e) {
+				let el = this.getRowOfTarget(e.target)
+				if(el === null) return
+				let sourceId = parseInt(e.dataTransfer.getData('text/plain').substr(4))
+				let targetId = parseInt(el.id.substr(4))
+
+				let sourceIndex = sourceId-1
+				let targetIndex = targetId-1
+				let source = this.commands.splice(sourceIndex, 1)
+				this.commands.splice(targetIndex, 0, source[0])
+				this.saveCommands()
 			},
 
 			uncropResponse(e) {
