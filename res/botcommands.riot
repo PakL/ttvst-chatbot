@@ -1,7 +1,6 @@
 <botcommands>
-	<p>
-		{ lang_desc }
-	</p>
+	<p>{ lang_desc }</p>
+	<p>{ lang_cloud }</p>
 	<table class="datatable">
 		<thead>
 			<tr><th>{ lang_command }</th><th>{ lang_response }</th><th>{ lang_perm }</th><th>{ lang_action }</th><th>{ lang_active }</th><th>{ lang_sort }</th></tr>
@@ -91,6 +90,11 @@
 				this.commands = Tool.settings.getJSON('bot_commands', [])
 				this.resetIds()
 				this.addon.setCommands(this.commands)
+				this.lang_cloud = (
+					Tool.settings.getBoolean('cloud-save', false)
+					? this.i18n.__('Cloud save is active. Commands for everyone are visible on {{url}}', {url: 'https://bot.ttvst.app/' + Tool.auth._username})
+					: this.i18n.__('If you enable cloud saving in settings, commands (that are accessable for everyone) will appear on https://bot.ttvst.app/')
+				)
 				this.update()
 			},
 

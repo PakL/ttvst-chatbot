@@ -272,6 +272,7 @@ class Bot extends UIPage {
 
 	open() {
 		this.contentElement.style.display = 'block'
+		this.commandListElement._tag.loadCommands()
 	}
 
 	close() {

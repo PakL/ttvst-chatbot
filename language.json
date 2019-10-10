@@ -223,5 +223,11 @@
 	},
 	"How many points a user needs to execute the command. The required points will be taken from that user account.": {
 		"de": "Wie viele Punkte an Benutzer benötigt um einen Befehl auszuführen. Die benötigten Punkte werden vom Account des Benutzers abgezogen."
+	},
+	"Cloud save is active. Commands for everyone are visible on {{url}}": {
+		"de": "Cloud-Speicherung ist aktiv. Befehle für jeden sind jetzt auf {{url}} sichtbar"
+	},
+	"If you enable cloud saving in settings, commands (that are accessable for everyone) will appear on https://bot.ttvst.app/": {
+		"de": "Wenn Cloud-Speicherung in den Einstellunge aktiviert wird, werden Befehle (die von jedem ausgeführt werden können) auf https://bot.ttvst.app/ erscheinen"
 	}
 }
