@@ -99,6 +99,14 @@
 			},
 
 			resetIds() {
+				// Filter out empty commands
+				let commands = []
+				for(let i = 0; i < this.commands.length; i++) {
+					if(this.commands[i].cmd.length > 0 || this.commands[i].response.length > 0 || this.commands[i].active) 
+						commands.push(this.commands[i])
+				}
+				this.commands = commands
+
 				for(let i = 0; i < this.commands.length; i++)
 					this.commands[i].id = (i+1)
 			},
