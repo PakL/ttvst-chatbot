@@ -952,6 +952,7 @@ class Bot extends UIPage {
 
 	onPointsTimer() {
 		if(!this.pointsSettings.active) return
+		if(this.tool.channel.streamobject == null || typeof(this.tool.channel.streamobject.started_at) == 'undefined') return
 		let ppm = this.pointsSettings.ppm
 		for(let u in this.tool.cockpit.userselement._tag.userDictonary) {
 			if(!this.tool.cockpit.userselement._tag.userDictonary.hasOwnProperty(u)) continue
