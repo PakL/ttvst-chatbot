@@ -82,6 +82,10 @@ class CommandExecution {
 			}
 		}
 
+		this.sendResponse(response)
+	}
+
+	sendResponse(response) {
 		response = response.replace(/\n/g, ' ')
 		response = response.replace(/\t/g, ' ')
 		response = response.replace(/\r/g, '')
@@ -222,11 +226,13 @@ class CommandExecution {
 			let ifRegex = /\{% ?if (.*?) ?%\}/igs
 			let elseRegex = /\{% ?else ?%\}/igs
 			let endifRegex = /\{% ?endif ?%\}/igs
+			let waitRegex = /\{% ?wait ([0-9]+) ?%\}/igs
 
 			let conditionals = []
 			while(match = ifRegex.exec(response))		{ match.g = 1; conditionals.push(match) }
 			while(match = elseRegex.exec(response))		{ match.g = 2; conditionals.push(match) }
 			while(match = endifRegex.exec(response))	{ match.g = 3; conditionals.push(match) }
+			while(match = waitRegex.exec(response))		{ match.g = 4; conditionals.push(match) }
 
 			conditionals.sort((a, b) => {
 				return a.index - b.index
@@ -269,6 +275,13 @@ class CommandExecution {
 							ifDepth--
 							lastIf.pop()
 						}
+						break
+					case 4:
+						conditionMet = true
+						this.sendResponse(responseAfter)
+						responseAfter = ''
+						let wait = parseInt(cond[1]) * 1000
+						await new Promise(res => { setTimeout(() => res(), wait) })
 						break
 				}
 
