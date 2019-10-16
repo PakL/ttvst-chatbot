@@ -1,5 +1,5 @@
 const VarInterface = require('./VarInterface')
-const request = require(path.dirname(module.parent.parent.filename) + '/../node_modules/request')
+const request = require(path.dirname(module.parent.parent.parent.filename) + '/../node_modules/request')
 
 class VarRequest extends VarInterface {
 

@@ -64,13 +64,38 @@ class CommandExecution {
 		return filteredCmds
 	}
 
-	async executeCommand(msg, cmd, args, cmdstack) {
+	onMessage(user, msg, cmdstack) {
 		if(typeof(cmdstack) === 'undefined')
 			cmdstack = []
 
+		let message = msg.msg
+		let commands = this.filterCommands(message, user)
+		if(commands.length > 0) {
+			if(cmdstack.indexOf(commands[0].id) >= 0) {
+				console.log('[chatbot] detected loop and stopped')
+				return null
+			}
+			let args = CommandExecution.messageToArgs(message)
+			for(let i = 0; i < commands.length; i++) {
+				let cmd = commands[i]
+				let points = this.bot.getPoints(user.user)
+				if(typeof(cmd.points) !== 'number') cmd.points = 0
+				if(points >= cmd.points) {
+					this.bot.addPoints(user.user, cmd.points * -1)
+					this.executeCommand(msg, cmd, args, cmdstack)
+				}
+			}
+			return true
+		}
+		return false
+	}
+
+	async executeCommand(msg, cmd, args) {
 		console.log('[chatbot] command ' + cmd.cmd + ' is being executed')
 		this.lastCommandExecution[cmd.id.toString()] = new Date().getTime()
 		let response = cmd.response
+		this.commandstack.push(cmd.id)
+
 		if(CommandExecution.hasStatement(response)) {
 			if(typeof(args) === 'undefined') args = CommandExecution.messageToArgs(msg.msg)
 			console.log('[chatbot] processing: ' + response)
@@ -92,14 +117,12 @@ class CommandExecution {
 		response = response.replace(/ +/g, ' ')
 		response = response.trim()
 		if(response.length > 0) {
-			cmdstack.push(cmd.id)
-
 			let msgtags = this.chat.usertags[this.auth.username]
 			msgtags.emotes = findEmoticons(response, this.tool.cockpit.emoticons_data)
 			let userobj = this.chat.getUserObjByTags(this.auth.username, msgtags)
 
 			console.log('[chatbot] response: ' + response)
-			let cs = this.onMessage(userobj, {'chn': this.auth.username, 'usr': userobj, 'msg': response, 'uuid': null}, cmdstack)
+			let cs = this.onMessage(userobj, {'chn': this.auth.username, 'usr': userobj, 'msg': response, 'uuid': null})
 			if(cs === false) {
 				if(this.alttmi !== null) {
 					this.alttmi.say(this.auth.username, response)
@@ -242,6 +265,12 @@ class CommandExecution {
 			let ifDepth = -1
 			let lastIndex = 0
 			let lastIf = []
+
+			if(conditionals.length > 0) {
+				responseAfter = await self.processLowPrioStatements(response.substring(0, conditionals[0].index), args, msg)
+				lastIndex = conditionals[0].index
+			}
+
 			for(let i = 0; i < conditionals.length; i++) {
 				let cond = conditionals[i]
 				if(cond.index < lastIndex) continue
