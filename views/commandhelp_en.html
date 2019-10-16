@@ -62,6 +62,7 @@
 							<li><a href="#chapter_2_1_2"><code>set</code></a></li>
 							<li><a href="#chapter_2_1_3"><code>add</code> / <code>sub</code></a></li>
 							<li><a href="#chapter_2_1_4">Conditions</a></li>
+							<li><a href="#chapter_2_1_5"><code>wait</code></a></li>
 						</ol>
 					</li>
 					<li><a href="#chapter_2_2">Variables</a>
@@ -220,6 +221,24 @@
 		{% print $num %} is lesser or equal to 5
 	{% endif %}
 {% endif %}</pre>
+		</p>
+		<h3 id="chapter_2_1_5">2.1.5. <code>wait</code></h3>
+		<p>
+			The <code>wait</code> statement expects a time value in seconds and will wait this time before processing
+			the rest of the command. The content that was generated until this statment will be send immediately.
+			So you can use <code>wait</code> to split a long message into multiple messages by setting the time to
+			<code>0</code>.
+			<strong>Example:</strong><br>
+			<code>{% wait 10 %}</code> - Sends the part that was generated up to the statement and will wait for 10 seconds.<br>
+			<code>{% wait 0 %}</code> - Sends the part that was generated up to the statement and will continue immediately.
+
+			The <code>wait</code>-Anweisung erwartet eine Zeitangabe in Sekunden und wartet diese Zeit ab, bevor der
+			Befehl weiter verarbeitet wird. Der Inhalt, der bis dahin bereits generiert wurde wird schon abgesendet.
+			Damit ist es auch möglich mit <code>wait</code> eine lange Nachricht in mehrere aufzuteilen indem eine Wartezeit
+			von <code>0</code> verwendet wird.
+			<strong>Beispiel:</strong><br>
+			<code>{% wait 10 %}</code> - Sendet den Teil, der bis zur Answeisung bereits generiert wurde und wartet 10 Sekunden.<br>
+			<code>{% wait 0 %}</code> - Sendet den Teil, der bis zur Answeisung bereits generiert wurde und führt den Rest sofort weiter aus.
 		</p>
 		<h3 id="chapter_2_2">2.2. Variables</h3>
 		<p>
