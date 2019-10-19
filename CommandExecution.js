@@ -113,12 +113,13 @@ class CommandExecution {
 		response = response.replace(/\r/g, '')
 		response = response.replace(/ +/g, ' ')
 		response = response.trim()
+
+		console.log('[chatbot] response: ' + response)
 		if(response.length > 0) {
 			let msgtags = this.chat.usertags[this.auth.username]
 			msgtags.emotes = findEmoticons(response, this.tool.cockpit.emoticons_data)
 			let userobj = this.chat.getUserObjByTags(this.auth.username, msgtags)
 
-			console.log('[chatbot] response: ' + response)
 			let cs = this.onMessage(userobj, {'chn': this.auth.username, 'usr': userobj, 'msg': response, 'uuid': null})
 			if(cs === false) {
 				if(this.alttmi !== null) {
@@ -130,7 +131,6 @@ class CommandExecution {
 				this.chat.showmsg('', '', this.auth.username, this.i18n.__('A command loop was detected and stopped.'), {color: '#999999'}, 1)
 			}
 		} else {
-			console.log('[chatbot] response: ')
 			this.chat.showmsg('', '', this.auth.username, this.i18n.__('The command response was empty.'), {color: '#999999'}, 1)
 		}
 	}
@@ -481,6 +481,10 @@ class CommandExecution {
 				} else if(stmt[1].toLowerCase() == 'includes') {
 					if(typeof(var1Value) === 'string' && (typeof(var2Value) === 'string' || typeof(var2Value) === 'number')) {
 						resolve(var1Value.includes(var2Value))
+					} else if(typeof(var1Value) === 'object' && (typeof(var2Value) === 'string' || typeof(var2Value) === 'number')) {
+						let val = var1Value
+						if(!Array.isArray(val)) val = Object.values(val)
+						resolve((val.indexOf(var2Value) >= 0))
 					} else {
 						resolve(false)
 					}
