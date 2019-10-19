@@ -75,11 +75,14 @@ class VarInterface {
 					self.value[index] += value
 				}
 			} else {
+				if(self.getType() === 'undefined') {
+					self.value = []
+				}
 				if(typeof(value) === 'number' && self.getType() === 'number') {
 					self.value += value
 				} else if(self.getType() === 'array') {
 					self.value.push(value)
-				} else if(self.getType() === 'undefined') {
+				} else {
 					self.value = value
 				}
 			}
