@@ -114,6 +114,36 @@ class VarInterface {
 		})
 	}
 
+	delete(index) {
+		const self = this
+		return new Promise((resolve, reject) => {
+			if(typeof(index) == 'number' && self.getType() == 'array') {
+				self.value.splice(index, 1)
+				resolve()
+				return
+			}
+			if(typeof(index) == 'string' && self.getType() == 'object') {
+				delete self.value[index]
+				resolve()
+				return
+			}
+
+			switch(self.getType()) {
+				case 'array':
+					self.value = []
+					break
+				case 'object':
+					self.value = {}
+					break
+				default:
+					self.value = null
+					break
+			}
+
+			resolve()
+		})
+	}
+
 	toString() {
 		if(this.type === 'object') {
 			let v = []

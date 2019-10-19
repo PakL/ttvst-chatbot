@@ -68,5 +68,19 @@ class VarFile extends VarInterface {
 		})
 	}
 
+	delete(index) {
+		const self = this
+		return new Promise((y, n) => {
+			let rows = []
+			if(typeof(index) == 'string' || typeof(index) == 'number') {
+				rows = self.loadFile()
+				index = self.validateIndex(index)
+				rows[index] = ''
+			}
+			self.saveFile(rows)
+			y()
+		})
+	}
+
 } 
 module.exports = VarFile

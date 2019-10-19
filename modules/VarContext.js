@@ -113,7 +113,7 @@ class VarContext extends VarInterface {
 		const self = this
 		return new Promise((y, n) => {
 			if(self.name == 'points') {
-				if(typeof(value) === 'number' || (typeof(value) === 'string' && value.match(/^-?([0-9]+)(\.([0-9]+))?$/))) {
+				if(typeof(index) === 'string' && typeof(value) === 'number' || (typeof(value) === 'string' && value.match(/^-?([0-9]+)(\.([0-9]+))?$/))) {
 					value = parseFloat(value)
 					index = index.toLowerCase()
 					_addon.setPoints(index, value)
@@ -132,9 +132,24 @@ class VarContext extends VarInterface {
 				if(typeof(value) === 'string' && value.match(/^-?([0-9]+)(\.([0-9]+))?$/)) {
 					value = parseFloat(value)
 				}
-				if(typeof(value) === 'number') {
+				if(typeof(index) === 'string' && typeof(value) === 'number') {
 					index = index.toLowerCase()
 					_addon.addPoints(index, value)
+				}
+				y()
+			} else {
+				y()
+			}
+		})
+	}
+
+	delete(index) {
+		const self = this
+		return new Promise((y, n) => {
+			if(self.name == 'points') {
+				if(typeof(index) === 'string') {
+					index = index.toLowerCase()
+					_addon.setPoints(index, 0)
 				}
 				y()
 			} else {

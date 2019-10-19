@@ -36,5 +36,16 @@ class VarStorage extends VarInterface {
 		})
 	}
 
+	delete(index) {
+		const self = this
+		return new Promise(async (y, n) => {
+			try {
+				super.delete(index)
+			} catch(e) { console.error(e) }
+			self.save()
+			y()
+		})
+	}
+
 } 
 module.exports = VarStorage

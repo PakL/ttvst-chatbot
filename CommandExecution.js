@@ -353,6 +353,8 @@ class CommandExecution {
 							await self.processStmtAdd(stmtArgs, args, msg)
 						} else if(stmtArgs[0].toLowerCase() == 'print' && stmtArgs.length >= 2) {
 							responseResult += await self.processStmtPrint(stmtArgs, args, msg)
+						} else if(stmtArgs[0].toLowerCase() == 'delete' && stmtArgs.length >= 2) {
+							await self.processStmtDelete(stmtArgs, args, msg)
 						}
 					}
 				} catch(e) {
@@ -447,6 +449,26 @@ class CommandExecution {
 			}
 	
 			resolve('')
+		})
+	}
+
+	processStmtDelete(stmt, args, msg) {
+		const self = this
+		return new Promise(async (resolve, reject) => {
+			try {
+				let var1 = self.getVarInterface(stmt[1], args, msg)
+				let var1Index = await self.getVarIndex(stmt[1], args, msg)
+
+				if(var1 === null) {
+					resolve()
+					return
+				}
+				await var1.delete(var1Index)
+			} catch(e) {
+				console.error(e)
+			}
+
+			resolve()
 		})
 	}
 

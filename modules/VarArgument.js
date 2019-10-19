@@ -17,5 +17,7 @@ class VarArgument extends VarInterface {
 
 	addTo(value, index) { return new Promise((y, n) => { y() }) }
 
+	delete(index) { return new Promise((y, n) => { y() }) }
+
 } 
 module.exports = VarArgument
