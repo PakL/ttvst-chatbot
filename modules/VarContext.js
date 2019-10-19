@@ -87,6 +87,9 @@ class VarContext extends VarInterface {
 			case 'points':
 				this.value = _addon.points
 				break
+			case 'ranks':
+				this.value = require('../CommandExecution').getPermissionLevels(msg.usr.badges)
+				break
 		}
 	}
 
