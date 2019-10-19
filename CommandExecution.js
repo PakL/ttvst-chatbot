@@ -64,14 +64,11 @@ class CommandExecution {
 		return filteredCmds
 	}
 
-	onMessage(user, msg, cmdstack) {
-		if(typeof(cmdstack) === 'undefined')
-			cmdstack = []
-
+	onMessage(user, msg) {
 		let message = msg.msg
 		let commands = this.filterCommands(message, user)
 		if(commands.length > 0) {
-			if(cmdstack.indexOf(commands[0].id) >= 0) {
+			if(this.commandstack.indexOf(commands[0].id) >= 0) {
 				console.log('[chatbot] detected loop and stopped')
 				return null
 			}
@@ -82,7 +79,7 @@ class CommandExecution {
 				if(typeof(cmd.points) !== 'number') cmd.points = 0
 				if(points >= cmd.points) {
 					this.bot.addPoints(user.user, cmd.points * -1)
-					this.executeCommand(msg, cmd, args, cmdstack)
+					this.executeCommand(msg, cmd, args, this.commandstack)
 				}
 			}
 			return true
