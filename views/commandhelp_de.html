@@ -63,6 +63,7 @@
 							<li><a href="#chapter_2_1_3"><code>add</code> / <code>sub</code></a></li>
 							<li><a href="#chapter_2_1_4">Bedingungen</a></li>
 							<li><a href="#chapter_2_1_5"><code>wait</code></a></li>
+							<li><a href="#chapter_2_1_6"><code>delete</code></a></li>
 						</ol>
 					</li>
 					<li><a href="#chapter_2_2">Variabeln</a>
@@ -232,10 +233,21 @@
 			Die <code>wait</code>-Anweisung erwartet eine Zeitangabe in Sekunden und wartet diese Zeit ab, bevor der
 			Befehl weiter verarbeitet wird. Der Inhalt, der bis dahin bereits generiert wurde wird schon abgesendet.
 			Damit ist es auch möglich mit <code>wait</code> eine lange Nachricht in mehrere aufzuteilen indem eine Wartezeit
-			von <code>0</code> verwendet wird.
+			von <code>0</code> verwendet wird.<br>
 			<strong>Beispiel:</strong><br>
 			<code>{% wait 10 %}</code> - Sendet den Teil, der bis zur Answeisung bereits generiert wurde und wartet 10 Sekunden.<br>
-			<code>{% wait 0 %}</code> - Sendet den Teil, der bis zur Answeisung bereits generiert wurde und führt den Rest sofort weiter aus.</code>
+			<code>{% wait 0 %}</code> - Sendet den Teil, der bis zur Answeisung bereits generiert wurde und führt den Rest sofort weiter aus.
+		</p>
+		<h3 id="chapter_2_1_6">2.1.6. <code>delete</code></h3>
+		<p>
+			Die <code>delete</code>-Anweisung kann benutzt werden um Inhalte von Variablen zu löschen. Die Variabeln an
+			sich werden nicht gelöscht. Besonders nützlich ist die <code>delete</code>-Anweisung daher für Listen und
+			assoziative Datenfelder um Einträge zu löschen oder die Listen und Datenfelder zu leeren.<br>
+			<strong>Beispiel:</strong><br>
+			<code>{% delete $list %}</code> - Wenn $list eine Liste: leert die Liste<br>
+			<code>{% delete $array %}</code> - Wenn $array assoziative Datenfelder: leert die assoziative Datenfelder<br>
+			<code>{% delete $list[2] %}</code> - Wenn $list eine Liste: löscht den dritten Eintrag der Liste<br>
+			<code>{% delete $array[abc] %}</code> - Wenn $array assoziative Datenfelder: Löscht das Feld mit dem Schlüssel abc
 		</p>
 		<h3 id="chapter_2_2">2.2. Variabeln</h3>
 		<p>
