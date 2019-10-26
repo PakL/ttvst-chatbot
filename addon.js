@@ -70,6 +70,7 @@ class Bot extends UIPage {
 		this.onSubscriberListener = async (chn, usr, tags, msg) => { self.onSubscriber(chn, usr, tags, msg) }
 		this.onHostListener = async (chn, usr, viewers, msg, tags) => { self.onHost(chn, usr, viewers, msg, tags) }
 		this.onWebsocketListener = async (command) => { self.onWebsocket(command) }
+		this.onChannelPointsListener = async (id, title, user, cost, icon) => { self.onChannelPoints(id, title, user, cost, icon) }
 
 		let botcommandsTag = fs.readFileSync(__dirname.replace(/\\/g, '/') + '/res/botcommands.riot', { encoding: 'utf8' })
 		let bcCode = riot.compileFromString(botcommandsTag).code
@@ -141,6 +142,8 @@ class Bot extends UIPage {
 		this.hasSubscriberCmds = false
 		this.hasHostCmds = false
 		this.hasWebsocketCmds = false
+		this.hasChannelPointsCmds = false
+
 		for(let i = 0; i < this.commands.length; i++) {
 			if(!this.commands[i].active) continue
 			let c = this.commands[i].cmd.toLowerCase()
@@ -158,6 +161,8 @@ class Bot extends UIPage {
 				this.hasHostCmds = true;
 			} else if(c.startsWith('/cmd ')) {
 				this.hasWebsocketCmds = true;
+			} else if(c.startsWith('/redeemed ')) {
+				this.hasChannelPointsCmds = true
 			}
 		}
 
@@ -199,6 +204,7 @@ class Bot extends UIPage {
 			this.chat.on('autohostingyou', this.onHostListener)
 		}
 		if(this.hasWebsocketCmds) this.tool.overlays.on('command', this.onWebsocketListener)
+		if(this.hasChannelPointsCmds) this.tool.pubsub.on('reward-redeemed', this.onChannelPointsListener)
 
 		if(this.altAccountLoginToken.length > 0) {
 			let username = this.settings.getString('chatbot_username', '')
@@ -247,6 +253,7 @@ class Bot extends UIPage {
 		this.chat.removeListener('hostingyou', this.onHostListener)
 		this.chat.removeListener('autohostingyou', this.onHostListener)
 		this.tool.overlays.removeListener('command', this.onWebsocketListener)
+		this.tool.pubsub.removeListener('reward-redeemed', this.onChannelPointsListener)
 
 		if(this.alttmi !== null) {
 			this.alttmi.disconnect()
@@ -466,6 +473,18 @@ class Bot extends UIPage {
 			if(typeof(this.lastCommandExecution[cmd.id.toString()]) === 'number' && this.lastCommandExecution[cmd.id.toString()] > new Date().getTime() - (cmd.timeout * 1000)) continue
 
 			this.executeCommand({'chn': this.auth.username.toLowerCase(), 'msg': cmd.cmd, 'uuid': null}, cmd)
+		}
+	}
+
+	onChannelPoints(id, title, user, cost, icon) {
+		for(let i = 0; i < this.commands.length; i++) {
+			let cmd = this.commands[i]
+			if(!cmd.active || !cmd.cmd.toLowerCase().startsWith('/redeemed ')) continue
+			if(cmd.cmd.substr(10).trim() != title && cmd.cmd.substr(10).trim() != id) continue
+			if(typeof(this.lastCommandExecution[cmd.id.toString()]) === 'number' && this.lastCommandExecution[cmd.id.toString()] > new Date().getTime() - (cmd.timeout * 1000)) continue
+
+			let msg = '/redeemed ' + title + ' ' + cost
+			this.executeCommand({'chn': this.auth.username.toLowerCase(), 'usr': { user: user.login, name: user.display_name }, 'msg': msg, 'uuid': null}, cmd)
 		}
 	}
 

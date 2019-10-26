@@ -52,6 +52,7 @@
 					<li><a href="#chapter_1_4">Host</a></li>
 					<li><a href="#chapter_1_5">Overlay command</a></li>
 					<li><a href="#chapter_1_6">Timer</a></li>
+					<li><a href="#chapter_1_7">Channel point rewards</a></li>
 				</ol>
 			</li>
 			<li><a href="#chapter_2">Dynamic output</a>
@@ -127,7 +128,13 @@
 			A <a onclick="openLinkExternal('https://time.is/Unix_time_converter')">Unix timestamp</a> can be used to run
 			the command once at a specific time.
 		</p>
-		
+		<h3 id="chapter_1_7">1.7. Channel point rewards</h3>
+		<p>
+			This trigger will be active on every custom channel points reward redemption. The reward title and the cost of the
+			reward will be available through the <a href="#chapter_2_2_1">argument variables</a> %1 and %2.
+			The trigger requires the reward title like this: <code>/redeemed Rewardtitle</code>.
+		</p>
+
 		<h2 id="chapter_2">2. Dynamic output</h2>
 		<p>
 			In addition to a simple output, statements can also be used in the command output to generate dynamic output.
