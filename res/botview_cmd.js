@@ -34,6 +34,12 @@ window.addEventListener('load', () => {
 	command_timeout.value = command.timeout
 	command_points.value = (typeof(command.points) !== 'undefined' ? command.points : '0')
 
+	if(command.cmd.length <= 0 && command.active) {
+		command.active = false
+		commands[cmdId] = command
+		setJSON('bot_commands', commands)
+	}
+
 	command_response.addEventListener('keyup', (e) => {
 		charactersRemaining(command_response, 500, char_remain)
 	})
