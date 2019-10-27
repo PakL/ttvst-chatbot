@@ -56,7 +56,9 @@ function  setJSON(name, value) {
 }
 
 
-let lang = getString('language', 'en')
+let locale = app.getLocale().toLowerCase()
+if(['en', 'de'].indexOf(locale) < 0) locale = 'en'
+let lang = getString('language', locale)
 let i18n = new i18n_mod(lang, document.location.pathname.substr(1, document.location.pathname.lastIndexOf('/')) + '../language.json')
 
 window.addEventListener('load', () => {
