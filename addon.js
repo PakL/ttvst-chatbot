@@ -120,8 +120,30 @@ class Bot extends UIPage {
 		this.vareditElement.appendChild(this.variablesListElement)
 		riot.mount(this.variablesListElement, {i18n: i18n, addonDirname: __dirname, addon: this})
 
+
+
+		this.rewardWindow = document.createElement('webview')
+		this.rewardWindow.style.display = 'none'
+		this.contentElement.appendChild(this.rewardWindow)
+		this.rewardWindow.addEventListener('console-message', (log) => {
+			if(log.message.startsWith('retry:')) {
+				try {
+					let options = JSON.parse(log.message.substr(6))
+					if(options.attempt < 3) {
+						console.log('[chatbot] Reward status update unsuccessful, retrying in 2 seconds')
+						setTimeout(() => {
+							self.updateRewardStatus(options.reward, options.user, options.executed, options.attempt)
+						}, 2000)
+					} else {
+						console.log('[chatbot] Reward status update unsuccessful, giving up')
+					}
+				} catch(e) {}
+			}
+		})
+
 		this.tool.cockpit.on('channelopen', () => {
 			this.hookEventlistener()
+			this.loadRewardQueue()
 		})
 		this.tool.cockpit.on('channelleft', () => {
 			this.removeEventListener()
@@ -477,14 +499,20 @@ class Bot extends UIPage {
 	}
 
 	onChannelPoints(id, title, user, cost, icon) {
+		let rewardState = 0
 		for(let i = 0; i < this.commands.length; i++) {
 			let cmd = this.commands[i]
 			if(!cmd.active || !cmd.cmd.toLowerCase().startsWith('/redeemed ')) continue
 			if(cmd.cmd.substr(10).trim() != title && cmd.cmd.substr(10).trim() != id) continue
+			if(rewardState < 1) rewardState = 1
 			if(typeof(this.lastCommandExecution[cmd.id.toString()]) === 'number' && this.lastCommandExecution[cmd.id.toString()] > new Date().getTime() - (cmd.timeout * 1000)) continue
 
 			let msg = '/redeemed ' + title + ' ' + cost
 			this.executeCommand({'chn': this.auth.username.toLowerCase(), 'usr': { user: user.login, name: user.display_name }, 'msg': msg, 'uuid': null}, cmd)
+			if(rewardState < 2) rewardState = 2
+		}
+		if(rewardState > 0) {
+			this.updateRewardStatus(title, user.display_name, (rewardState == 1 ? false : true))
 		}
 	}
 
@@ -585,6 +613,30 @@ class Bot extends UIPage {
 
 			this.addPoints(user.user, points)
 		}
+	}
+
+	loadRewardQueue() {
+		if(!this.tool.cockpit.openChannelObject.hasOwnProperty('login') || this.tool.cockpit.openChannelObject.login.toLowerCase() != this.auth.username.toLowerCase()) return
+		this.rewardWindow.setAttribute('src', 'https://www.twitch.tv/popout/' + this.tool.cockpit.openChannelObject.login.toLowerCase() + '/reward-queue')
+	}
+
+	updateRewardStatus(title, user, executed, attempt) {
+		if(typeof(attempt) !== 'number') attempt = 0
+		console.log('[chatbot] Marking reward as ' + (executed ? 'satisfied' : 'rejected') + ' for ' + user + '\'s ' + title + ' (attempt ' + attempt + ')')
+		this.rewardWindow.getWebContents().executeJavaScript('\
+			var rewardsObjects = document.querySelectorAll(\'.redemption-card__card-body\');\
+			var success = false;\
+			for(var i = 0; i < rewardsObjects.length; i++) {\
+				var rwname = rewardsObjects[i].querySelector(\'.tw-flex > .tw-item-order-0 h4\').innerText;\
+				var usname = rewardsObjects[i].querySelector(\'.tw-flex > .tw-item-order-1 h4\').innerText;\
+				if(rwname == "' + title.replace(/"/g, '\\"') + '" && usname.toLowerCase() == "' + user.toLowerCase().replace(/"/g, '\\"') + '") {\
+					rewardsObjects[i].querySelectorAll(\'button\')[' + (executed ? '0' : '1') + '].click();\
+					success = true;\
+				}\
+			}\
+			if(!success)\
+				console.log(\'retry:\' + JSON.stringify({user:\'' + title.replace(/'/g, '\\\'') + '\',reward:\'' + user.replace(/'/g, '\\\'') + '\',executed:' + (executed ? 'true' : 'false') + ',attempt:' + (attempt+1) + '}));\
+		', true);
 	}
 
 }
