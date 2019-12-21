@@ -56,7 +56,7 @@ class CommandExecution {
 		for(let i = 0; i < this.commands.length; i++) {
 			if(!this.commands[i].active) continue
 			if(message != this.commands[i].cmd && !message.startsWith(this.commands[i].cmd + ' ')) continue
-			if(typeof(this.lastCommandExecution[this.commands[i].id.toString()]) === 'number' && this.lastCommandExecution[this.commands[i].id.toString()] > new Date().getTime() - (this.commands[i].timeout * 1000)) continue
+			if(typeof(this.bot.lastCommandExecution[this.commands[i].id.toString()]) === 'number' && this.bot.lastCommandExecution[this.commands[i].id.toString()] > new Date().getTime() - (this.commands[i].timeout * 1000)) continue
 			if(permLevels.indexOf(this.commands[i].permission) < 0) continue
 
 			filteredCmds.push(this.commands[i])
@@ -89,7 +89,7 @@ class CommandExecution {
 
 	async executeCommand(msg, cmd, args) {
 		console.log('[chatbot] command ' + cmd.cmd + ' is being executed')
-		this.lastCommandExecution[cmd.id.toString()] = new Date().getTime()
+		this.bot.lastCommandExecution[cmd.id.toString()] = new Date().getTime()
 		let response = cmd.response
 		this.commandstack.push(cmd.id)
 

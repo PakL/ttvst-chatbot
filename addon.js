@@ -131,9 +131,7 @@ class Bot extends UIPage {
 					let options = JSON.parse(log.message.substr(6))
 					if(options.attempt < 3) {
 						console.log('[chatbot] Reward status update unsuccessful, retrying in 2 seconds')
-						setTimeout(() => {
-							self.updateRewardStatus(options.reward, options.user, options.executed, options.attempt)
-						}, 2000)
+						self.updateRewardStatus(options.reward, options.user, options.executed, options.attempt)
 					} else {
 						console.log('[chatbot] Reward status update unsuccessful, giving up')
 					}
@@ -622,21 +620,24 @@ class Bot extends UIPage {
 
 	updateRewardStatus(title, user, executed, attempt) {
 		if(typeof(attempt) !== 'number') attempt = 0
-		console.log('[chatbot] Marking reward as ' + (executed ? 'satisfied' : 'rejected') + ' for ' + user + '\'s ' + title + ' (attempt ' + attempt + ')')
-		this.rewardWindow.getWebContents().executeJavaScript('\
-			var rewardsObjects = document.querySelectorAll(\'.redemption-card__card-body\');\
-			var success = false;\
-			for(var i = 0; i < rewardsObjects.length; i++) {\
-				var rwname = rewardsObjects[i].querySelector(\'.tw-flex > .tw-item-order-0 h4\').innerText;\
-				var usname = rewardsObjects[i].querySelector(\'.tw-flex > .tw-item-order-1 h4\').innerText;\
-				if(rwname == "' + title.replace(/"/g, '\\"') + '" && usname.toLowerCase() == "' + user.toLowerCase().replace(/"/g, '\\"') + '") {\
-					rewardsObjects[i].querySelectorAll(\'button\')[' + (executed ? '0' : '1') + '].click();\
-					success = true;\
+		const self = this
+		setTimeout(() => {
+			console.log('[chatbot] Marking reward as ' + (executed ? 'satisfied' : 'rejected') + ' for ' + user + '\'s ' + title + ' (attempt ' + attempt + ')')
+			self.rewardWindow.getWebContents().executeJavaScript('\
+				var rewardsObjects = document.querySelectorAll(\'.redemption-card__card-body\');\
+				var success = false;\
+				for(var i = 0; i < rewardsObjects.length; i++) {\
+					var rwname = rewardsObjects[i].querySelector(\'.tw-flex > .tw-item-order-0 h4\').innerText;\
+					var usname = rewardsObjects[i].querySelector(\'.tw-flex > .tw-item-order-1 h4\').innerText;\
+					if(rwname == "' + title.replace(/"/g, '\\"') + '" && usname.toLowerCase() == "' + user.toLowerCase().replace(/"/g, '\\"') + '") {\
+						rewardsObjects[i].querySelectorAll(\'button\')[' + (executed ? '0' : '1') + '].click();\
+						success = true;\
+					}\
 				}\
-			}\
-			if(!success)\
-				console.log(\'retry:\' + JSON.stringify({user:\'' + title.replace(/'/g, '\\\'') + '\',reward:\'' + user.replace(/'/g, '\\\'') + '\',executed:' + (executed ? 'true' : 'false') + ',attempt:' + (attempt+1) + '}));\
-		', true);
+				if(!success)\
+					console.log(\'retry:\' + JSON.stringify({user:\'' + title.replace(/'/g, '\\\'') + '\',reward:\'' + user.replace(/'/g, '\\\'') + '\',executed:' + (executed ? 'true' : 'false') + ',attempt:' + (attempt+1) + '}));\
+			', true)
+		}, 2000)
 	}
 
 }
