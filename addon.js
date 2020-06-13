@@ -614,24 +614,28 @@ class Bot extends UIPage {
 	}
 
 	loadRewardQueue() {
-		if(!this.tool.cockpit.openChannelObject.hasOwnProperty('login') || this.tool.cockpit.openChannelObject.login.toLowerCase() != this.auth.username.toLowerCase()) return
-		this.rewardWindow.setAttribute('src', 'https://www.twitch.tv/popout/' + this.tool.cockpit.openChannelObject.login.toLowerCase() + '/reward-queue')
+		this.rewardWindow.setAttribute('src', 'https://www.twitch.tv/popout/wolfsterror/reward-queue')
+		//if(!this.tool.cockpit.openChannelObject.hasOwnProperty('login') || this.tool.cockpit.openChannelObject.login.toLowerCase() != this.auth.username.toLowerCase()) return
+		//this.rewardWindow.setAttribute('src', 'https://www.twitch.tv/popout/' + this.tool.cockpit.openChannelObject.login.toLowerCase() + '/reward-queue')
 	}
 
 	updateRewardStatus(title, user, executed, attempt) {
 		if(typeof(attempt) !== 'number') attempt = 0
+		if(attempt > 5) return; // Give up
+
 		const self = this
 		setTimeout(() => {
 			console.log('[chatbot] Marking reward as ' + (executed ? 'satisfied' : 'rejected') + ' for ' + user + '\'s ' + title + ' (attempt ' + attempt + ')')
 			self.rewardWindow.getWebContents().executeJavaScript('\
-				var rewardsObjects = document.querySelectorAll(\'.redemption-card__card-body\');\
+				var rewardsObjects = document.querySelectorAll(\'.redemption-list-item__body\');\
 				var success = false;\
 				for(var i = 0; i < rewardsObjects.length; i++) {\
-					var rwname = rewardsObjects[i].querySelector(\'.tw-flex > .tw-item-order-0 h4\').innerText;\
-					var usname = rewardsObjects[i].querySelector(\'.tw-flex > .tw-item-order-1 h4\').innerText;\
+					var rwname = rewardsObjects[i].querySelector(\'.tw-align-items-start p.tw-semibold\').innerText;\
+					var usname = rewardsObjects[i].querySelector(\'.redemption-list-item__context span > span\').innerText;\
 					if(rwname == "' + title.replace(/"/g, '\\"') + '" && usname.toLowerCase() == "' + user.toLowerCase().replace(/"/g, '\\"') + '") {\
-						rewardsObjects[i].querySelectorAll(\'button\')[' + (executed ? '0' : '1') + '].click();\
+						rewardsObjects[i].querySelector(\'button[data-test-selector="' + (executed ? 'complete' : 'reject') + '-button"]\').click();\
 						success = true;\
+						break;\
 					}\
 				}\
 				if(!success)\

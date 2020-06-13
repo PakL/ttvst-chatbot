@@ -1,7 +1,7 @@
 {
 	"name": "chatbot",
 	"description": "A chatbot for TTVST. Let's you automate responses, and such...",
-	"version": "1.6.1",
+	"version": "1.6.2",
 	"systems": ["win32"],
 	"toolversion": "1.x.x"
 }
