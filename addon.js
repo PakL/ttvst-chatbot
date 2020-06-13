@@ -614,9 +614,8 @@ class Bot extends UIPage {
 	}
 
 	loadRewardQueue() {
-		this.rewardWindow.setAttribute('src', 'https://www.twitch.tv/popout/wolfsterror/reward-queue')
-		//if(!this.tool.cockpit.openChannelObject.hasOwnProperty('login') || this.tool.cockpit.openChannelObject.login.toLowerCase() != this.auth.username.toLowerCase()) return
-		//this.rewardWindow.setAttribute('src', 'https://www.twitch.tv/popout/' + this.tool.cockpit.openChannelObject.login.toLowerCase() + '/reward-queue')
+		if(!this.tool.cockpit.openChannelObject.hasOwnProperty('login') || this.tool.cockpit.openChannelObject.login.toLowerCase() != this.auth.username.toLowerCase()) return
+		this.rewardWindow.setAttribute('src', 'https://www.twitch.tv/popout/' + this.tool.cockpit.openChannelObject.login.toLowerCase() + '/reward-queue')
 	}
 
 	updateRewardStatus(title, user, executed, attempt) {
