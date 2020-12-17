@@ -1,0 +1,202 @@
+<ChatbotWrap>
+	<ChatbotList if={ page === 0 } onflowedit={ onFlowEdit }></ChatbotList>
+	<div if={ page === 1 }>
+		<label>
+			<span>{ __('Flow label') }</span>:
+			<input type="text" class="flowlabel" value={ flowlabel }>
+			<small class="accent-light-font">{ __('This is just a label for you to identify this flow. Like a file name. Put whatever you want in here.') }</small>
+		</label>
+		<label>
+			<span>{ __('Execution condition') }</span>:
+			<conditionalgroupinput condgroup={ flowcond }></conditionalgroupinput>
+		</label>
+		<div class="btngrp">
+			<button onclick={ onCancelFlowClick }>{ __('Cancel') }</button>
+			<button onclick={ onSaveFlowClick }>{ __('Save') }</button>
+		</div>
+		<div class="step trigger">
+			<i class="ms-Icon ms-Icon--LightningBolt"></i>
+			<span><span>{ __(selectedTrigger.addon) }</span>: <b>{ __(selectedTrigger.label) }</b></span>
+			<button onclick={ onSelectTriggerClick }>{ __('Select Trigger') }</button>
+		</div>
+		<floweditor flow={ flow }></floweditor>
+		<div class="step">
+			<i class="ms-Icon ms-Icon--EntitlementRedemption"></i>
+			<span>{ __('End of Flow') }</span>
+			<span></span>
+		</div>
+	</div>
+
+	<style>
+		:host {
+			display: block;
+		}
+		:host span.vr {
+			display: inline-block;
+			border: 1px solid #000000;
+			width: 0;
+			margin: 0 5px;
+			height: 1em;
+			vertical-align: text-bottom;
+		}
+		:host .sortbullet {
+			margin-left: 10px;
+		}
+		:host .actionbar {
+			margin: 10px;
+			padding-top: 10px;
+			padding-left: 10px;
+			padding-right: 5px;
+			background: rgba(255, 255, 255, 0.03);
+			box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4);
+			border-radius: 5px;
+			margin-bottom: 30px;
+		}
+		:host .actionbar > span.vr {
+			margin-right: 10px;
+		}
+		:host .actionbar > button {
+			margin-right: 5px;
+			margin-bottom: 10px;
+		}
+		:host .actionbar > button > .ms-Icon {
+			vertical-align: middle;
+			margin-right: 5px;
+		}
+
+		:host > div > floweditor {
+			margin: auto;
+			width: 60%;
+		}
+		:host .step {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 10px;
+			width: calc(70% - 22px);
+			border: 1px solid rgba(255, 255, 255, 0.3);
+			margin: auto;
+		}
+		:host .step > .ms-Icon {
+			font-size: 2em;
+		}
+		:host .downarrow {
+			display: block;
+			height: 40px;
+			width: 100%;
+			background: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iNDAiIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDEzIDMwIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAyMCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4NCiA8c3R5bGUgdHlwZT0idGV4dC9jc3MiPi5zdDB7ZmlsbDpub25lO3N0cm9rZTojNUI1QjVDO3N0cm9rZS13aWR0aDoyO3N0cm9rZS1taXRlcmxpbWl0OjEwO30NCgkuc3Qxe2ZpbGw6IzVCNUI1Qzt9PC9zdHlsZT4NCiA8cmVjdCB4PSI5IiB3aWR0aD0iMiIgaGVpZ2h0PSIzNy45NzQiIGZpbGw9IiM1MTUxNTEiIHN0cm9rZS13aWR0aD0iNC41MDYyIi8+DQogPHBvbHlnb24gdHJhbnNmb3JtPSJtYXRyaXgoMS4xNzg1IDAgMCAxLjE3ODUgLS42MDY5MiAyMy41NDQpIiBwb2ludHM9IjEuOTI4IDQuMDY1IDguOTk5IDExLjEzNiAxNi4wNzIgNC4wNjUgMTcuNDg2IDUuNDc5IDguOTk5IDEzLjk2NCAwLjUxNSA1LjQ3OSIgZmlsbD0iIzUxNTE1MSIvPg0KPC9zdmc+DQo=") center center no-repeat;
+		}
+		:host > div {
+			padding: 10px 0;
+		}
+		:host > div > label {
+			display: block;
+			padding: 10px;
+			width: 70%;
+			margin: auto;
+		}
+		:host > div > label > input {
+			margin-top: 5px;
+			display: block;
+			box-sizing: border-box;
+			width: 100%;
+		}
+		:host > div > label > small {
+			display: block;
+			margin-top: 5px;
+			font-size: 12px;
+		}
+		:host > div > div.btngrp {
+			display: block;
+			padding: 10px;
+			width: 70%;
+			margin: auto;
+			text-align: center;
+		}
+		
+		:host > div > div.btngrp > button {
+			margin: 5px;
+		}
+	</style>
+	<script>
+		const riot = require('riot');
+		const ConditionalGroup = require('../lib/ConditionalGroup').default;
+		import ChatbotList from './ChatbotList.riot';
+		import ConditionalGroupInput from './ConditionalGroupInput.riot';
+		import FlowEditor from './FlowEditor.riot';
+		riot.register('chatbotlist', ChatbotList);
+		riot.register('conditionalgroupinput', ConditionalGroupInput);
+		riot.register('floweditor', FlowEditor);
+
+		let chatbotPage = null;
+
+		export default {
+			selectedTrigger: { label: 'No trigger selected', addon: '', channel: '' },
+			page: 0,
+			flowobj: null,
+			flow: [],
+			flowlabel: '',
+			flowcond: false,
+
+			chatbotlistRiot: null,
+
+			onBeforeMount(props, state) {
+				this.__ = global.TTVST.i18n.__;
+			},
+
+			onMounted(props, state) {
+			},
+
+			async onSelectTriggerClick() {
+				let triggerChannel = await TTVST.ui.selectTrigger();
+				if(triggerChannel !== null) {
+					let triggers = TTVST.Broadcast.getTrigger({ channel: triggerChannel });
+					if(triggers.length == 1) {
+						this.selectedTrigger = triggers[0]
+						this.update();
+					}
+				}
+			},
+
+			async onFlowEdit(flow) {
+				this.selectedTrigger = { label: 'No trigger selected', addon: '', channel: '' };
+				this.page = 1;
+				this.flowobj = flow;
+				this.flow = flow.flow;
+				this.flowlabel = flow.name;
+				this.flowcond = flow.conditionals;
+				if(flow.trigger !== null) {
+					let triggers = TTVST.Broadcast.getTrigger({ channel: flow.trigger });
+					if(triggers.length == 1) {
+						this.selectedTrigger = triggers[0];
+					}
+				}
+				this.update();
+			},
+
+			async onCancelFlowClick() {
+				this.flowobj = null;
+				this.page = 0;
+				this.update();
+			},
+
+			async onSaveFlowClick() {
+				let cgi = this.$('conditionalgroupinput')
+				let cgiSym = cgi[Object.getOwnPropertySymbols(cgi)[0]];
+				let fe = this.$('floweditor')
+				let feSym = fe[Object.getOwnPropertySymbols(fe)[0]];
+
+				this.flowobj.name = this.$('input.flowlabel').value;
+				this.flowobj.conditionals = cgiSym.condgroup;
+				this.flowobj.flow = feSym.state.steps;
+				this.flowobj.trigger = this.selectedTrigger.channel;
+				await this.flowobj.save();
+
+				this.flowobj = null;
+				this.page = 0;
+				this.update();
+			}
+
+		}
+	</script>
+</ChatbotWrap>

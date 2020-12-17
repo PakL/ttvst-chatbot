@@ -1,0 +1,104 @@
+<ConditionalGroupInput>
+	<select>
+		<option value="and" selected={ condgroup.operator === 'and' }>{ __('AND: All conditions need to be met') }</option>
+		<option value="or" selected={ condgroup.operator === 'or' }>{ __('OR: At least one condition must be met') }</option>
+		<option value="xor" selected={ condgroup.operator === 'xor' }>{ __('XOR: ONLY one condition must be met') }</option>
+	</select>
+	<div class="conditions">
+		<template each={ (condition, index) in this.condgroup.conditions }>
+			<span class="delete" onclick={ onRemoveConditionClick } data-index={ index }><i class="ms-Icon ms-Icon--Cancel"></i></span>
+			<ConditionalGroupInput if={ condition.discriminator === 'ConditionGroup' } condgroup={ condition }></ConditionalGroupInput>
+			<ConditionalInput if={ condition.discriminator === 'Condition' } cond={ condition }></ConditionalInput>
+		</template>
+	</div>
+	<div class="addbtns"><button onclick={ onAddConditionClick }>Add a condition</button> or <button onclick={ onAddConditionGroupClick }>Add a group</button></div>
+
+	<style>
+		:host {
+			display: block;
+		}
+		:host > select {
+			display: inline-block !important;
+			width: auto !important;
+		}
+		:host > .conditions {
+			border-left: 1px dashed rgba(255,255,255, 0.5);
+			margin-left: 10px;
+			position: relative;
+		}
+		:host > .conditions > conditionalinput, :host > .conditions > conditionalgroupinput, :host > .addbtns {
+			margin-bottom: 5px;
+		}
+		:host > .conditions > conditionalgroupinput {
+			background: rgba(255, 255, 255, 0.02);
+		}
+		:host > .conditions > conditionalinput::before, :host > .conditions > conditionalgroupinput::before {
+			content: ' ';
+			display: inline-block;
+			height: 1px;
+			width: 20px;
+			border-top: 1px dashed rgba(255,255,255, 0.5);
+			vertical-align: middle;
+			margin-right: 5px;
+		}
+		:host > .conditions > span {
+			display: block;
+			position: absolute;
+			color: #ff0000;
+			cursor: pointer;
+			margin: 7px 2px;
+		}
+		:host > .conditions > span > i {
+			visibility: hidden;
+		}
+		:host > .conditions > span:hover > i {
+			visibility: visible;
+		}
+		:host > .conditions > conditionalgroupinput > .conditions {
+			margin-left: 35px;
+		}
+		:host > .conditions > conditionalgroupinput > .addbtns {
+			margin-left: 25px;
+		}
+	</style>
+	<script>
+		const riot = require('riot');
+		const Conditional = require('../lib/Conditional').default;
+		const ConditionalGroup = require('../lib/ConditionalGroup').default;
+		import ConditionalInput from './ConditionalInput.riot';
+		riot.register('conditionalinput', ConditionalInput);
+
+		export default {
+			condgroup: null,
+
+			onBeforeMount(props, state) {
+				this.__ = global.TTVST.i18n.__;
+
+				if(typeof(props.condgroup) === 'object' && props.condgroup !== null) {
+					this.condgroup = props.condgroup;
+				} else {
+					this.condgroup = new ConditionalGroup({ discriminator: 'ConditionGroup', conditions: [], operator: 'and' });
+				}
+			},
+
+			onAddConditionClick() {
+				this.condgroup.add(new Conditional({ discriminator: 'Condition', left: '', right: '', compare: 'eq' }));
+				this.update();
+			},
+
+			onAddConditionGroupClick() {
+				this.condgroup.add(new ConditionalGroup({ discriminator: 'ConditionGroup', conditions: [], operator: 'and' }));
+				this.update();
+			},
+
+			async onRemoveConditionClick(e) {
+				let target = e.currentTarget;
+				let index = parseInt(target.dataset.index);
+				if(await TTVST.ui.confirm('Do you really want to remove this condition?', true, 'Remove Condition', 'RecycleBin')) {
+					this.condgroup.conditions.splice(index, 1);
+					this.update();
+				}
+			}
+		}
+	</script>
+</ConditionalGroupInput>

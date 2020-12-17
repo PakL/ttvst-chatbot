@@ -1,0 +1,379 @@
+<ChatbotList>
+	<div class="actionbar">
+		<button title={ __('Move up one folder') } onclick={ onMoveUp }><i class="ms-Icon ms-Icon--Up"></i></button>
+		<button disabled class="btnCopy"><i class="ms-Icon ms-Icon--Copy"></i>{ __('Copy') }</button>
+		<button disabled class="btnCut"><i class="ms-Icon ms-Icon--Cut"></i>{ __('Cut') }</button>
+		<button disabled class="btnPaste"><i class="ms-Icon ms-Icon--Paste"></i>{ __('Paste') }</button>
+		<span class="vr accent-contrast-border"></span>
+		<button disabled class="btnEdit" onclick={ onEditClick }><i class="ms-Icon ms-Icon--Edit"></i>{ __('Edit') }</button>
+		<span class="vr accent-contrast-border"></span>
+		<button onclick={ onNewFolderClick }><i class="ms-Icon ms-Icon--FabricNewFolder"></i>{ __('New Folder') }</button>
+		<button onclick={ onNewFlowClick }><i class="ms-Icon ms-Icon--FlowChart"></i>{ __('New Flow') }</button>
+	</div>
+	<div class="actionbar breadcrumps">
+		<button data-folder="-1" onclick={ onBreadcrumpClick }>~</button>
+		<template each={ folder in currentPath }>
+			<span>/</span>
+			<button data-folder={ folder.key } onclick={ onBreadcrumpClick }>{ folder.name }</button>
+		</template>
+	</div>
+	<table>
+		<thead>
+			<tr>
+				<th width="33"></th>
+				<th class="accent-contrast-border accent-contrast-font clickable" onclick={ onHeadSortClick } data-sortcolumn="name" data-sortdir={ sortColumn == 'name' ? (sortDirection == 'asc' ? 'desc' : 'asc') : 'asc' } style="width:33%;">{ __('Name') }<span if={ sortColumn == 'name' } class="sortbullet">{sortDirectionIcon}</span></th>
+				<th class="accent-contrast-border accent-contrast-font">{ __('Trigger') }</th>
+				<th class="accent-contrast-border accent-contrast-font clickable" onclick={ onHeadSortClick } data-sortcolumn="active" data-sortdir={ sortColumn == 'active' ? (sortDirection == 'asc' ? 'desc' : 'asc') : 'asc' }>{ __('Active') }<span if={ sortColumn == 'active' } class="sortbullet">{sortDirectionIcon}</span></th>
+				<th class="accent-contrast-border accent-contrast-font clickable" onclick={ onHeadSortClick } data-sortcolumn="modified" data-sortdir={ sortColumn == 'modified' ? (sortDirection == 'asc' ? 'desc' : 'asc') : 'desc' }>{ __('Last modified') }<span if={ sortColumn == 'modified' } class="sortbullet">{sortDirectionIcon}</span></th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr each={ folder in folders } class="folder accent-contrast-border" key={ folder.key }>
+				<td><input type="checkbox" class="selectcheckbox" onchange={ onSelectChange } data-type="folder" data-folder={ folder.key } /></td>
+				<td class="accent-contrast-background-hover clickable" data-folder={ folder.key } onclick={ onFolderClick }><i class="ms-Icon ms-Icon--FabricFolder"></i><span>{ folder.name }</span></td>
+				<td></td>
+				<td><label class="win10-switch"><input type="checkbox" checked={ folder.active } /><span class={langclass}></span></label></td>
+				<td>{ dateformat(folder.lastModified) }</td>
+			</tr>
+			<tr each={ flow in flows } class="flow accent-contrast-border" key={ flow.key }>
+				<td><input type="checkbox" class="selectcheckbox" onchange={ onSelectChange } data-type="flow" data-flow={ flow.key } /></td>
+				<td class="accent-contrast-background-hover clickable" data-flow={ flow.key } onclick={ onFlowClick }><i class="ms-Icon ms-Icon--FlowChart"></i><span>{ flow.name }</span></td>
+				<td>{ displayTrigger(flow.trigger) }</td>
+				<td><label class="win10-switch"><input type="checkbox" checked={ flow.active } /><span class={langclass}></span></label></td>
+				<td>{ dateformat(flow.lastModified) }</td>
+			</tr>
+			<tr if={ folders.length <= 0 && flows.length <= 0 } class="accent-contrast-border">
+				<td colspan="5" class="accent-contrast-font" style="text-align:center;">{ __('This folder is empty.') }</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<style>
+		:host > .breadcrumps {
+			padding-left: 5px;
+		}
+		:host > .breadcrumps > button {
+			background: transparent;
+			border-color: transparent;
+			cursor: pointer;
+			margin-left: 5px;
+		}
+
+		:host > table {
+			width: 100%;
+			border-collapse: collapse;
+		}
+		:host > table > tbody > tr {
+			border-top: 1px solid;
+		}
+		:host > table > thead > tr > th {
+			border-left: 1px solid;
+			text-align: left;
+		}
+		:host > table > thead > tr > th:nth-child(1) {
+			border-left: 0;
+		}
+		:host > table tr > td, :host > table tr > th {
+			padding: 5px 10px;
+		}
+		:host > table tr > td >  i.ms-Icon {
+			display: inline-block;
+			font-size: 1.8em;
+			width: 30px;
+			height: 30px;
+			vertical-align: middle;
+			margin-right: 10px;
+		}
+		:host td.clickable, :host th.clickable {
+			cursor: pointer;
+		}
+		:host td .win10-switch > input[type=checkbox]::before {
+			font-size: 1.8em;
+		}
+	</style>
+	<script>
+		const riot = require('riot');
+		const Folder = require('../lib/Folder').default;
+		const Flow = require('../lib/Flow').default;
+		const ConditionalGroup = require('../lib/ConditionalGroup').default;
+
+		import ConditionalGroupInput from './ConditionalGroupInput.riot';
+		const conditionalGroupInputCmpnt = riot.component(ConditionalGroupInput);
+
+		export default {
+			currentFolder: null,
+			folders: [],
+			flows: [],
+			currentPath: [],
+
+			sortColumn: 'name',
+			sortDirection: 'asc',
+			sortDirectionIcon: '▲',
+			
+			onBeforeMount(props, state) {
+				this.__ = global.TTVST.i18n.__;
+				this.langclass = 'lang-' + global.TTVST.i18n._lang;
+			},
+
+			onMounted() {
+				this.openFolder(-1);
+			},
+
+			onBeforeUpdate() {
+				this.sortlist();
+				if(this.sortDirection == 'asc') {
+					this.sortDirectionIcon = '▲';
+				} else {
+					this.sortDirectionIcon = '▼';
+				}
+			},
+
+			onUpdated() {
+				this.onSelectChange();
+			},
+
+			dateformat(date) {
+				return TTVST.DateFormat(date, 'isoDateTime');
+			},
+
+			sortlist() {
+				const self = this;
+				let sortfunc = (a, b) => {
+					return (a.name.localeCompare(b.name) * (self.sortDirection == 'asc' ? 1 : -1));
+				};
+				if(this.sortColumn == 'active') {
+					sortfunc = (a, b) => {
+						if(a.active == b.active) {
+							return (a.name.localeCompare(b.name) * (self.sortDirection == 'asc' ? 1 : -1));
+						} else if(a.active && !b.active) {
+							return (self.sortDirection == 'asc' ? -1 : 1);
+						} else {
+							return (self.sortDirection == 'asc' ? 1 : -1);
+						}
+					};
+				} else if(this.sortColumn == 'modified') {
+					sortfunc = (a, b) => {
+						return (a.lastModified.getTime() - b.lastModified.getTime()) * (self.sortDirection == 'asc' ? 1 : -1);
+					};
+				} else {
+					this.sortColumn = 'name';
+				}
+				this.folders.sort(sortfunc);
+				this.flows.sort(sortfunc);
+			},
+
+			onHeadSortClick(e) {
+				let target = e.currentTarget;
+				this.sortColumn = target.dataset.sortcolumn;
+				this.sortDirection = target.dataset.sortdir;
+				this.update();
+			},
+
+			async openFolder(folderKey, flag) {
+				if(typeof(flag) !== 'number') {
+					flag = 0;
+				}
+
+				if(flag === 1) {
+					this.currentPath.pop();
+				}
+
+				if(folderKey < 0) {
+					this.currentFolder = null;
+					this.currentPath = [];
+				} else {
+					this.currentFolder = await Folder.get(folderKey);
+					await this.currentFolder.correctPath();
+					if(flag === 0) {
+						this.currentPath.push(this.currentFolder);
+					}
+				}
+
+				let supkey = -1;
+				if(this.currentFolder !== null) {
+					supkey = this.currentFolder.key;
+				}
+				this.folders = await Folder.getByIndex('superior', supkey);
+				this.flows = await Flow.getByIndex('superior', supkey)
+
+
+				if(flag === 2 && this.currentFolder !== null) {
+					this.currentPath = await this.currentFolder.getAbsolutePath();
+				}
+				this.update();
+			},
+
+			onFolderClick(e) {
+				let target = e.currentTarget
+				this.openFolder(parseInt(target.dataset.folder));
+			},
+
+			onMoveUp() {
+				if(this.currentFolder != null) {
+					this.openFolder(this.currentFolder.superior, 1)
+				}
+			},
+
+			onBreadcrumpClick(e) {
+				let target = e.currentTarget
+				this.openFolder(parseInt(target.dataset.folder), 2);
+			},
+
+			async editFolder(folder) {
+				const self = this;
+				let [folderName, conditionalGroup] = await new Promise((resolve, reject) => {
+					let namelbl = document.createElement('label');
+					let nameinp = document.createElement('input');
+					nameinp.setAttribute('type', 'text');
+					nameinp.setAttribute('id', 'chatbot-newfolder-name');
+					nameinp.setAttribute('placeholder', self.__('Folder name'));
+					nameinp.value = folder.name;
+					let namedesc = document.createElement('small');
+					namedesc.innerText = self.__('Enter your new folder name here');
+					namelbl.appendChild(nameinp);
+					namelbl.appendChild(namedesc);
+
+					let condlbl = document.createElement('div');
+					condlbl.style.margin = '10px';
+					let cogrin = conditionalGroupInputCmpnt(document.createElement('ConditionalGroupInput'), { condgroup: folder.conditionals });
+					condlbl.appendChild(cogrin.root);
+
+					let response = false;
+					let nfmodal = TTVST.ui.modal([namelbl, condlbl], self.__('New folder'), 'FabricNewFolder', () => {
+						if(response) {
+							resolve([nfmodal.$('#chatbot-newfolder-name').value, cogrin.condgroup]);
+						} else {
+							resolve(['', null]);
+						}
+					}, [
+						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+						{ key: 'cancel', title: 'Cancel' }
+					], true)
+				});
+
+				if(folderName.length > 0) {
+					folder.name = folderName;
+					folder.conditionals = conditionalGroup;
+					await folder.save();
+				}
+			},
+
+			async onNewFolderClick() {
+				const self = this;
+				try {
+					let f = Folder.factory({
+						name: '',
+						path: (this.currentFolder !== null ? this.currentFolder.path + this.currentFolder.key.toString() : '') + '/',
+						superior: (this.currentFolder !== null ? this.currentFolder.key : -1),
+						active: true,
+						conditionals: 'null',
+						lastModified: new Date()
+					});
+					await this.editFolder(f);
+					this.openFolder((this.currentFolder !== null ? this.currentFolder.key : -1), 2);
+				} catch(e) {
+					console.error(e);
+				}
+			},
+
+			getSelectedElements() {
+				let checkboxes = this.$$('input[type="checkbox"].selectcheckbox');
+				let checkedElements = [];
+				for(let i = 0; i < checkboxes.length; i++) {
+					if(checkboxes[i].checked) {
+						checkedElements.push(checkboxes[i]);
+					}
+				}
+				return checkedElements;
+			},
+
+			onSelectChange() {
+				let checkedElements = this.getSelectedElements();
+
+				if(checkedElements.length > 0) {
+					if(checkedElements.length >= 1) {
+						this.$('button.btnCopy').removeAttribute('disabled');
+						this.$('button.btnCut').removeAttribute('disabled');
+						this.$('button.btnPaste').removeAttribute('disabled');
+					}
+					if(checkedElements.length > 1) {
+						this.$('button.btnEdit').setAttribute('disabled', 'disabled');
+					} else {
+						this.$('button.btnEdit').removeAttribute('disabled');
+					}
+				} else {
+					this.$('button.btnCopy').setAttribute('disabled', 'disabled');
+					this.$('button.btnCut').setAttribute('disabled', 'disabled');
+					this.$('button.btnPaste').setAttribute('disabled', 'disabled');
+					this.$('button.btnEdit').setAttribute('disabled', 'disabled');
+				}
+			},
+
+			async onEditClick() {
+				let checkedElements = this.getSelectedElements();
+
+				if(checkedElements.length == 1) {
+					let editType = checkedElements[0].dataset.type;
+					if(editType === 'folder') {
+						let folderId = parseInt(checkedElements[0].dataset.folder);
+						try {
+							let f = await Folder.get(folderId);
+							await this.editFolder(f);
+							this.openFolder((this.currentFolder !== null ? this.currentFolder.key : -1), 2);
+						} catch(e) {
+							console.error(e);
+						}
+					} else if(editType === 'flow') {
+						let flowId = parseInt(checkedElements[0].dataset.flow);
+						try {
+							let flow = await Flow.get(flowId);
+							this.props.onflowedit(flow);
+						} catch(e) {
+							console.error(e);
+						}
+					}
+				}
+			},
+
+			onNewFlowClick() {
+				try {
+					let f = Flow.factory({
+						name: '',
+						path: (this.currentFolder !== null ? this.currentFolder.path + this.currentFolder.key.toString() : '') + '/',
+						superior: (this.currentFolder !== null ? this.currentFolder.key : -1),
+						active: false,
+						lastModified: new Date(),
+						trigger: null,
+						conditionals: 'null',
+						flow: '[]'
+					});
+					this.props.onflowedit(f);
+				} catch(e) {
+					console.error(e);
+				}
+			},
+
+			displayTrigger(channel) {
+				if(channel.length == 0) {
+					return this.__('No trigger selected');
+				}
+
+				let triggers = TTVST.Broadcast.getTrigger({ channel });
+				if(triggers.length == 1) {
+					return this.__(triggers[0].label);
+				}
+				return channel;
+			},
+
+			async onFlowClick(e) {
+				let target = e.currentTarget
+				try {
+					let flow = await Flow.get(parseInt(target.dataset.flow));
+					this.props.onflowedit(flow);
+				} catch(e) {
+					console.error(e);
+				}
+			}
+		}
+	</script>
+</ChatbotList>

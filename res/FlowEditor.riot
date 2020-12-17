@@ -1,0 +1,361 @@
+<FlowEditor>
+	<div class="downarrow" data-insertat="0" onclick={ onAddStepClick }></div>
+	<div each={ (step, index) in state.steps } key={ step.key }>
+		<div class="step">
+			<template if={ step.discriminator === 'FlowConditional' }>
+				<i class="ms-Icon ms-Icon--HighlightMappedShapes"></i>
+				<span>{ __(step.loop ? 'Loop while' : 'If') }</span>
+				<div class="btngrp">
+					<button onclick={ onEditFlowConditional } data-flow={ index }>{ __('Edit') }</button>
+					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
+				</div>
+			</template>
+			<template if={ step.discriminator === 'FlowMath' }>
+				<i class="ms-Icon ms-Icon--CalculatorEqualTo"></i>
+				<span>{ step.resultinto } = { step.expression }</span>
+				<div class="btngrp">
+					<button onclick={ onEditFlowMath } data-flow={ index }>{ __('Edit') }</button>
+					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
+				</div>
+			</template>
+			<template if={ step.discriminator === 'FlowAction' }>
+				<i class="ms-Icon ms-Icon--Processing"></i>
+				<span>{ __actionByChannel(step.channel) }</span>
+				<div class="btngrp">
+					<button onclick={ onEditFlowAction } data-flow={ index }>{ __('Edit') }</button>
+					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
+				</div>
+			</template>
+			<template if={ step.discriminator === 'FlowVariable' }>
+				<i class="ms-Icon ms-Icon--Variable"></i>
+				<span>{ step.variable } = { __(step.type) }</span>
+				<div class="btngrp">
+					<button onclick={ onEditFlowVariable } data-flow={ index }>{ __('Edit') }</button>
+					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
+				</div>
+			</template>
+		</div>
+		<template if={ step.discriminator === 'FlowConditional' }>
+			<div class="subflow">
+				<floweditor flow={ step.flow }></floweditor>
+			</div>
+			<template if={ !step.loop }>
+				<div class="step else"><span>{ __('Else') }</span></div>
+				<div class="subflow">
+					<floweditor flow={ step.elseflow }></floweditor>
+				</div>
+			</template>
+			<div class="step else" if={ !step.loop }><span>{ __('End if') }</span></div>
+			<div class="step else" if={ step.loop }><span>{ __('End loop') }</span></div>
+		</template>
+		<div class="downarrow" data-insertat={ index+1 } onclick={ onAddStepClick }></div>
+	</div>
+
+	<style>
+		:host {
+			display: block;
+		}
+
+		:host .step {
+			width: calc(100% - 22px);
+		}
+
+		:host .downarrow:hover {
+			cursor: pointer;
+			background: none;
+			text-align: center;
+			font-size: 2em;
+			line-height: 35px;
+		}
+		:host .downarrow:hover:before {
+			content: "+";
+		}
+
+		:host .subflow {
+			width: 90%;
+			margin-left: 10%;
+		}
+		:host .step.else {
+			width: calc(95% - 22px);
+			margin-left: 5%;
+			opacity: 0.8;
+		}
+	</style>
+	<script>
+		const riot = require('riot');
+		const ConditionalGroup = require('../lib/ConditionalGroup').default;
+		import FlowVariableEditor from './FlowVariableEditor.riot';
+		const FlowVariableEditorMount = riot.component(FlowVariableEditor);
+
+
+		export default {
+
+			__actionByChannel(channel) {
+				let actions = TTVST.Broadcast.getAction({ channel });
+				if(actions.length > 0) {
+					return this.__(actions[0].addon) + ': ' + this.__(actions[0].label);
+				} else {
+					return channel;
+				}
+			},
+
+			onBeforeMount(props, state) {
+				this.__ = global.TTVST.i18n.__;
+				this.state.steps = [];
+				this.state.keystate = 0;
+
+				if(typeof(props.flow) === 'object' && Array.isArray(props.flow)) {
+					for(let i = 0; i < props.flow.length; i++) {
+						this.state.keystate++;
+						props.flow[i].k = this.state.keystate;
+					}
+					this.state.steps = props.flow;
+				}
+			},
+
+			async onAddStepClick(e) {
+				const self = this;
+
+				let btn = e.currentTarget;
+				let insertAt = parseInt(btn.dataset.insertat);
+	
+				let selectedStep = await new Promise((resolve, reject) => {
+					let typlbl = document.createElement('label');
+					let typinp = document.createElement('select');
+					let options = [document.createElement('option'),document.createElement('option'),document.createElement('option'),document.createElement('option')];
+					options[0].value = 'FlowConditional';options[1].value = 'FlowMath';options[2].value = 'FlowAction';options[3].value = 'FlowVariable';
+					options[0].appendChild(document.createTextNode(self.__('Condition')));
+					options[1].appendChild(document.createTextNode(self.__('Math')));
+					options[2].appendChild(document.createTextNode(self.__('Action')));
+					options[3].appendChild(document.createTextNode(self.__('Variable')));
+					for(let i = 0; i < options.length; i++)
+						typinp.appendChild(options[i]);
+					
+					let typdesc = document.createElement('small');
+					typdesc.innerText = self.__('Select a step to insert');
+					typlbl.appendChild(typinp);
+					typlbl.appendChild(typdesc);
+
+					let response = false;
+					let nfmodal = TTVST.ui.modal([typlbl], self.__('Add step'), 'FabricNewFolder', () => {
+						if(response) {
+							resolve(nfmodal.$('select > option:checked').value);
+						} else {
+							resolve('');
+						}
+					}, [
+						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+						{ key: 'cancel', title: 'Cancel' }
+					], true);
+				});
+				if(selectedStep.length > 0) {
+					switch(selectedStep) {
+						case 'FlowConditional':
+							this.state.keystate++;
+							this.state.steps.splice(insertAt, 0, { k: this.state.keystate, discriminator: 'FlowConditional', conditional: '{"discriminator":"ConditionGroup","conditions":[],"operator":"and"}', flow: [], elseflow: [], loop: false });
+							break;
+						case 'FlowMath':
+							this.state.keystate++;
+							this.state.steps.splice(insertAt, 0, { k: this.state.keystate,discriminator: 'FlowMath', expression: '', resultinto: '' });
+							break;
+						case 'FlowAction':
+							this.state.keystate++;
+							this.state.steps.splice(insertAt, 0, { k: this.state.keystate,discriminator: 'FlowAction', channel: '', parameters: [], resultinto: '' });
+							break;
+						case 'FlowVariable':
+							this.state.keystate++;
+							this.state.steps.splice(insertAt, 0, { k: this.state.keystate, discriminator: 'FlowVariable', variable: '', type: 'number', content: 0, processing: 'none', processingextra: '' });
+							break;
+					}
+					this.update();
+				}
+			},
+
+			async onDeleteStep(e) {
+				let btn = e.currentTarget;
+				let flowIndex = parseInt(btn.dataset.flow);
+				this.state.steps.splice(flowIndex, 1);
+				this.update();
+			},
+
+			async onEditFlowMath(e) {
+				let btn = e.currentTarget;
+				let flowIndex = parseInt(btn.dataset.flow);
+				let math = this.state.steps[flowIndex]
+				
+				if(math.discriminator != 'FlowMath') {
+					return;
+				}
+
+				const self = this;
+				let [resultinto, expression] = await new Promise((resolve, reject) => {
+					let expressionlbl = document.createElement('label');
+					let expressioninp = document.createElement('textarea');
+					let expressiondesc = document.createElement('small');
+					let resultintolbl = document.createElement('label');
+					let resultintoinp = document.createElement('input');
+					let resultintodesc = document.createElement('small');
+
+					expressioninp.setAttribute('id', 'flowmathedit_expression');
+					expressioninp.innerText = math.expression;
+					expressionlbl.innerText = self.__('Math.js expression');
+					expressionlbl.appendChild(expressioninp);
+					expressiondesc.innerText = self.__('Enter your Math.js expression here. Learn more about the syntax on mathjs.org. Do not forget to terminate rows with a semicolon (;). You can use TTVST variables to input data.');
+					expressionlbl.appendChild(expressioninp);
+					expressionlbl.appendChild(expressiondesc);
+
+					resultintoinp.setAttribute('id', 'flowmathedit_resultinto');
+					resultintoinp.setAttribute('type', 'text');
+					resultintoinp.value = math.resultinto;
+					resultintolbl.innerText = self.__('Result into variable');
+					resultintolbl.appendChild(resultintoinp);
+					resultintodesc.innerText = self.__('Enter a TTVST variable that you want the result put into');
+					resultintolbl.appendChild(resultintoinp);
+					resultintolbl.appendChild(resultintodesc);
+
+					let response = false;
+					let nfmodal = TTVST.ui.modal([expressionlbl, resultintolbl], self.__('Edit Math'), 'CalculatorEqualTo', () => {
+						if(response) {
+							resolve([nfmodal.$('#flowmathedit_resultinto').value, nfmodal.$('#flowmathedit_expression').value]);
+						} else {
+							resolve([null, null]);
+						}
+					}, [
+						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+						{ key: 'cancel', title: 'Cancel' }
+					], true);
+				});
+				if(resultinto !== null) {
+					this.state.steps[flowIndex].expression = expression;
+					this.state.steps[flowIndex].resultinto = resultinto;
+					this.update();
+				}
+			},
+
+			async onEditFlowAction(e) {
+				let btn = e.currentTarget;
+				let flowIndex = parseInt(btn.dataset.flow);
+				let action = this.state.steps[flowIndex]
+				
+				if(action.discriminator != 'FlowAction') {
+					return;
+				}
+
+				const self = this;
+				let [resultinto, channel, parameters] = await new Promise((resolve, reject) => {
+					let selectactionlbl = document.createElement('label');
+					let selectactioninp = document.createElement('button');
+					let resultintolbl = document.createElement('label');
+					let resultintoinp = document.createElement('input');
+					let resultintodesc = document.createElement('small');
+
+					selectactioninp.setAttribute('type', 'button');
+					selectactioninp.innerText = self.__('Select Action');
+					let resultchannel = action.channel, resultparameters = action.parameters;
+					selectactioninp.onclick = async () => {
+						let r = await TTVST.ui.selectAction(action.channel, action.parameters);
+						if(r !== null) {
+							resultchannel = r.channel;
+							resultparameters = r.parameter;
+						}
+					};
+					selectactionlbl.appendChild(selectactioninp);
+
+					resultintoinp.setAttribute('id', 'flowactionedit_resultinto');
+					resultintoinp.setAttribute('type', 'text');
+					resultintoinp.value = action.resultinto;
+					resultintolbl.innerText = self.__('Result into variable');
+					resultintolbl.appendChild(resultintoinp);
+					resultintodesc.innerText = self.__('Enter a TTVST variable that you want the result put into');
+					resultintolbl.appendChild(resultintoinp);
+					resultintolbl.appendChild(resultintodesc);
+
+					let response = false;
+					let nfmodal = TTVST.ui.modal([selectactionlbl, resultintolbl], self.__('Edit Action'), 'Processing', () => {
+						if(response) {
+							resolve([nfmodal.$('#flowactionedit_resultinto').value, resultchannel, resultparameters]);
+						} else {
+							resolve([null, null, null]);
+						}
+					}, [
+						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+						{ key: 'cancel', title: 'Cancel' }
+					], true);
+				});
+				if(resultinto !== null) {
+					this.state.steps[flowIndex].channel = channel;
+					this.state.steps[flowIndex].parameters = parameters;
+					this.state.steps[flowIndex].resultinto = resultinto;
+					this.update();
+				}
+			},
+
+			async onEditFlowVariable(e) {
+				let btn = e.currentTarget;
+				let flowIndex = parseInt(btn.dataset.flow);
+				let variable = this.state.steps[flowIndex]
+				
+				if(variable.discriminator != 'FlowVariable') {
+					return;
+				}
+
+				const self = this;
+				let result = await new Promise((resolve, reject) => {
+					let fve = document.createElement('flowvariableeditor');
+					let fveSym = FlowVariableEditorMount(fve, variable);
+
+					let response = false;
+					let nfmodal = TTVST.ui.modal([fve], self.__('Edit Variable'), 'Variable', () => {
+						if(response) {
+							resolve(fveSym.getIFlowVariable());
+						} else {
+							resolve(null);
+						}
+					}, [
+						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+						{ key: 'cancel', title: 'Cancel' }
+					], true);
+				});
+				if(result !== null) {
+					Object.assign(this.state.steps[flowIndex], result);
+					this.update();
+				}
+			},
+
+			async onEditFlowConditional(e) {
+				let btn = e.currentTarget;
+				let flowIndex = parseInt(btn.dataset.flow);
+				let conditional = this.state.steps[flowIndex]
+				
+				if(conditional.discriminator != 'FlowConditional') {
+					return;
+				}
+
+				const self = this;
+				let result = await new Promise((resolve, reject) => {
+					let fce = document.createElement('conditionalgroupinput');
+					riot.mount(fce, { condgroup: new ConditionalGroup(JSON.parse(conditional.conditional)) });
+					let fceSym = fce[Object.getOwnPropertySymbols(fce)[0]];
+
+					let response = false;
+					let nfmodal = TTVST.ui.modal([fce], self.__('Edit Conditional'), 'HighlightMappedShapes', () => {
+						if(response) {
+							resolve(fceSym.condgroup);
+						} else {
+							resolve(null);
+						}
+					}, [
+						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+						{ key: 'cancel', title: 'Cancel' }
+					], true);
+				});
+				if(result !== null) {
+					this.state.steps[flowIndex].conditional = result.toString();
+					this.update();
+				}
+
+			}
+		}
+	</script>
+
+</FlowEditor>

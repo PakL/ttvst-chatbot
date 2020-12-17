@@ -1,0 +1,76 @@
+<ConditionalInput>
+	<input type="text" class="left" value={ cond.condition.left } onchange={ onInputChange } />
+	<select class="comp" onchange={ onInputChange }>
+		<optgroup label={ __('Default comparison') }>
+			<option value="eq" selected={ cond.condition.compare === 'eq' }>{ __('equals') }</option>
+			<option value="not" selected={ cond.condition.compare === 'not' }>{ __('does not equal') }</option>
+			<option value="gt" selected={ cond.condition.compare === 'gt' }>{ __('greater than') }</option>
+			<option value="ge" selected={ cond.condition.compare === 'ge' }>{ __('equal or greater than') }</option>
+			<option value="lt" selected={ cond.condition.compare === 'lt' }>{ __('less than') }</option>
+			<option value="le" selected={ cond.condition.compare === 'le' }>{ __('equal or less than') }</option>
+		</optgroup>
+		<optgroup label={ __('Advanced comparison') }>
+			<option value="contains" selected={ cond.condition.compare === 'contains' }>{ __('contains') }</option>
+			<option value="similar" selected={ cond.condition.compare === 'similar' }>{ __('is similar to') }</option>
+			<option value="match" selected={ cond.condition.compare === 'match' }>{ __('matches') }</option>
+			<option value="like" selected={ cond.condition.compare === 'like' }>{ __('is like') }</option>
+			<option value="has" selected={ cond.condition.compare === 'has' }>{ __('has') }</option>
+		</optgroup>
+		<optgroup label={ __('Special string comparison') }>
+			<option value="eqc" selected={ cond.condition.compare === 'eqc' }>{ __('equals (ignore case)') }</option>
+			<option value="notc" selected={ cond.condition.compare === 'notc' }>{ __('does not equal (ignore case)') }</option>
+			<option value="starts" selected={ cond.condition.compare === 'starts' }>{ __('starts with') }</option>
+			<option value="ends" selected={ cond.condition.compare === 'ends' }>{ __('ends with') }</option>
+			<option value="startsc" selected={ cond.condition.compare === 'startsc' }>{ __('starts with (ignore case)') }</option>
+			<option value="endsc" selected={ cond.condition.compare === 'endsc' }>{ __('ends with (ignore case)') }</option>
+		</optgroup>
+		<optgroup label={ __('Boolean check') }>
+			<option value="true" selected={ cond.condition.compare === 'true' }>{ __('is true') }</option>
+			<option value="false" selected={ cond.condition.compare === 'false' }>{ __('is false') }</option>
+		</optgroup>
+	</select>
+	<input type="text" class="right" value={ cond.condition.right } onchange={ onInputChange } />
+
+	<style>
+		:host {
+			display: block;
+		}
+		:host > input, :host > select {
+			margin-right: 5px;
+			display: inline-block !important;
+			width: auto !important;
+		}
+	</style>
+	<script>
+		export default {
+			cond: null,
+
+			onBeforeMount(props, state) {
+				this.__ = global.TTVST.i18n.__;
+				this.cond = props.cond;
+			},
+
+			onBeforeUpdate(props, state) {
+				this.cond = props.cond;
+			},
+			
+			onUpdated() {
+				this.$('.left').value = this.cond.condition.left;
+				this.$('.comp').value = this.cond.condition.compare;
+				this.$('.right').value = this.cond.condition.right;
+			},
+
+			onInputChange() {
+				this.cond.condition.left = this.$('.left').value;
+				this.cond.condition.compare = this.$('.comp').value;
+				this.cond.condition.right = this.$('.right').value;
+
+				if(this.$('.comp').value === 'true' || this.$('.comp').value === 'false') {
+					this.$('.right').style.display = 'none';
+				} else {
+					this.$('.right').style.display = 'initial';
+				}
+			}
+		}
+	</script>
+</ConditionalInput>

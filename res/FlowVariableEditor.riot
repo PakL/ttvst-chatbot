@@ -1,0 +1,317 @@
+<FlowVariableEditor>
+	<label>{__('Variable name')}<input type="text" class="variablename" value={ variableName }><small>{__('Enter variable name. Must start with a letter (A-Z, no umlauts). Case sensitive. If the variable already exists, it will be overwritten.')}</small></label>
+	<label>{__('Variable type')}<select class="variabletype" onchange={ onTypeChange }>
+			<option value="number" selected={ variableType === 'number' }>{__('number')}</option>
+			<option value="string" selected={ variableType === 'string' }>{__('string')}</option>
+			<option value="boolean" selected={ variableType === 'boolean' }>{__('boolean')}</option>
+			<option value="array" selected={ variableType === 'array' }>{__('list')}</option>
+			<option value="object" selected={ variableType === 'object' }>{__('assoc')}</option>
+		</select><small>{__('Select the type of content of the variable. Depending on the variable type you select you will have different processing options available.')}</small></label>
+	<label>{__('Processing')}<select class="processing" onchange={ onProcessingChange }>
+			<option value="none" selected={ processing === 'none' }>{__('None')}</option>
+			<option value="split" selected={ processing === 'split' } if={ ['array'].indexOf(variableType) >= 0 }>{__('Split')}</option>
+			<option value="join" selected={ processing === 'join' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Join')}</option>
+			<option value="enjson" selected={ processing === 'enjson' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Encode JSON')}</option>
+			<option value="dejson" selected={ processing === 'dejson' } if={ ['string', 'array', 'object'].indexOf(variableType) >= 0 }>{__('Decode JSON')}</option>
+			<option value="urlencode" selected={ processing === 'urlencode' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Encode for URI')}</option>
+			<option value="urldecode" selected={ processing === 'urldecode' } if={ ['string', 'object'].indexOf(variableType) >= 0 }>{__('Decode for URI')}</option>
+			<option value="append" selected={ processing === 'append' } if={ ['string', 'array', 'object'].indexOf(variableType) >= 0 }>{__('Append')}</option>
+			<option value="prepend" selected={ processing === 'prepend' } if={ ['string', 'array'].indexOf(variableType) >= 0 }>{__('Prepend')}</option>
+			<option value="shift" selected={ processing === 'shift' } if={ ['number', 'string'].indexOf(variableType) >= 0 }>{__('List shift')}</option>
+			<option value="pop" selected={ processing === 'pop' } if={ ['number', 'string'].indexOf(variableType) >= 0 }>{__('List pop')}</option>
+		</select>
+		<small>{__('Process input below - select an option to see a description')}:
+			<template if={ processing == 'none' }>{__('No processing.')}</template>
+			<template if={ processing == 'split' }>{__('Split a string into a list by the splitter below.')}</template>
+			<template if={ processing == 'join' }>{__('Join a list into string by the glue below.')}</template>
+			<template if={ processing == 'enjson' }>{__('Encode an associative array or list into a JSON string. You can JSON escape strings too. Strings will be enclosed in double quotes (").')}</template>
+			<template if={ processing == 'dejson' }>{__('Decode a JSON string into a list or associative array. You can decode JSON escaped string too. Strings must be enclosed in double quotes (").')}</template>
+			<template if={ processing == 'urlencode' }>{__('Encode URI elements or associative arrays.')}</template>
+			<template if={ processing == 'urldecode' }>{__('Decode URI elements or associative arrays.')}</template>
+			<template if={ processing == 'append' }>{__('Append string/list to the end of a string/list. Associative arrays will be merged.')}</template>
+			<template if={ processing == 'prepend' }>{__('Prepend string/list to the beginning of a string/list.')}</template>
+			<template if={ processing == 'shift' }>{__('Puts the first element of a list into the variable and removes it from the list.')}</template>
+			<template if={ processing == 'pop' }>{__('Puts the last element of a list into the variable and removes it from the list.')}</template>
+		</small>
+	</label>
+
+	<label if={ processing == 'split' }>{__('Splitter')}<input type="text" class="processingextra"><small>{__('Enter symbol(s) that the string will be splitted by.')}</small></label>
+	<label if={ processing == 'join' }>{__('Glue')}<input type="text" class="processingextra"><small>{__('Enter symbol(s) that the list items will be joined together by.')}</small></label>
+
+	<label class={ contentinput === 'boolean' ? 'win10-switch' : '' }>{__('Content')}
+		<template if={ contentinput === 'simple' }>
+			<input type="string" class="variablecontent" value={ content }>
+		</template>
+		<div if={ contentinput === 'list' }>
+			<input type="text" class="variablecontent">
+			<button class="variablecontentadd" onclick={ onAddList }>+</button>
+			<button class="variablecontentremove" onclick={ onRemoveList }>-</button>
+		</div>
+		<div if={ contentinput === 'assoc' } class="assoc">
+			<input type="text" class="variablecontent key"><span class="variablecontent spacer">: </span><input type="text" class="variablecontent value">
+			<button class="variablecontentadd" onclick={ onAddAssoc }>+</button>
+			<button class="variablecontentremove" onclick={ onRemoveAssoc }>-</button>
+		</div>
+		<template if={ contentinput === 'boolean' }>
+			<input type="checkbox" class="variablecontent" checked={ content }>
+			<span class={langclass}></span>
+		</template>
+	</label>
+
+	<style>
+		:host {
+			display: block;
+		}
+		:host div.assoc > .key {
+			display: inline-block;
+			width: 30%;
+		}
+		:host div.assoc > .spacer {
+			display: inline-block;
+			width: 1%;
+		}
+		:host div.assoc > .value {
+			display: inline-block;
+			width: 69%
+		}
+	</style>
+	<script>
+		export default {
+			variableName: '',
+			variableType: 'number',
+			contentinput: 'simple',
+			content: 0,
+			processing: 'none',
+			processingextra: '',
+
+			firstupdate: true,
+
+
+			onBeforeMount(props, state) {
+				this.__ = global.TTVST.i18n.__;
+				this.langclass = 'lang-' + global.TTVST.i18n._lang;
+
+				let defaults = {
+					variable: '',
+					type: 'number',
+					content: 0,
+					processing: 'none',
+					processingextra: ''
+				};
+				Object.assign(defaults, props);
+
+				this.variableName = defaults.variable;
+				this.variableType = defaults.type;
+				this.processing = defaults.processing;
+				this.onProcessingChange();
+				this.content = defaults.content;
+				this.processingextra = defaults.processingextra;
+			},
+
+			onMounted(props, state) {
+				this.onUpdated(props, state);
+			},
+			
+			onUpdated(props, state) {
+				if(this.firstupdate) {
+					this.firstupdate = false;
+
+					if(this.contentinput === 'list') {
+						for(let i = 0; i < this.content.length; i++) {
+							if(i == 0) {
+								this.$('.variablecontent').value = this.content[i];
+							} else {
+								this.onAddList().value = this.content[i];
+							}
+						}
+					} else if(this.contentinput === 'assoc') {
+						let keys = Object.keys(this.content);
+						for(let i = 0; i < keys.length; i++) {
+							let k = keys[i];
+							let v = this.content[k];
+							if(i == 0) {
+								this.$('.variablecontent.key').value = k;
+								this.$('.variablecontent.value').value = v;
+							} else {
+								let [inpk, inpv] = this.onAddAssoc();
+								inpk.value = k;
+								inpv.value = v;
+							}
+						}
+					}
+				}
+			},
+
+			onTypeChange() {
+				this.variableType = this.$('.variabletype').value;
+				if(this.processing !== 'none') {
+					this.$('.processing').value = 'none';
+				} else {
+					this.onProcessingChange();
+				}
+			},
+
+			onProcessingChange() {
+				if(!this.firstupdate) {
+					this.processing = this.$('.processing').value;
+					this.processingextra = '';
+				}
+
+				if(this.processing === 'none') {
+					if(this.variableType === 'number') {
+						this.content = 0;
+						this.contentinput = 'simple';
+					} else if(this.variableType === 'string') {
+						this.content = '';
+						this.contentinput = 'simple';
+					} else if(this.variableType === 'boolean') {
+						this.content = false;
+						this.contentinput = 'boolean';
+					} else if(this.variableType === 'array') {
+						this.content = '';
+						this.contentinput = 'list';
+					} else if(this.variableType === 'object') {
+						this.content = '';
+						this.contentinput = 'assoc';
+					}
+				} else if(this.processing === 'split') {
+					this.content = '';
+					this.contentinput = 'simple';
+				} else if(this.processing === 'join') {
+					this.content = '';
+					this.contentinput = 'simple';
+				} else if(this.processing === 'enjson') {
+					this.content = '';
+					this.contentinput = 'simple';
+				} else if(this.processing === 'dejson') {
+					this.content = '';
+					this.contentinput = 'simple';
+				} else if(this.processing === 'urlencode') {
+					this.content = '';
+					this.contentinput = 'simple';
+				} else if(this.processing === 'urldecode') {
+					this.content = '';
+					this.contentinput = 'simple';
+				} else if(this.processing === 'append') {
+					this.content = '';
+					this.contentinput = 'simple';
+				} else if(this.processing === 'prepend') {
+					this.content = '';
+					this.contentinput = 'simple';
+				} else if(this.processing === 'shift') {
+					this.content = '';
+					this.contentinput = 'simple';
+				} else if(this.processing === 'pop') {
+					this.content = '';
+					this.contentinput = 'simple';
+				}
+
+				if(!this.firstupdate) this.update();
+			},
+			
+
+			onAddList(e) {
+				let btn = null;
+				if(typeof(e) == 'object') {
+					btn = e.currentTarget;
+				} else {
+					btn = this.$('button.variablecontentadd')
+				}
+				let parent = btn.parentNode;
+
+				let newInput = document.createElement('input');
+				newInput.setAttribute('type', 'text');
+				newInput.classList.add('variablecontent');
+				parent.insertBefore(newInput, btn);
+				return newInput;
+			},
+			onAddAssoc(e) {
+				let btn = null;
+				if(typeof(e) == 'object') {
+					btn = e.currentTarget;
+				} else {
+					btn = this.$('button.variablecontentadd')
+				}
+				let parent = btn.parentNode;
+
+				let newInputKey = document.createElement('input');
+				let newSpacer = document.createElement('span');
+				let newInputValue = document.createElement('input');
+				newInputKey.setAttribute('type', 'text');
+				newSpacer.innerText = ':';
+				newInputValue.setAttribute('type', 'text');
+				newInputKey.classList.add('key');
+				newInputKey.classList.add('variablecontent');
+				newSpacer.classList.add('spacer');
+				newSpacer.classList.add('variablecontent');
+				newInputValue.classList.add('value');
+				newInputValue.classList.add('variablecontent');
+				parent.insertBefore(newInputKey, btn);
+				parent.insertBefore(newSpacer, btn);
+				parent.insertBefore(newInputValue, btn);
+				return [newInputKey, newInputValue];
+			},
+
+			onRemoveList(e) {
+				let btn = e.currentTarget;
+				let parent = btn.parentNode;
+
+				let allInputs = parent.querySelectorAll('input');
+				if(allInputs.length > 0) {
+					parent.removeChild(allInputs[allInputs.length-1]);
+				}
+			},
+			onRemoveAssoc(e) {
+				let btn = e.currentTarget;
+				let parent = btn.parentNode;
+
+				let allInputs = parent.querySelectorAll('input');
+				let allSpacers = parent.querySelectorAll('span');
+				if(allInputs.length > 0) {
+					parent.removeChild(allInputs[allInputs.length-2]);
+					parent.removeChild(allInputs[allInputs.length-1]);
+					parent.removeChild(allSpacers[allSpacers.length-1]);
+				}
+			},
+
+			getIFlowVariable() {
+				this.variableName = this.$('.variablename').value;
+				if(this.contentinput === 'simple') {
+					this.content = this.$('.variablecontent').value;
+				} else if(this.contentinput === 'list') {
+					this.content = [];
+					let inputs = this.$$('.variablecontent');
+					for(let i = 0; i < inputs.length; i++) {
+						this.content.push(inputs[i].value);
+					}
+				} else if(this.contentinput === 'assoc') {
+					this.content = {};
+					let keyinputs = this.$$('.variablecontent.key');
+					let valinputs = this.$$('.variablecontent.value');
+					if(keyinputs.length == valinputs.length) {
+						for(let i = 0; i < keyinputs.length; i++) {
+							if(keyinputs[i].value.length > 0) {
+								this.content[keyinputs[i].value] = valinputs[i].value;
+							}
+						}
+					}
+				} else if(this.contentinput === 'boolean') {
+					this.content = this.$('.variablecontent').checked;
+				}
+
+				if(this.processing == 'join' || this.processing == 'split') {
+					this.processingextra = this.$('.processingextra').value;
+				}
+
+				return {
+					discriminator: 'FlowVariable',
+					variable: this.variableName,
+					type: this.variableType,
+					content: this.content,
+					processing: this.processing,
+					processingextra: this.processingextra
+				}
+			}
+		}
+	</script>
+</FlowVariableEditor>

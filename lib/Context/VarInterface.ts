@@ -1,25 +1,39 @@
 class VarInterface {
+	private _name: string;
+	private value: any = null;
 
-	constructor(name) {
-		this.name = name
-		this.value = null
+	constructor(name: string) {
+		this._name = name;
 	}
 
-	get type() {
-		return this.getType()
+	get name(): string {
+		return this._name;
 	}
 
-	getType() {
-		let type = (this.value == null ? 'undefined' : typeof(this.value))
-		if(type === 'object' && Array.isArray(this.value)) {
-			type = 'array'
+	get type(): string {
+		return this.getType();
+	}
+
+	get description(): string {
+		return 'User defined variable';
+	}
+
+	getType(): 'undefined'|'object'|'boolean'|'number'|'string'|'array' {
+		let type: 'undefined'|'object'|'boolean'|'number'|'string'|'array' = 'undefined';
+		if(this.value !== null) {
+			let to = typeof(this.value);
+			if(to === 'object' && Array.isArray(this.value)) {
+				type = 'array';
+			} else if(['undefined','object','boolean','number','string'].indexOf(to) >= 0) {
+				type = to as 'undefined'|'object'|'boolean'|'number'|'string';
+			}
 		}
-		return type
+		return type;
 	}
 
-	setTo(value, index) {
+	setTo(value: any, index?: number|string): Promise<void> {
 		const self = this
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			if(typeof(value) === 'string' && (self.type == 'undefined' || self.type == 'number') && value.match(/^-?([0-9]+)(\.([0-9]+))?$/)) {
 				value = parseFloat(value)
 			}
@@ -47,53 +61,9 @@ class VarInterface {
 		})
 	}
 
-	addTo(value, index) {
+	getValue(index?: string|number): Promise<any> {
 		const self = this
-		return new Promise((resolve, reject) => {
-			if(typeof(value) === 'string' && value.match(/^-?([0-9]+)$/)) {
-				value = parseInt(value)
-			} else if(typeof(value) === 'string' && value.match(/^-?([0-9]+)\.([0-9]+)$/)) {
-				value = parseFloat(value)
-			}
-
-			if(typeof(index) === 'string') {
-				if(self.getType() === 'undefined') {
-					self.value = {}
-				}
-				if(self.getType() === 'object' && typeof(value) === 'number') {
-					if(typeof(self.value[index]) === 'undefined') self.value[index] = 0
-					self.value[index] += value
-					return
-				}
-			} else if(typeof(index) === 'number') {
-				index = Math.round(index)
-				if(self.getType() === 'undefined') {
-					self.value = []
-				}
-				if(self.getType() === 'array' && typeof(value) === 'number') {
-					if(typeof(self.value[index]) === 'undefined') self.value[index] = 0
-					self.value[index] += value
-				}
-			} else {
-				if(self.getType() === 'undefined') {
-					self.value = []
-				}
-				if(typeof(value) === 'number' && self.getType() === 'number') {
-					self.value += value
-				} else if(self.getType() === 'array') {
-					self.value.push(value)
-				} else {
-					self.value = value
-				}
-			}
-
-			resolve()
-		})
-	}
-
-	getValue(index) {
-		const self = this
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			if(typeof(index) == 'number' && self.getType() == 'array') {
 				if(index >= self.value.length) index = Math.random()
 				if(index % 1 !== 0) {
@@ -117,7 +87,7 @@ class VarInterface {
 		})
 	}
 
-	delete(index) {
+	delete(index?: string|number): Promise<void> {
 		const self = this
 		return new Promise((resolve, reject) => {
 			if(typeof(index) == 'number' && self.getType() == 'array') {
@@ -147,7 +117,7 @@ class VarInterface {
 		})
 	}
 
-	toString() {
+	toString(): string {
 		if(this.type === 'object') {
 			let v = []
 			for(let index in this.value) {
@@ -172,4 +142,4 @@ class VarInterface {
 	}
 
 } 
-module.exports = VarInterface
+export = VarInterface

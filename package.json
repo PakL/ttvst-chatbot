@@ -1,7 +1,20 @@
 {
+	"addonid": "app.ttvst.chatbot",
 	"name": "chatbot",
-	"description": "A chatbot for TTVST. Let's you automate responses, and such...",
-	"version": "1.6.2",
-	"systems": ["win32"],
-	"toolversion": "1.x.x"
+	"version": "2.0.0",
+	"description": "The chatbot addon provides a powerful tool to automate your stream. Out of the box you can respond to chat commands, create actions for custom twitch point rewards or timed action. With more addons you could for example automatically post your online status on Discord, play audio tracks or display funny GIFs in your stream via commands or point rewards.",
+	"author": {
+		"email": "git@pakl.dev",
+		"url": "https://pakl.dev",
+		"name": "PakL"
+	},
+	"toolversion": "2.x.x",
+	"main": "main.js",
+	"renderer": "renderer.js",
+	"dependencies": {
+		"@types/mathjs": "6.0.5",
+		"@types/string-similarity": "3.0.0",
+		"mathjs": "7.5.1",
+		"string-similarity": "4.0.2"
+	}
 }
