@@ -197,7 +197,7 @@
 					let resultintodesc = document.createElement('small');
 
 					expressioninp.setAttribute('id', 'flowmathedit_expression');
-					expressioninp.innerText = math.expression;
+					expressioninp.innerHTML = math.expression.replace(/</g,'&lt;').replace(/>/g,'&gt;');
 					expressionlbl.innerText = self.__('Math.js expression');
 					expressionlbl.appendChild(expressioninp);
 					expressiondesc.innerText = self.__('Enter your Math.js expression here. Learn more about the syntax on mathjs.org. Do not forget to terminate rows with a semicolon (;). You can use TTVST variables to input data.');
