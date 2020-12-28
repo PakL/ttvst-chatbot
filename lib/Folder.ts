@@ -37,8 +37,12 @@ class Folder extends IDBOrm {
 		}
 	}
 
-	static get(query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBArrayKey | IDBKeyRange): Promise<Folder> {
+	static get(query: number | IDBArrayKey | IDBKeyRange): Promise<Folder> {
 		return (super.get(query) as Promise<Folder>);
+	}
+
+	static getAll(query: number | IDBArrayKey | IDBKeyRange): Promise<Folder[]> {
+		return (super.getAll(query) as Promise<Folder[]>);
 	}
 
 	static getByIndex(index: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBArrayKey | IDBKeyRange): Promise<Folder[]> {
@@ -79,6 +83,11 @@ class Folder extends IDBOrm {
 
 	get active(): boolean {
 		return this.data.active;
+	}
+
+	set active(newactive: boolean) {
+		this.data.active = newactive;
+		super.save();
 	}
 
 	get lastModified(): Date {
@@ -126,7 +135,7 @@ class Folder extends IDBOrm {
 			}
 			if(this.path !== (suppath + '/')) {
 				this.data.path = (suppath + '/');
-				await this.save();
+				await super.save();
 			}
 		} catch(e) {}
 	}

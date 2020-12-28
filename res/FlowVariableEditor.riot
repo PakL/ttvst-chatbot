@@ -1,42 +1,44 @@
 <FlowVariableEditor>
-	<label>{__('Variable name')}<input type="text" class="variablename" value={ variableName }><small>{__('Enter variable name. Must start with a letter (A-Z, no umlauts). Case sensitive. If the variable already exists, it will be overwritten.')}</small></label>
-	<label>{__('Variable type')}<select class="variabletype" onchange={ onTypeChange }>
+	<label>{__('Variable name')}<input type="text" class="variablename" readonly={ processing === 'disabled' && variableName.length > 0 } value={ variableName }><small>{__('Enter variable name. Must start with a letter (A-Z, no umlauts). Case sensitive. If the variable already exists, it will be overwritten.')}</small></label>
+	<label>{__('Variable type')}<select class="variabletype" disabled={ processing === 'disabled' && variableName.length > 0 } onchange={ onTypeChange }>
 			<option value="number" selected={ variableType === 'number' }>{__('number')}</option>
 			<option value="string" selected={ variableType === 'string' }>{__('string')}</option>
 			<option value="boolean" selected={ variableType === 'boolean' }>{__('boolean')}</option>
 			<option value="array" selected={ variableType === 'array' }>{__('list')}</option>
 			<option value="object" selected={ variableType === 'object' }>{__('assoc')}</option>
-		</select><small>{__('Select the type of content of the variable. Depending on the variable type you select you will have different processing options available.')}</small></label>
-	<label>{__('Processing')}<select class="processing" onchange={ onProcessingChange }>
-			<option value="none" selected={ processing === 'none' }>{__('None')}</option>
-			<option value="split" selected={ processing === 'split' } if={ ['array'].indexOf(variableType) >= 0 }>{__('Split')}</option>
-			<option value="join" selected={ processing === 'join' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Join')}</option>
-			<option value="enjson" selected={ processing === 'enjson' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Encode JSON')}</option>
-			<option value="dejson" selected={ processing === 'dejson' } if={ ['string', 'array', 'object'].indexOf(variableType) >= 0 }>{__('Decode JSON')}</option>
-			<option value="urlencode" selected={ processing === 'urlencode' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Encode for URI')}</option>
-			<option value="urldecode" selected={ processing === 'urldecode' } if={ ['string', 'object'].indexOf(variableType) >= 0 }>{__('Decode for URI')}</option>
-			<option value="append" selected={ processing === 'append' } if={ ['string', 'array', 'object'].indexOf(variableType) >= 0 }>{__('Append')}</option>
-			<option value="prepend" selected={ processing === 'prepend' } if={ ['string', 'array'].indexOf(variableType) >= 0 }>{__('Prepend')}</option>
-			<option value="shift" selected={ processing === 'shift' } if={ ['number', 'string'].indexOf(variableType) >= 0 }>{__('List shift')}</option>
-			<option value="pop" selected={ processing === 'pop' } if={ ['number', 'string'].indexOf(variableType) >= 0 }>{__('List pop')}</option>
-		</select>
-		<small>{__('Process input below - select an option to see a description')}:
-			<template if={ processing == 'none' }>{__('No processing.')}</template>
-			<template if={ processing == 'split' }>{__('Split a string into a list by the splitter below.')}</template>
-			<template if={ processing == 'join' }>{__('Join a list into string by the glue below.')}</template>
-			<template if={ processing == 'enjson' }>{__('Encode an associative array or list into a JSON string. You can JSON escape strings too. Strings will be enclosed in double quotes (").')}</template>
-			<template if={ processing == 'dejson' }>{__('Decode a JSON string into a list or associative array. You can decode JSON escaped string too. Strings must be enclosed in double quotes (").')}</template>
-			<template if={ processing == 'urlencode' }>{__('Encode URI elements or associative arrays.')}</template>
-			<template if={ processing == 'urldecode' }>{__('Decode URI elements or associative arrays.')}</template>
-			<template if={ processing == 'append' }>{__('Append string/list to the end of a string/list. Associative arrays will be merged.')}</template>
-			<template if={ processing == 'prepend' }>{__('Prepend string/list to the beginning of a string/list.')}</template>
-			<template if={ processing == 'shift' }>{__('Puts the first element of a list into the variable and removes it from the list.')}</template>
-			<template if={ processing == 'pop' }>{__('Puts the last element of a list into the variable and removes it from the list.')}</template>
-		</small>
-	</label>
+		</select><small class={ processing !== 'disabled' ? 'visible' : 'hidden' }>{__('Select the type of content of the variable. Depending on the variable type you select you will have different processing options available.')}</small></label>
+	<div class={ processing !== 'disabled' ? 'visible' : 'hidden' }>
+		<label>{__('Processing')}<select class="processing" onchange={ onProcessingChange }>
+				<option value="none" selected={ processing === 'none' }>{__('None')}</option>
+				<option value="split" selected={ processing === 'split' } if={ ['array'].indexOf(variableType) >= 0 }>{__('Split')}</option>
+				<option value="join" selected={ processing === 'join' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Join')}</option>
+				<option value="enjson" selected={ processing === 'enjson' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Encode JSON')}</option>
+				<option value="dejson" selected={ processing === 'dejson' } if={ ['string', 'array', 'object'].indexOf(variableType) >= 0 }>{__('Decode JSON')}</option>
+				<option value="urlencode" selected={ processing === 'urlencode' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Encode for URI')}</option>
+				<option value="urldecode" selected={ processing === 'urldecode' } if={ ['string', 'object'].indexOf(variableType) >= 0 }>{__('Decode for URI')}</option>
+				<option value="append" selected={ processing === 'append' } if={ ['string', 'array', 'object'].indexOf(variableType) >= 0 }>{__('Append')}</option>
+				<option value="prepend" selected={ processing === 'prepend' } if={ ['string', 'array'].indexOf(variableType) >= 0 }>{__('Prepend')}</option>
+				<option value="shift" selected={ processing === 'shift' } if={ ['number', 'string'].indexOf(variableType) >= 0 }>{__('List shift')}</option>
+				<option value="pop" selected={ processing === 'pop' } if={ ['number', 'string'].indexOf(variableType) >= 0 }>{__('List pop')}</option>
+			</select>
+			<small>{__('Process input below - select an option to see a description')}:
+				<template if={ processing == 'none' }>{__('No processing.')}</template>
+				<template if={ processing == 'split' }>{__('Split a string into a list by the splitter below.')}</template>
+				<template if={ processing == 'join' }>{__('Join a list into string by the glue below.')}</template>
+				<template if={ processing == 'enjson' }>{__('Encode an associative array or list into a JSON string. You can JSON escape strings too. Strings will be enclosed in double quotes (").')}</template>
+				<template if={ processing == 'dejson' }>{__('Decode a JSON string into a list or associative array. You can decode JSON escaped string too. Strings must be enclosed in double quotes (").')}</template>
+				<template if={ processing == 'urlencode' }>{__('Encode URI elements or associative arrays.')}</template>
+				<template if={ processing == 'urldecode' }>{__('Decode URI elements or associative arrays.')}</template>
+				<template if={ processing == 'append' }>{__('Append string/list to the end of a string/list. Associative arrays will be merged.')}</template>
+				<template if={ processing == 'prepend' }>{__('Prepend string/list to the beginning of a string/list.')}</template>
+				<template if={ processing == 'shift' }>{__('Puts the first element of a list into the variable and removes it from the list.')}</template>
+				<template if={ processing == 'pop' }>{__('Puts the last element of a list into the variable and removes it from the list.')}</template>
+			</small>
+		</label>
 
-	<label if={ processing == 'split' }>{__('Splitter')}<input type="text" class="processingextra"><small>{__('Enter symbol(s) that the string will be splitted by.')}</small></label>
-	<label if={ processing == 'join' }>{__('Glue')}<input type="text" class="processingextra"><small>{__('Enter symbol(s) that the list items will be joined together by.')}</small></label>
+		<label if={ processing == 'split' }>{__('Splitter')}<input type="text" class="processingextra"><small>{__('Enter symbol(s) that the string will be splitted by.')}</small></label>
+		<label if={ processing == 'join' }>{__('Glue')}<input type="text" class="processingextra"><small>{__('Enter symbol(s) that the list items will be joined together by.')}</small></label>
+	</div>
 
 	<label class={ contentinput === 'boolean' ? 'win10-switch' : '' }>{__('Content')}
 		<template if={ contentinput === 'simple' }>
@@ -73,6 +75,9 @@
 		:host div.assoc > .value {
 			display: inline-block;
 			width: 69%
+		}
+		:host .hidden {
+			display: none;
 		}
 	</style>
 	<script>
@@ -144,7 +149,7 @@
 
 			onTypeChange() {
 				this.variableType = this.$('.variabletype').value;
-				if(this.processing !== 'none') {
+				if(this.processing !== 'none' && this.processing !== 'disabled') {
 					this.$('.processing').value = 'none';
 				} else {
 					this.onProcessingChange();
@@ -152,12 +157,12 @@
 			},
 
 			onProcessingChange() {
-				if(!this.firstupdate) {
+				if(!this.firstupdate && this.processing !== 'disabled') {
 					this.processing = this.$('.processing').value;
 					this.processingextra = '';
 				}
 
-				if(this.processing === 'none') {
+				if(this.processing === 'none' || this.processing === 'disabled') {
 					if(this.variableType === 'number') {
 						this.content = 0;
 						this.contentinput = 'simple';
@@ -278,6 +283,9 @@
 				this.variableName = this.$('.variablename').value;
 				if(this.contentinput === 'simple') {
 					this.content = this.$('.variablecontent').value;
+					if(this.variableType === 'number' && this.content.match(/^-?([0-9]+)(\.([0-9]+))?$/)) {
+						this.content = parseFloat(this.content);
+					}
 				} else if(this.contentinput === 'list') {
 					this.content = [];
 					let inputs = this.$$('.variablecontent');

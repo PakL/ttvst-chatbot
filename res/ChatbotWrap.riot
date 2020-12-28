@@ -1,5 +1,5 @@
 <ChatbotWrap>
-	<ChatbotList if={ page === 0 } onflowedit={ onFlowEdit }></ChatbotList>
+	<ChatbotList if={ page === 0 } onflowedit={ onFlowEdit } ongvaredit={ onGVarEdit } openingfolder={ openingFolder }></ChatbotList>
 	<div if={ page === 1 }>
 		<label>
 			<span>{ __('Flow label') }</span>:
@@ -26,6 +26,7 @@
 			<span></span>
 		</div>
 	</div>
+	<GlobalVarList if={ page === 2 } onbacktoflowlist={ onBackToFlowList }></GlobalVarList>
 
 	<style>
 		:host {
@@ -124,13 +125,17 @@
 		import ChatbotList from './ChatbotList.riot';
 		import ConditionalGroupInput from './ConditionalGroupInput.riot';
 		import FlowEditor from './FlowEditor.riot';
+		import GlobalVarList from './GlobalVarList.riot';
 		riot.register('chatbotlist', ChatbotList);
 		riot.register('conditionalgroupinput', ConditionalGroupInput);
 		riot.register('floweditor', FlowEditor);
+		riot.register('globalvarlist', GlobalVarList);
 
 		let chatbotPage = null;
 
 		export default {
+			openingFolder: -1,
+
 			selectedTrigger: { label: 'No trigger selected', addon: '', channel: '' },
 			page: 0,
 			flowobj: null,
@@ -139,6 +144,7 @@
 			flowcond: false,
 
 			chatbotlistRiot: null,
+			rememberFolder: -1,
 
 			onBeforeMount(props, state) {
 				this.__ = global.TTVST.i18n.__;
@@ -175,6 +181,7 @@
 			},
 
 			async onCancelFlowClick() {
+				this.openingFolder = this.flowobj.superior;
 				this.flowobj = null;
 				this.page = 0;
 				this.update();
@@ -192,7 +199,22 @@
 				this.flowobj.trigger = this.selectedTrigger.channel;
 				await this.flowobj.save();
 
+				this.openingFolder = this.flowobj.superior;
 				this.flowobj = null;
+				this.page = 0;
+				this.update();
+				
+				ipcRenderer.send('app.ttvst.chatbot.registerFlows');
+			},
+
+			onGVarEdit(currentfolder) {
+				this.rememberFolder = currentfolder;
+				this.page = 2;
+				this.update();
+			},
+
+			onBackToFlowList() {
+				this.openingFolder = this.rememberFolder;
 				this.page = 0;
 				this.update();
 			}

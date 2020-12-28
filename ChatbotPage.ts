@@ -1,3 +1,4 @@
+import { ipcRenderer } from 'electron';
 import * as riot from 'riot';
 
 import ChatbotWrap from './res/ChatbotWrap';
@@ -15,6 +16,8 @@ class ChatbotPage extends TTVST.ui.Page {
 
 	constructor() {
 		super('Chatbot');
+
+		ipcRenderer.send('app.ttvst.chatbot.registerFlows');
 
 		chatbotWrapCmpnt = riot.component<null, null>(ChatbotWrap);
 	}

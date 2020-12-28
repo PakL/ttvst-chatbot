@@ -46,8 +46,12 @@ class Flow extends IDBOrm {
 		}
 	}
 
-	static get(query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBArrayKey | IDBKeyRange): Promise<Flow> {
+	static get(query: number | IDBArrayKey | IDBKeyRange): Promise<Flow> {
 		return (super.get(query) as Promise<Flow>);
+	}
+
+	static getAll(query: number | IDBArrayKey | IDBKeyRange): Promise<Flow[]> {
+		return (super.getAll(query) as Promise<Flow[]>);
 	}
 
 	static getByIndex(index: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBArrayKey | IDBKeyRange): Promise<Flow[]> {
@@ -88,6 +92,11 @@ class Flow extends IDBOrm {
 
 	get active(): boolean {
 		return this.data.active;
+	}
+
+	set active(newactive: boolean) {
+		this.data.active = newactive;
+		super.save();
 	}
 
 	get lastModified(): Date {
@@ -161,7 +170,7 @@ class Flow extends IDBOrm {
 			}
 			if(this.path !== (suppath + '/')) {
 				this.data.path = (suppath + '/');
-				await this.save();
+				await super.save();
 			}
 		} catch(e) {}
 	}

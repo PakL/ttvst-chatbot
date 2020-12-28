@@ -1,9 +1,10 @@
 class VarInterface {
 	private _name: string;
-	private value: any = null;
+	protected value: any = null;
 
-	constructor(name: string) {
+	constructor(name: string, startvalue: any = null) {
 		this._name = name;
+		this.value = startvalue;
 	}
 
 	get name(): string {

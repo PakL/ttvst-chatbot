@@ -26,6 +26,11 @@ class DBHelper extends EventEmitter {
 	constructor() {
 		super();
 
+		if(typeof(indexedDB) === 'undefined') {
+			// Probably main process
+			return;
+		}
+
 		this.onOpenRequestError = this.onOpenRequestError.bind(this);
 		this.onOpenRequestSuccess = this.onOpenRequestSuccess.bind(this);
 		this.onOpenRequestUpgradeneeded = this.onOpenRequestUpgradeneeded.bind(this);

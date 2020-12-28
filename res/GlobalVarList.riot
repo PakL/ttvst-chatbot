@@ -1,0 +1,205 @@
+<GlobalVarList>
+	<div class="actionbar">
+		<button onclick={ onMoveUp }><i class="ms-Icon ms-Icon--Up"></i>{ __('Back') }</button>
+		<span class="vr accent-contrast-border"></span>
+		<button disabled class="btnDelete" onclick={ onDeleteClick }><i class="ms-Icon ms-Icon--RecycleBin"></i>{ __('Delete') }</button>
+		<span class="vr accent-contrast-border"></span>
+		<button onclick={ onNewVariableClick }><i class="ms-Icon ms-Icon--Variable"></i>{ __('New Variable') }</button>
+	</div>
+	<table>
+		<thead>
+			<tr>
+				<th width="33"></th>
+				<th class="accent-contrast-border accent-contrast-font" style="width:25%;">{ __('Name') }</th>
+				<th class="accent-contrast-border accent-contrast-font">{ __('Type') }</th>
+				<th class="accent-contrast-border accent-contrast-font">{ __('Content preview') }</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr each={ variable in variables } class="accent-contrast-border">
+				<td><input type="checkbox" class="selectcheckbox" onchange={ onSelectChange } data-type="variable" data-variable={ variable.name } /></td>
+				<td class="accent-contrast-background-hover clickable" onclick={ onEditVarClick } data-variable={ variable.name }><i class="ms-Icon ms-Icon--Variable"></i>{ variable.name }</td>
+				<td>{ __(variable.type) }</td>
+				<td>{ variable.datapreview }</td>
+			</tr>
+			<tr if={ variables.length <= 0 } class="accent-contrast-border">
+				<td colspan="5" class="accent-contrast-font" style="text-align:center;">{ __('No global variables found. Create one by clicking on "New Variable" above.') }</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<style>
+		:host > table {
+			width: 100%;
+			border-collapse: collapse;
+		}
+		:host > table > tbody > tr {
+			border-top: 1px solid;
+		}
+		:host > table > thead > tr > th {
+			border-left: 1px solid;
+			text-align: left;
+		}
+		:host > table > thead > tr > th:nth-child(1) {
+			border-left: 0;
+		}
+		:host > table tr > td, :host > table tr > th {
+			padding: 5px 10px;
+		}
+		:host > table tr > td >  i.ms-Icon {
+			display: inline-block;
+			font-size: 1.8em;
+			width: 30px;
+			height: 30px;
+			vertical-align: middle;
+			margin-right: 10px;
+		}
+		:host td.clickable, :host th.clickable {
+			cursor: pointer;
+		}
+	</style>
+	<script>
+		const riot = require('riot');
+		const GVar = require('../lib/GVar').default;
+
+		import FlowVariableEditor from './FlowVariableEditor.riot';
+		const FlowVariableEditorMount = riot.component(FlowVariableEditor);
+
+		export default {
+			variables: [],
+
+			onBeforeMount(props, state) {
+				this.__ = global.TTVST.i18n.__;
+			},
+
+			onMounted() {
+				GVar.getAll().then(((result) => { this.variables = result; this.update(); }).bind(this));
+			},
+
+			async onNewVariableClick(e) {
+				const self = this;
+				let result = await new Promise((resolve, reject) => {
+					let fve = document.createElement('flowvariableeditor');
+					let fveSym = FlowVariableEditorMount(fve, {processing:'disabled'});
+
+					let response = false;
+					let nfmodal = TTVST.ui.modal([fve], self.__('Create Variable'), 'Variable', () => {
+						if(response) {
+							resolve(fveSym.getIFlowVariable());
+						} else {
+							resolve(null);
+						}
+					}, [
+						{ key: 'ok', title: 'Save', callback: () => {
+							let fv = fveSym.getIFlowVariable()
+							if(!fv.variable.match(/^[a-z]([a-z0-9]+)?$/i)) {
+								TTVST.ui.alert('Variable name must not be empty');
+								return false;
+							} else {
+								for(let i = 0; i < self.variables.length; i++) {
+									if(self.variables[i].name == fv.variable) {
+										TTVST.ui.alert('Variable name is already in use');
+										return false;
+									}
+								}
+								response = true;
+							}
+						} },
+						{ key: 'cancel', title: 'Cancel' }
+					], true);
+				});
+				if(result !== null && result.variable.match(/^[a-z]([a-z0-9]+)?$/i)) {
+					let v = GVar.factory({ name: result.variable, value: result.content });
+					await v.save();
+					this.variables = await GVar.getAll();
+					this.update();
+				}
+			},
+
+			async onEditVarClick(e) {
+				let btn = e.currentTarget;
+				let variable = btn.dataset.variable;
+				let gvar = await GVar.get(variable);
+
+				const self = this;
+				let result = await new Promise((resolve, reject) => {
+					let fve = document.createElement('flowvariableeditor');
+					let inputtype = gvar.type;
+					if(inputtype === 'list') inputtype = 'array';
+					if(inputtype === 'assoc') inputtype = 'object';
+					let fveSym = FlowVariableEditorMount(fve, { variable: gvar.name, type: inputtype, content: gvar.value, processing:'disabled' });
+
+					let response = false;
+					let nfmodal = TTVST.ui.modal([fve], self.__('Edit Variable'), 'Variable', () => {
+						if(response) {
+							resolve(fveSym.getIFlowVariable());
+						} else {
+							resolve(null);
+						}
+					}, [
+						{ key: 'ok', title: 'Save', callback: () => { response = true; } },
+						{ key: 'cancel', title: 'Cancel' }
+					], true);
+				});
+				if(result !== null && result.variable.match(/^[a-z]([a-z0-9]+)?$/i)) {
+					gvar.value = result.content;
+					await gvar.save();
+					this.variables = await GVar.getAll();
+					this.update();
+				}
+			},
+			
+			getSelectedElements() {
+				let checkboxes = this.$$('input[type="checkbox"].selectcheckbox');
+				let checkedElements = [];
+				for(let i = 0; i < checkboxes.length; i++) {
+					if(checkboxes[i].checked) {
+						checkedElements.push(checkboxes[i]);
+					}
+				}
+				return checkedElements;
+			},
+
+			onSelectChange() {
+				let checkedElements = this.getSelectedElements();
+
+				if(checkedElements.length > 0) {
+					this.$('button.btnDelete').removeAttribute('disabled');
+				} else {
+					this.$('button.btnDelete').setAttribute('disabled', 'disabled');
+				}
+			},
+
+			async onDeleteClick() {
+				let selected = this.getSelectedElements();
+				if(selected.length > 0) {
+					let confirmText = TTVST.i18n.__('Are you sure you want to delete these {{count}} variables?', { count: selected.length });
+					if(selected.length == 1) {
+						confirmText = 'Are you sure you want to delete this variable?';
+					}
+					if(await TTVST.ui.confirm(confirmText, true)) {
+						for(let i = 0; i < selected.length; i++) {
+							let item = selected[i];
+							if(item.dataset.type === 'variable') {
+								let variableName = item.dataset.variable;
+								let gvar = await GVar.get(variableName);
+								try {
+									await gvar.delete();
+								} catch(e) { console.error(e) }
+							}
+						}
+						this.variables = await GVar.getAll();
+						this.update();
+					}
+				}
+			},
+
+			onMoveUp() {
+				if(typeof(this.props.onbacktoflowlist) === 'function') {
+					this.props.onbacktoflowlist();
+				}
+			}
+
+		}
+	</script>
+</GlobalVarList>
