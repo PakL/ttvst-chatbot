@@ -106,7 +106,7 @@ class Chatbot {
 		return this.isActive(folder);
 	}
 
-	private createContext(flow: Flow, ... args: any[]): Context {
+	private async createContext(flow: Flow, ... args: any[]): Promise<Context> {
 		let context = new Context();
 		if(flow.trigger.length > 0) {
 			let argobj = TTVST.BroadcastMain.argumentsToObject(flow.trigger);
@@ -122,7 +122,10 @@ class Chatbot {
 		context.add(new VarInterface('Timestamp', new Date().getTime()));
 		context.add(new VarInterface('FlowName', flow.name));
 
-
+		let globalVars = await GVar.getAll(undefined);
+		for(let i = 0; i < globalVars.length; i++) {
+			context.add(globalVars[i].asContextVar());
+		}
 		// TODO: add more enviorment variables
 
 		return context;
@@ -130,9 +133,10 @@ class Chatbot {
 
 	private createListener(flow: Flow): (...args: any[]) => void {
 		const self = this;
-		return (... args: any[]) => {
-			let context = self.createContext(flow, ...args);
-			if(flow.conditionals.meets(context)) {
+		return async (... args: any[]) => {
+			let context = await self.createContext(flow, ...args);
+			
+			if(await flow.conditionals.meets(context)) {
 				flow.execute(context);
 			}
 		};
