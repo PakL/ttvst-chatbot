@@ -21,7 +21,7 @@
 				<option value="shift" selected={ processing === 'shift' } if={ ['number', 'string'].indexOf(variableType) >= 0 }>{__('List shift')}</option>
 				<option value="pop" selected={ processing === 'pop' } if={ ['number', 'string'].indexOf(variableType) >= 0 }>{__('List pop')}</option>
 			</select>
-			<small>{__('Process input below - select an option to see a description')}:
+			<small class="accent-light-font">{__('Process input below - select an option to see a description')}:&nbsp;
 				<template if={ processing == 'none' }>{__('No processing.')}</template>
 				<template if={ processing == 'split' }>{__('Split a string into a list by the splitter below.')}</template>
 				<template if={ processing == 'join' }>{__('Join a list into string by the glue below.')}</template>
@@ -78,6 +78,21 @@
 		}
 		:host .hidden {
 			display: none;
+		}
+		:host .visible > label {
+			display: block;
+			margin: 10px;
+		}
+		:host .visible > label > select {
+			margin-top: 5px;
+			display: block;
+			box-sizing: border-box;
+			width: 100%;
+		}
+		:host .visible > label > small {
+			display: block;
+			margin-top: 5px;
+			font-size: 12px;
 		}
 	</style>
 	<script>

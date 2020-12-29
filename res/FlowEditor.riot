@@ -244,6 +244,7 @@
 				const self = this;
 				let [resultinto, channel, parameters] = await new Promise((resolve, reject) => {
 					let selectactionlbl = document.createElement('label');
+					let selectactiontxt = document.createTextNode(self.__('No action selected'));
 					let selectactioninp = document.createElement('button');
 					let resultintolbl = document.createElement('label');
 					let resultintoinp = document.createElement('input');
@@ -252,13 +253,20 @@
 					selectactioninp.setAttribute('type', 'button');
 					selectactioninp.innerText = self.__('Select Action');
 					let resultchannel = action.channel, resultparameters = action.parameters;
+					let resultaction = TTVST.Broadcast.getAction({ channel: resultchannel });
+					if(resultaction.length > 0) selectactiontxt.nodeValue = self.__(resultaction[0].label);
 					selectactioninp.onclick = async () => {
-						let r = await TTVST.ui.selectAction(action.channel, action.parameters);
+						let r = await TTVST.ui.selectAction(resultchannel, resultparameters);
 						if(r !== null) {
 							resultchannel = r.channel;
 							resultparameters = r.parameter;
+							
+							resultaction = TTVST.Broadcast.getAction({ channel: resultchannel });
+							if(resultaction.length > 0) selectactiontxt.nodeValue = self.__(resultaction[0].label);
 						}
 					};
+					selectactionlbl.appendChild(selectactiontxt);
+					selectactionlbl.appendChild(document.createElement('br'));
 					selectactionlbl.appendChild(selectactioninp);
 
 					resultintoinp.setAttribute('id', 'flowactionedit_resultinto');
@@ -307,7 +315,13 @@
 					let response = false;
 					let nfmodal = TTVST.ui.modal([fve], self.__('Edit Variable'), 'Variable', () => {
 						if(response) {
-							resolve(fveSym.getIFlowVariable());
+							let iflowvar = fveSym.getIFlowVariable();
+							if(iflowvar.variable.match(/^[a-z]([a-z0-9]+)?$/i)) {
+								resolve(iflowvar);
+							} else {
+								TTVST.ui.alert('Variable name is invalid. Must start with a letter and can only consist of numbers and letters.');
+								return false;
+							}
 						} else {
 							resolve(null);
 						}
