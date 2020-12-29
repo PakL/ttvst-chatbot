@@ -23,7 +23,7 @@ if(typeof(ipcRenderer) !== 'undefined') {
 		} catch(e) {
 			orm = null;
 		}
-		ipcRenderer.send('app.ttvst.chatbot.idborm.getIndex.' + ipcKey, orm);
+		ipcRenderer.send('app.ttvst.chatbot.idborm.getAll.' + ipcKey, orm);
 	});
 	ipcRenderer.on('app.ttvst.chatbot.idborm.getIndex', async (event, ipcKey: string, store: string, index: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBArrayKey | IDBKeyRange) => {
 		let orm = [];
