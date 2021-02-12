@@ -3,14 +3,16 @@ import Context from '../Context/Context';
 import FlowMath, { IFlowMath } from './FlowMath';
 import FlowAction, { IFlowAction } from './FlowAction';
 import FlowVariable, { IFlowVariable } from './FlowVariable';
+import FlowWait, { IFlowWait } from './FlowWait';
+import FlowWebRequest, { IFlowWebRequest } from './FlowWebRequest';
 
 import ConditionalGroup, { IConditionGroup } from '../ConditionalGroup';
 
 export interface IFlowConditional {
 	discriminator: 'FlowConditional',
 	conditional: string,
-	flow: Array<IFlowVariable|IFlowAction|IFlowMath|IFlowConditional>,
-	elseflow: Array<IFlowVariable|IFlowAction|IFlowMath|IFlowConditional>,
+	flow: Array<IFlowVariable|IFlowAction|IFlowMath|IFlowConditional|IFlowWait|IFlowWebRequest>,
+	elseflow: Array<IFlowVariable|IFlowAction|IFlowMath|IFlowConditional|IFlowWait|IFlowWebRequest>,
 	loop: boolean
 }
 
@@ -29,9 +31,12 @@ class FlowConditional {
 		if(this.data.loop) {
 			let startTime = (new Date()).getTime();
 			let nowTime = (new Date()).getTime();
-			while(cond.meets(context) && (nowTime-startTime) < 60000) {
-				await FlowConditional.execFlow(this.data.flow, context);
-				nowTime = (new Date()).getTime();
+			// Check for any conditions, or we get stuck in an "endless" loop
+			if(cond.conditions.length > 0) {
+				while(cond.meets(context) && (nowTime-startTime) < 60000) {
+					await FlowConditional.execFlow(this.data.flow, context);
+					nowTime = (new Date()).getTime();
+				}
 			}
 		} else {
 			if(cond.meets(context)) {
@@ -42,7 +47,7 @@ class FlowConditional {
 		}
 	}
 	
-	static async execFlow(f: Array<IFlowVariable|IFlowAction|IFlowMath|IFlowConditional>, context: Context) {
+	static async execFlow(f: Array<IFlowVariable|IFlowAction|IFlowMath|IFlowConditional|IFlowWait|IFlowWebRequest>, context: Context) {
 		for(let i = 0; i < f.length; i++) {
 			let fl = null;
 			switch(f[i].discriminator) {
@@ -57,6 +62,12 @@ class FlowConditional {
 					break;
 				case 'FlowVariable':
 					fl = new FlowVariable(f[i] as IFlowVariable);
+					break;
+				case 'FlowWait':
+					fl = new FlowWait(f[i] as IFlowWait);
+					break;
+				case 'FlowWebRequest':
+					fl = new FlowWebRequest(f[i] as IFlowWebRequest);
 					break;
 			}
 

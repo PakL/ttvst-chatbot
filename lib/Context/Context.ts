@@ -1,7 +1,7 @@
 import VarInterface from './VarInterface';
 
 const placeholderRegex = /\$\{(\s+)?(?<var>([a-z]([a-z0-9]+)?)(\[(\s+)?(([a-z]([a-z0-9]+)?)|[0-9]+|"(.*?[^\\])?")(\s+)?\])?)(\s+)?\}/;
-const variablePartsRegex = /(?<varname>[a-z]([a-z0-9]+)?)(\[(\s+)?(?<index>([a-z]([a-z0-9]+)?)|[0-9]+|"(.*?[^\\])?")(\s+)?\])?/;
+const variablePartsRegex = /(?<varname>[a-z]([a-z0-9]+)?)(\[(\s+)?(?<varindex>([a-z]([a-z0-9]+)?)|[0-9]+|"(.*?[^\\])?")(\s+)?\])?/;
 
 class Context {
 
@@ -30,13 +30,13 @@ class Context {
 			if(varinf !== null) {
 				let result = null;
 				let resIndex: string|number = null;
-				if(typeof(matches.groups.index) !== 'undefined') {
-					if(matches.groups.index.startsWith('"') && matches.groups.index.endsWith('"')) {
-						resIndex = matches.groups.index.substr(1, matches.groups.index.length-2);
-					} else if(matches.groups.index.match(/^[a-z]/i)) {
-						resIndex = await this.valueOf(matches.groups.index);
+				if(typeof(matches.groups.varindex) !== 'undefined') {
+					if(matches.groups.varindex.startsWith('"') && matches.groups.varindex.endsWith('"')) {
+						resIndex = matches.groups.varindex.substr(1, matches.groups.varindex.length-2);
+					} else if(matches.groups.varindex.match(/^[a-z]/i)) {
+						resIndex = await this.valueOf(matches.groups.varindex);
 					} else {
-						resIndex = parseInt(matches.groups.index);
+						resIndex = parseInt(matches.groups.varindex);
 					}
 				}
 				if(resIndex !== null) {
@@ -59,15 +59,16 @@ class Context {
 			let varinf = this.get(matches.groups.varname)
 			if(varinf === null) {
 				varinf = new VarInterface(matches.groups.varname);
+				this.variables[varinf.name] = varinf;
 			}
 			let resIndex: string|number = null;
-			if(typeof(matches.groups.index) !== 'undefined') {
-				if(matches.groups.index.startsWith('"') && matches.groups.index.endsWith('"')) {
-					resIndex = matches.groups.index.substr(1, matches.groups.index.length-2);
-				} else if(matches.groups.index.match(/^[a-z]/i)) {
-					resIndex = await this.valueOf(matches.groups.index);
+			if(typeof(matches.groups.varindex) !== 'undefined') {
+				if(matches.groups.varindex.startsWith('"') && matches.groups.varindex.endsWith('"')) {
+					resIndex = matches.groups.varindex.substr(1, matches.groups.varindex.length-2);
+				} else if(matches.groups.varindex.match(/^[a-z][a-z0-9]+$/i)) {
+					resIndex = await this.valueOf(matches.groups.varindex);
 				} else {
-					resIndex = parseInt(matches.groups.index);
+					resIndex = parseInt(matches.groups.varindex);
 				}
 			}
 			if(resIndex !== null) {
@@ -121,5 +122,9 @@ class Context {
 		return null;
 	}
 	
+	iterable(): Array<VarInterface> {
+		return Object.values(this.variables);
+	}
+
 }
 export = Context;

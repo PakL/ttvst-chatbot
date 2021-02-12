@@ -92,11 +92,9 @@ class FlowVariable {
 					}
 				} else if(this.data.processing === 'enjson') {
 					let varContent = await context.getFirstVariableRaw(this.data.content);
-					if(varContent !== null && typeof(varContent) === 'object') {
-						try {
-							content = JSON.stringify(varContent);
-						} catch(e) {}
-					}
+					try {
+						content = JSON.stringify(varContent);
+					} catch(e) {}
 				}
 			}
 			value = content;
@@ -122,6 +120,11 @@ class FlowVariable {
 					try {
 						let jsonContent = JSON.parse(contentStr);
 						if(typeof(jsonContent) === 'object' && Array.isArray(jsonContent)) {
+							for(let i = 0; i < jsonContent.length; i++) {
+								if(['string','number','boolean'].indexOf(typeof(jsonContent[i])) < 0) {
+									jsonContent[i] = JSON.stringify(jsonContent[i]);
+								}
+							}
 							content = jsonContent;
 						}
 					} catch(e) {}
@@ -149,6 +152,11 @@ class FlowVariable {
 					try {
 						let jsonContent = JSON.parse(contentStr);
 						if(jsonContent !== null && typeof(jsonContent) === 'object' && !Array.isArray(jsonContent)) {
+							for(let i of Object.keys(jsonContent)) {
+								if(['string','number','boolean'].indexOf(typeof(jsonContent[i])) < 0) {
+									jsonContent[i] = JSON.stringify(jsonContent[i]);
+								}
+							}
 							content = jsonContent;
 						}
 					} catch(e) {}
@@ -169,6 +177,7 @@ class FlowVariable {
 				}
 			}
 		}
+
 
 		if(typeof(value) === this.data.type) {
 			context.setValueOf(this.data.variable, value);

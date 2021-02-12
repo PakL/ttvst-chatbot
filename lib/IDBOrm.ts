@@ -37,6 +37,24 @@ if(typeof(ipcRenderer) !== 'undefined') {
 		}
 		ipcRenderer.send('app.ttvst.chatbot.idborm.getIndex.' + ipcKey, orm);
 	});
+	ipcRenderer.on('app.ttvst.chatbot.idborm.save', async (event, ipcKey: string, store: string, keyPath: string, data: any) => {
+		let orm = new IDBOrm(data);
+		try {
+			await orm.save(store, keyPath);
+			ipcRenderer.send('app.ttvst.chatbot.idborm.save.' + ipcKey, true);
+		} catch(e) {
+			ipcRenderer.send('app.ttvst.chatbot.idborm.save.' + ipcKey, false);
+		}
+	});
+	ipcRenderer.on('app.ttvst.chatbot.idborm.delete', async (event, ipcKey: string, store: string, keyPath: string, data: any) => {
+		let orm = new IDBOrm(data);
+		try {
+			await orm.delete(store, keyPath);
+			ipcRenderer.send('app.ttvst.chatbot.idborm.delete.' + ipcKey, true);
+		} catch(e) {
+			ipcRenderer.send('app.ttvst.chatbot.idborm.delete.' + ipcKey, false);
+		}
+	});
 }
 
 class IDBOrm {
@@ -182,18 +200,33 @@ class IDBOrm {
 		this.data = data;
 	}
 
-	save(): Promise<this> {
-		if(typeof(ipcMain) !== 'undefined') {
-			return Promise.reject('Cannot save in main process');
-		}
+	save(store: string = null, keyPath: string = null): Promise<this> {
 		const orm = (this.constructor as typeof IDBOrm);
+
+		if(store === null || keyPath === null) {
+			store = orm.store;
+			keyPath = orm.keyPath;
+		}
 		return new Promise((async (resolve: (result: this) => void, reject: (reason: any) => void) => {
-			if(orm.store.length > 0) {
+			if(store.length > 0 && keyPath.length > 0) {
+				if(typeof(ipcMain) !== 'undefined') {
+					let ipcKey = ((new Date()).getTime() + Math.random()).toString(16);
+					ipcMain.once('app.ttvst.chatbot.idborm.save.' + ipcKey, ((event: Electron.IpcMainEvent, result: boolean) => {
+						if(result) {
+							resolve(this);
+						} else {
+							reject('DB request failed');
+						}
+					}).bind(this));
+					TTVST.mainWindow.ipcSend('app.ttvst.chatbot.idborm.save', ipcKey, store, keyPath, this.data);
+					return;
+				}
+
 				let db = await DBHelper.getDatabaseWhenReady();
-				let transaction = db.transaction(orm.store, 'readwrite');
-				let objectStore = transaction.objectStore(orm.store);
+				let transaction = db.transaction(store, 'readwrite');
+				let objectStore = transaction.objectStore(store);
 				let request: IDBRequest = null;
-				if(typeof(this.data[orm.keyPath]) !== 'undefined') {
+				if(typeof(this.data[keyPath]) !== 'undefined') {
 					request = objectStore.put(this.data);
 				} else {
 					request = objectStore.add(this.data);
@@ -202,7 +235,7 @@ class IDBOrm {
 					reject('DB request failed');
 				}
 				request.onsuccess = (() => {
-					this.data[orm.keyPath] = request.result;
+					this.data[keyPath] = request.result;
 					resolve(this);
 				}).bind(this);
 			} else {
@@ -211,23 +244,38 @@ class IDBOrm {
 		}).bind(this));
 	}
 
-	delete(): Promise<void> {
-		if(typeof(ipcMain) !== 'undefined') {
-			return Promise.reject('Cannot delete in main process');
-		}
+	delete(store: string = null, keyPath: string = null): Promise<void> {
 		const orm = (this.constructor as typeof IDBOrm);
+
+		if(store === null || keyPath === null) {
+			store = orm.store;
+			keyPath = orm.keyPath;
+		}
 		return new Promise((async (resolve: () => void, reject: (reason: any) => void) => {
-			if(orm.store.length > 0) {
-				if(typeof(this.data[orm.keyPath]) !== 'undefined') {
+			if(store.length > 0 && keyPath.length > 0) {
+				if(typeof(ipcMain) !== 'undefined') {
+					let ipcKey = ((new Date()).getTime() + Math.random()).toString(16);
+					ipcMain.once('app.ttvst.chatbot.idborm.delete.' + ipcKey, ((event: Electron.IpcMainEvent, result: boolean) => {
+						if(result) {
+							resolve();
+						} else {
+							reject('DB request failed');
+						}
+					}).bind(this));
+					TTVST.mainWindow.ipcSend('app.ttvst.chatbot.idborm.delete', ipcKey, store, keyPath, this.data);
+					return;
+				}
+
+				if(typeof(this.data[keyPath]) !== 'undefined') {
 					let db = await DBHelper.getDatabaseWhenReady();
-					let transaction = db.transaction(orm.store, 'readwrite');
-					let objectStore = transaction.objectStore(orm.store);
-					let request = objectStore.delete(this.data[orm.keyPath]);
+					let transaction = db.transaction(store, 'readwrite');
+					let objectStore = transaction.objectStore(store);
+					let request = objectStore.delete(this.data[keyPath]);
 					request.onerror = function() {
 						reject('DB request failed');
 					}
 					request.onsuccess = (() => {
-						delete this.data[orm.keyPath];
+						delete this.data[keyPath];
 						resolve();
 					}).bind(this);
 				} else {

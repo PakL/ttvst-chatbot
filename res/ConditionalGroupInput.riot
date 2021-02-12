@@ -1,5 +1,5 @@
 <ConditionalGroupInput>
-	<select>
+	<select onchange={ onOperatorChange }>
 		<option value="and" selected={ condgroup.operator === 'and' }>{ __('AND: All conditions need to be met') }</option>
 		<option value="or" selected={ condgroup.operator === 'or' }>{ __('OR: At least one condition must be met') }</option>
 		<option value="xor" selected={ condgroup.operator === 'xor' }>{ __('XOR: ONLY one condition must be met') }</option>
@@ -11,7 +11,7 @@
 			<ConditionalInput if={ condition.discriminator === 'Condition' } cond={ condition }></ConditionalInput>
 		</template>
 	</div>
-	<div class="addbtns"><button onclick={ onAddConditionClick }>Add a condition</button> or <button onclick={ onAddConditionGroupClick }>Add a group</button></div>
+	<div class="addbtns"><button onclick={ onAddConditionClick }>{ __('Add a condition') }</button>{ __(' or ') }<button onclick={ onAddConditionGroupClick }>{ __('Add a group') }</button></div>
 
 	<style>
 		:host {
@@ -79,6 +79,10 @@
 				} else {
 					this.condgroup = new ConditionalGroup({ discriminator: 'ConditionGroup', conditions: [], operator: 'and' });
 				}
+			},
+
+			onOperatorChange(e) {
+				this.condgroup.operator = e.currentTarget.value;
 			},
 
 			onAddConditionClick() {

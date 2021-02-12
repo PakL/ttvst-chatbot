@@ -12,6 +12,7 @@ export enum IConditionCompare {
 	CONTAINS = 'contains',
 	SIMILAR = 'similar',
 	MATCH = 'match',
+	MATCHI = 'matchi',
 	LIKE = 'like',
 	HAS = 'has',
 
@@ -93,6 +94,14 @@ class Conditional {
 					}
 				} catch(e){}
 				return false;
+			case IConditionCompare.MATCHI:
+				try {
+					let reg = new RegExp(right, 'i');
+					if(left.match(reg)) {
+						return true;
+					}
+				} catch(e){}
+				return false;
 			case IConditionCompare.LIKE:
 				right = right
 							.replace(/[\(\)\[\]\{\}\.\*\?\\\/\^\$\+\-]/g, '\\$&')
@@ -128,12 +137,9 @@ class Conditional {
 	private async contains(context: Context, right: string): Promise<boolean> {
 		let left = await context.getFirstVariableRaw(this.condition.left);
 		if(typeof(left) === 'object' && left !== null) {
-			if(Array.isArray(left)) {
-				let rightNum = parseInt(right);
-				if(!isNaN(rightNum) && rightNum < left.length) {
-					return true;
-				}
-			} else {
+			if(Array.isArray(left) && left.indexOf(right) >= 0) {
+				return true;
+			} else if(!Array.isArray(left)) {
 				for(let key of Object.keys(left)) {
 					if(left[key] == right) {
 						return true;
@@ -150,9 +156,12 @@ class Conditional {
 	private async has(context: Context, right: string): Promise<boolean> {
 		let left = await context.getFirstVariableRaw(this.condition.left);
 		if(typeof(left) === 'object' && left !== null) {
-			if(Array.isArray(left) && left.indexOf(right) >= 0) {
-				return true;
-			} else if(!Array.isArray(left)) {
+			if(Array.isArray(left)) {
+				let rightNum = parseInt(right);
+				if(!isNaN(rightNum) && rightNum < left.length) {
+					return true;
+				}
+			} else {
 				return Object.keys(left).indexOf(right) >= 0;
 			}
 			return false;

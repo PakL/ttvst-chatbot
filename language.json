@@ -1,0 +1,212 @@
+{
+	"Chatbot": {
+		"de": "Chatbot"
+	},
+	"{{flows}} active flows registered": {
+		"de": "{{flows}} aktive Abläufe registriert"
+	},
+	"Reregister": {
+		"de": "Neu registrieren"
+	},
+	"Move up one folder": {
+		"de": "Einen Ordner nach oben"
+	},
+	"Copy": {
+		"de": "Kopieren"
+	},
+	"Cut": {
+		"de": "Ausschneiden"
+	},
+	"Paste": {
+		"de": "Einfügen"
+	},
+	"Delete": {
+		"de": "Löschen"
+	},
+	"Edit": {
+		"de": "Bearbeiten"
+	},
+	"New Folder": {
+		"de": "Neuer Ordner"
+	},
+	"New Flow": {
+		"de": "Neuer Ablauf"
+	},
+	"Global variables": {
+		"de": "Globale Variabeln"
+	},
+	"Name": {
+		"de": "Name"
+	},
+	"Active": {
+		"de": "Aktiv"
+	},
+	"Last modified": {
+		"de": "Zuletzt bearbeitet"
+	},
+	"This folder is empty.": {
+		"de": "Dieser Ordner ist leer."
+	},
+	"Registering flows": {
+		"de": "Registriere Abläufe"
+	},
+	"No trigger selected": {
+		"de": "Kein Auslöser ausgewählt"
+	},
+	"Flow label": {
+		"de": "Ablaufbezeichnung"
+	},
+	"This is just a label for you to identify this flow. Like a file name. Put whatever you want in here.": {
+		"de": "Dies ist nur eine Bezeichnung für den Ablauf, damit du ihn wiederfindest. Wie ein Dateiname. Gib irgendetwas ein."
+	},
+	"Mode": {
+		"de": "Modus"
+	},
+	"Chat command": {
+		"de": "Chatbefehl"
+	},
+	"Channel point reward automation": {
+		"de": "Kanalpunkt-Belohnungs-Automatisierung"
+	},
+	"Free mode": {
+		"de": "Freier Modus"
+	},
+	"Execution condition": {
+		"de": "Ausfürungsbedingung"
+	},
+	"AND: All conditions need to be met": {
+		"de": "UND: Alle Bedingungen müssen erfüllt werden"
+	},
+	"OR: At least one condition must be met": {
+		"de": "ODER: Wenigstens eine Bedingung muss erfüllt werden"
+	},
+	"XOR: ONLY one condition must be met": {
+		"de": "X-ODER: NUR EINE Bedingung darf erfüllt werden"
+	},
+	"Loop while": {
+		"de": "Wiederhole solange"
+	},
+	"End loop": {
+		"de": "Ende der Schleife"
+	},
+	"End of Flow": {
+		"de": "Ende des Ablaufs"
+	},
+	"Command phrase": {
+		"de": "Befehl-Phrase"
+	},
+	"A command phrase that stands in front of the message. You should also use a symobl (like !) to make sure it is not triggered on accident.": {
+		"de": "Eine Befehls-Phrase, die am Anfang einer Nachricht steht. Du solltest auch ein Symbol (z.B. !) benutzen um sicher zu stellen dass der Befehl nicht aus Versehen ausgelöst wird."
+	},
+	"Permission level": {
+		"de": "Berechtigungsstufe"
+	},
+	"Everyone": {
+		"de": "Jede(r)"
+	},
+	"Subscriber": {
+		"de": "Abonnent(in)"
+	},
+	"VIP": {
+		"de": "VIP"
+	},
+	"Moderator": {
+		"de": "Moderator(in)"
+	},
+	"Broadcaster": {
+		"de": "Broadcaster(in)"
+	},
+	"Select a badge that a user must have at least.": {
+		"de": "Wähle ein Abzeichen, das ein Benutzer mindestens haben muss."
+	},
+	"Cooldown": {
+		"de": "Abklingzeit"
+	},
+	"The minimum time in seconds that should pass before the command can be executed again.": {
+		"de": "Die mindest Anzahl an Sekunden die vergehen müssen bis der Befehl wieder ausgeführt werden kann."
+	},
+	"Reward": {
+		"de": "Belohnung"
+	},
+	"Please wait": {
+		"de": "Bitte warten"
+	},
+	"Select the reward that triggers this flow.": {
+		"de": "Wähle eine Belohnung, die diesen Ablauf auslöst."
+	},
+	"Please log in to select reward": {
+		"de": "Bitte einloggen um Belohnung zu wählen"
+	},
+	"Default comparison": {
+		"de": "Standard Vergleichung"
+	},
+	"equals": {
+		"de": "ist gleich"
+	},
+	"does not equal": {
+		"de": "ist nicht gleich"
+	},
+	"greater than": {
+		"de": "größer als"
+	},
+	"equal or greater than": {
+		"de": "gleich oder größer als"
+	},
+	"less than": {
+		"de": "kleiner als"
+	},
+	"equal or less than": {
+		"de": "gleich oder kleiner als"
+	},
+	"Advanced comparison": {
+		"de": "Erweiterte Vergleichung"
+	},
+	"contains": {
+		"de": "beinhaltet"
+	},
+	"is similar to": {
+		"de": "ähnelt"
+	},
+	"regex matches": {
+		"de": "gleicht RegEx"
+	},
+	"regex matches (ignore case)": {
+		"de": "gleicht RegEx (Gr./Kl.-schreibung ignorieren)"
+	},
+	"is like": {
+		"de": "ist wie"
+	},
+	"has": {
+		"de": "hat"
+	},
+	"Special string comparison": {
+		"de": "String-spezifische Vergleichung"
+	},
+	"equals (ignore case)": {
+		"de": "ist gleich (Gr./Kl.-schreibung ignorieren)"
+	},
+	"does not equal (ignore case)": {
+		"de": "ist nicht gleich (Gr./Kl.-schreibung ignorieren)"
+	},
+	"starts with": {
+		"de": "beginnt mit"
+	},
+	"ends with": {
+		"de": "endet mit"
+	},
+	"starts with (ignore case)": {
+		"de": "beginnt mit (Gr./Kl.-schreibung ignorieren)"
+	},
+	"ends with (ignore case)": {
+		"de": "endet mit (Gr./Kl.-schreibung ignorieren)"
+	},
+	"Boolean check": {
+		"de": "Boolean Prüfung"
+	},
+	"is true": {
+		"de": "ist wahr"
+	},
+	"is false": {
+		"de": "ist falsch"
+	}
+}

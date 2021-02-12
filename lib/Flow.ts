@@ -6,6 +6,8 @@ import { IFlowMath } from './Flow/FlowMath';
 import { IFlowAction } from './Flow/FlowAction';
 import { IFlowVariable } from './Flow/FlowVariable';
 import FlowConditional, { IFlowConditional } from './Flow/FlowConditional';
+import { IFlowWait } from './Flow/FlowWait';
+import { IFlowWebRequest } from './Flow/FlowWebRequest';
 import Context from './Context/Context';
 
 export interface IFlowData {
@@ -18,6 +20,7 @@ export interface IFlowData {
 	trigger: string;
 	conditionals: string;
 	flow: string;
+	mode?: { mode: number, props: { [key: string]: string } };
 }
 
 class Flow extends IDBOrm {
@@ -115,6 +118,17 @@ class Flow extends IDBOrm {
 		this.data.trigger = newtrigger;
 	}
 
+	get mode(): { mode: number, props: { [key: string]: string } } {
+		if(typeof(this.data.mode) === 'undefined') {
+			return { mode: 2, props: {} };
+		}
+		return this.data.mode;
+	}
+
+	set mode(newmode: { mode: number, props: { [key: string]: string } }) {
+		this.data.mode = newmode;
+	}
+
 	get conditionals(): ConditionalGroup {
 		let j: IConditionGroup = JSON.parse(this.data.conditionals);
 		if(j === null || typeof(j) !== 'object' || Array.isArray(j)) {
@@ -127,8 +141,8 @@ class Flow extends IDBOrm {
 		this.data.conditionals = newconditionals.toString();
 	}
 
-	get flow(): Array<IFlowVariable|IFlowAction|IFlowMath|IFlowConditional> {
-		let j: Array<IFlowVariable|IFlowAction|IFlowMath|IFlowConditional> = [];
+	get flow(): Array<IFlowVariable|IFlowAction|IFlowMath|IFlowConditional|IFlowWait|IFlowWebRequest> {
+		let j: Array<IFlowVariable|IFlowAction|IFlowMath|IFlowConditional|IFlowWait|IFlowWebRequest> = [];
 		try {
 			j = JSON.parse(this.data.flow);
 			if(typeof(j) !== 'object' || !Array.isArray(j)) {
@@ -138,7 +152,7 @@ class Flow extends IDBOrm {
 		return j;
 	}
 
-	set flow(newflow: Array<IFlowVariable|IFlowAction|IFlowMath|IFlowConditional>) {
+	set flow(newflow: Array<IFlowVariable|IFlowAction|IFlowMath|IFlowConditional|IFlowWait|IFlowWebRequest>) {
 		this.data.flow = JSON.stringify(newflow);
 	}
 

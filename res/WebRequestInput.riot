@@ -1,0 +1,147 @@
+<WebRequestInput>
+	<label>
+		{ __('Method') }
+		<select class="req_method" onchange={ onMethodChange }>
+			<option value="HEAD">HEAD</option>
+			<option value="GET">GET</option>
+			<option value="POST">POST</option>
+			<option value="PUT">PUT</option>
+			<option value="PATCH">PATCH</option>
+			<option value="DELETE">DELETE</option>
+			<option value="OPTIONS">OPTIONS</option>
+		</select>
+		<small>{ __('What kind of HTTP request to make') }</small>
+	</label>
+	<label>
+		{ __('URL') }
+		<input type="url" placeholder="https://" class="req_url">
+		<small>{ __('URL the HTTP request is made to. Must start with http:// or https://') }</small>
+	</label>
+	<label>
+		{ __('Headers') }
+		<select class="req_headers">
+			<option value="">{ __('No custom headers') }</option>
+			<option each={ v in assocvars } value={ v }>{ v }</option>
+		</select>
+		<small>{ __('Select a associative array for HTTP headers') }</small>
+	</label>
+	<label if={ requestsWithoutBody.indexOf(selectedMethod) < 0 }>
+		{ __('Content Type') }
+		<select class="req_contenttype" onchange={ onContentTypeChange }>
+			<option each={ ct in predefinedContenttype } value={ ct } selected={ selectedContenttype == ct }>{ ct }</option>
+			<option value="custom">{ __('Custom') }</option>
+		</select>
+		<small>{ __('Select the content type you are going to send') }</small>
+	</label>
+	<label if={ requestsWithoutBody.indexOf(selectedMethod) < 0 && selectedContenttype == 'custom' }>
+		{ __('Custom Content Type') }
+		<input type="text" class="req_conenttype_custom">
+		<small>{ __('Enter the content type header you want to send') }</small>
+	</label>
+	<label if={ requestsWithoutBody.indexOf(selectedMethod) < 0 }>
+		{ __('Body') }
+		<textarea class="req_body"></textarea>
+		<small>{ __('Enter the request body you want to send. Must conform with the content type selected above.') }</small>
+	</label>
+	<hr>
+	<label>
+		{ __('Result type') }
+		<select class="req_whattoresult" onchange={ onWhattoresultChange }><option value="body">Body</option><option value="header">Header</option></select>
+		<small>{ __('Select what kind of result you want to put in the result variable') }</small>
+	</label>
+	<label if={ selectedResulttype === 'header' }>
+		{ __('Result header') }
+		<input type="text" class="req_whattoresult_header">
+		<small>{ __('Enter the header you want the result of') }</small>
+	</label>
+	<label>
+		{ __('Result into variable') }
+		<input type="text" class="req_resultinto">
+		<small>{ __('Enter a TTVST variable that you want the result put into') }</small>
+	</label>
+
+	<style>
+	</style>
+	<script>
+
+
+		export default {
+			requestsWithoutBody: ['HEAD','GET','DELETE'],
+			selectedMethod: 'GET',
+			predefinedContenttype: ['application/json', 'text/plain', 'application/x-www-form-urlencoded'],
+			selectedContenttype: 'application/json',
+			assocvars: [],
+			selectedResulttype: 'body',
+
+			onBeforeMount(props, state) {
+				this.__ = global.TTVST.i18n.__;
+				this.assocvars = [];
+				for(let i = 0; i < props.dyninput.length; i++) {
+					if(props.dyninput[i].param.type == 'assoc') {
+						this.assocvars.push(props.dyninput[i].param.label);
+					}
+				}
+
+				this.selectedMethod = props.step.method;
+				if(this.predefinedContenttype.indexOf(props.step.contentType) < 0) {
+					this.selectedContenttype = 'custom';
+				} else {
+					this.selectedContenttype = props.step.contentType;
+				}
+				if(props.step.whattoresult !== 'body') {
+					this.selectedResulttype = 'header';
+				}
+			},
+
+			onMounted(props, state) {
+				this.$('.req_method').value = this.selectedMethod;
+				this.$('.req_url').value = props.step.url;
+				this.$('.req_headers').value = props.step.headers;
+				if(this.requestsWithoutBody.indexOf(this.selectedMethod) < 0) {
+					this.$('.req_contenttype').value = this.selectedContenttype;
+					if(this.selectedContenttype === 'custom') {
+						this.$('.req_conenttype_custom').value = props.step.contentType;
+					}
+					this.$('.req_body').value = props.step.body;
+				}
+				this.$('.req_whattoresult').value = this.selectedResulttype;
+				if(this.selectedResulttype === 'header') {
+					this.$('.req_whattoresult_header').value = props.step.whattoresult;
+				}
+				this.$('.req_resultinto').value = props.step.resultinto;
+			},
+
+			onMethodChange() {
+				this.selectedMethod = this.$('.req_method').value;
+				if(this.requestsWithoutBody.indexOf(this.selectedMethod) >= 0) {
+					this.selectedContenttype = this.predefinedContenttype[0];
+				}
+				this.update();
+			},
+
+			onContentTypeChange() {
+				this.selectedContenttype = this.$('.req_contenttype').value;
+				this.update();
+			},
+
+			onWhattoresultChange() {
+				this.selectedResulttype = this.$('.req_whattoresult').value;
+				this.update();
+			},
+
+			getFlowObject() {
+				return {
+					discriminator: 'FlowWebRequest',
+					url: this.$('.req_url').value,
+					method: this.selectedMethod,
+					contentType: (this.selectedContenttype === 'custom' ? this.$('.req_conenttype_custom').value : this.selectedContenttype),
+					headers: this.$('.req_headers').value,
+					body: (this.requestsWithoutBody.indexOf(this.selectedMethod) < 0 ? this.$('.req_body').value : ''),
+					whattoresult: this.selectedResulttype === 'body' ? 'body' : this.$('.req_whattoresult_header').value,
+					resultinto: this.$('.req_resultinto').value
+				}
+			}
+		}
+	</script>
+
+</WebRequestInput>

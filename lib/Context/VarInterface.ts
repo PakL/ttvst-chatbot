@@ -11,7 +11,7 @@ class VarInterface {
 		return this._name;
 	}
 
-	get type(): string {
+	get type(): 'undefined'|'object'|'boolean'|'number'|'string'|'array' {
 		return this.getType();
 	}
 

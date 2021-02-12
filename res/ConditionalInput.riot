@@ -12,7 +12,8 @@
 		<optgroup label={ __('Advanced comparison') }>
 			<option value="contains" selected={ cond.condition.compare === 'contains' }>{ __('contains') }</option>
 			<option value="similar" selected={ cond.condition.compare === 'similar' }>{ __('is similar to') }</option>
-			<option value="match" selected={ cond.condition.compare === 'match' }>{ __('matches') }</option>
+			<option value="match" selected={ cond.condition.compare === 'match' }>{ __('regex matches') }</option>
+			<option value="matchi" selected={ cond.condition.compare === 'matchi' }>{ __('regex matches (ignore case)') }</option>
 			<option value="like" selected={ cond.condition.compare === 'like' }>{ __('is like') }</option>
 			<option value="has" selected={ cond.condition.compare === 'has' }>{ __('has') }</option>
 		</optgroup>

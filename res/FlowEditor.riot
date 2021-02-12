@@ -12,7 +12,7 @@
 			</template>
 			<template if={ step.discriminator === 'FlowMath' }>
 				<i class="ms-Icon ms-Icon--CalculatorEqualTo"></i>
-				<span>{ step.resultinto } = { step.expression }</span>
+				<span><span if={step.resultinto.length > 0}>{ step.resultinto } = </span>{ step.expression.replace(/\n/g,'⮐') }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowMath } data-flow={ index }>{ __('Edit') }</button>
 					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
@@ -20,7 +20,7 @@
 			</template>
 			<template if={ step.discriminator === 'FlowAction' }>
 				<i class="ms-Icon ms-Icon--Processing"></i>
-				<span>{ __actionByChannel(step.channel) }</span>
+				<span><span if={step.resultinto.length > 0}>{ step.resultinto } = </span>{ __actionByChannel(step.channel) }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowAction } data-flow={ index }>{ __('Edit') }</button>
 					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
@@ -31,6 +31,22 @@
 				<span>{ step.variable } = { __(step.type) }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowVariable } data-flow={ index }>{ __('Edit') }</button>
+					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
+				</div>
+			</template>
+			<template if={ step.discriminator === 'FlowWait' }>
+				<i class="ms-Icon ms-Icon--Clock"></i>
+				<span>{ __('Waiting for {{seconds}} seconds', { seconds: (step.time/1000) }) }</span>
+				<div class="btngrp">
+					<button onclick={ onEditFlowWait } data-flow={ index }>{ __('Edit') }</button>
+					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
+				</div>
+			</template>
+			<template if={ step.discriminator === 'FlowWebRequest' }>
+				<i class="ms-Icon ms-Icon--Globe"></i>
+				<span>{ step.method + ' ' + step.url }</span>
+				<div class="btngrp">
+					<button onclick={ onEditFlowWebRequest } data-flow={ index }>{ __('Edit') }</button>
 					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
 				</div>
 			</template>
@@ -82,10 +98,13 @@
 		}
 	</style>
 	<script>
+		const { ipcRenderer } = require('electron');
 		const riot = require('riot');
 		const ConditionalGroup = require('../lib/ConditionalGroup').default;
 		import FlowVariableEditor from './FlowVariableEditor.riot';
 		const FlowVariableEditorMount = riot.component(FlowVariableEditor);
+		import WebRequestInput from './WebRequestInput.riot';
+		const WebRequestInputMount = riot.component(WebRequestInput);
 
 
 		export default {
@@ -103,6 +122,7 @@
 				this.__ = global.TTVST.i18n.__;
 				this.state.steps = [];
 				this.state.keystate = 0;
+				this.state.editingIndex = -1;
 
 				if(typeof(props.flow) === 'object' && Array.isArray(props.flow)) {
 					for(let i = 0; i < props.flow.length; i++) {
@@ -122,12 +142,14 @@
 				let selectedStep = await new Promise((resolve, reject) => {
 					let typlbl = document.createElement('label');
 					let typinp = document.createElement('select');
-					let options = [document.createElement('option'),document.createElement('option'),document.createElement('option'),document.createElement('option')];
-					options[0].value = 'FlowConditional';options[1].value = 'FlowMath';options[2].value = 'FlowAction';options[3].value = 'FlowVariable';
-					options[0].appendChild(document.createTextNode(self.__('Condition')));
+					let options = [document.createElement('option'),document.createElement('option'),document.createElement('option'),document.createElement('option'),document.createElement('option'),document.createElement('option')];
+					options[0].value = 'FlowConditional';options[1].value = 'FlowMath';options[2].value = 'FlowAction';options[3].value = 'FlowVariable';options[4].value = 'FlowWait';options[5].value = 'FlowWebRequest';
+					options[0].appendChild(document.createTextNode(self.__('Condition / Loop')));
 					options[1].appendChild(document.createTextNode(self.__('Math')));
 					options[2].appendChild(document.createTextNode(self.__('Action')));
 					options[3].appendChild(document.createTextNode(self.__('Variable')));
+					options[4].appendChild(document.createTextNode(self.__('Wait')));
+					options[5].appendChild(document.createTextNode(self.__('Make a web request')));
 					for(let i = 0; i < options.length; i++)
 						typinp.appendChild(options[i]);
 					
@@ -166,6 +188,14 @@
 							this.state.keystate++;
 							this.state.steps.splice(insertAt, 0, { k: this.state.keystate, discriminator: 'FlowVariable', variable: '', type: 'number', content: 0, processing: 'none', processingextra: '' });
 							break;
+						case 'FlowWait':
+							this.state.keystate++;
+							this.state.steps.splice(insertAt, 0, { k: this.state.keystate, discriminator: 'FlowWait', time: 5000 });
+							break;
+						case 'FlowWebRequest':
+							this.state.keystate++;
+							this.state.steps.splice(insertAt, 0, { k: this.state.keystate, discriminator: 'FlowWebRequest', url: '', method: 'GET', contentType: 'application/json', headers: '', body: '', whattoresult: 'body', resultinto: '' });
+							break;
 					}
 					this.update();
 				}
@@ -187,6 +217,8 @@
 					return;
 				}
 
+				this.state.editingIndex = flowIndex;
+
 				const self = this;
 				let [resultinto, expression] = await new Promise((resolve, reject) => {
 					let expressionlbl = document.createElement('label');
@@ -200,7 +232,7 @@
 					expressioninp.innerHTML = math.expression.replace(/</g,'&lt;').replace(/>/g,'&gt;');
 					expressionlbl.innerText = self.__('Math.js expression');
 					expressionlbl.appendChild(expressioninp);
-					expressiondesc.innerText = self.__('Enter your Math.js expression here. Learn more about the syntax on mathjs.org. Do not forget to terminate rows with a semicolon (;). You can use TTVST variables to input data.');
+					expressiondesc.innerText = self.__('Enter your Math.js expression here. Learn more about the syntax on mathjs.org. You can use TTVST variables to input data.');
 					expressionlbl.appendChild(expressioninp);
 					expressionlbl.appendChild(expressiondesc);
 
@@ -216,7 +248,17 @@
 					let response = false;
 					let nfmodal = TTVST.ui.modal([expressionlbl, resultintolbl], self.__('Edit Math'), 'CalculatorEqualTo', () => {
 						if(response) {
-							resolve([nfmodal.$('#flowmathedit_resultinto').value, nfmodal.$('#flowmathedit_expression').value]);
+							let resultinto = nfmodal.$('#flowmathedit_resultinto').value;
+							if(resultinto.length > 0) {
+								let match = resultinto.match(/([a-z][a-z0-9]+)/i);
+								if(match) {
+									resultinto = match[1];
+								} else {
+									TTVST.ui.alert('Variable name is invalid');
+									return false;
+								}
+							}
+							resolve([resultinto, nfmodal.$('#flowmathedit_expression').value]);
 						} else {
 							resolve([null, null]);
 						}
@@ -230,6 +272,7 @@
 					this.state.steps[flowIndex].resultinto = resultinto;
 					this.update();
 				}
+				this.state.editingIndex = -1;
 			},
 
 			async onEditFlowAction(e) {
@@ -240,6 +283,8 @@
 				if(action.discriminator != 'FlowAction') {
 					return;
 				}
+
+				this.state.editingIndex = flowIndex;
 
 				const self = this;
 				let [resultinto, channel, parameters] = await new Promise((resolve, reject) => {
@@ -256,7 +301,16 @@
 					let resultaction = TTVST.Broadcast.getAction({ channel: resultchannel });
 					if(resultaction.length > 0) selectactiontxt.nodeValue = self.__(resultaction[0].label);
 					selectactioninp.onclick = async () => {
-						let r = await TTVST.ui.selectAction(resultchannel, resultparameters);
+						let botWrap = document.querySelector('chatbotwrap');
+						let wrapSym = botWrap[Object.getOwnPropertySymbols(botWrap)[0]];
+
+						let dyninput = [];
+						try {
+							dyninput = await ipcRenderer.invoke('app.ttvst.chatbot.getContextForDynamicInput', wrapSym.getMoreContextVars());
+						}catch(e) {
+							console.error(e);
+						}
+						let r = await TTVST.ui.selectAction(resultchannel, resultparameters, dyninput);
 						if(r !== null) {
 							resultchannel = r.channel;
 							resultparameters = r.parameter;
@@ -281,7 +335,17 @@
 					let response = false;
 					let nfmodal = TTVST.ui.modal([selectactionlbl, resultintolbl], self.__('Edit Action'), 'Processing', () => {
 						if(response) {
-							resolve([nfmodal.$('#flowactionedit_resultinto').value, resultchannel, resultparameters]);
+							let resultinto = nfmodal.$('#flowactionedit_resultinto').value;
+							if(resultinto.length > 0) {
+								let match = resultinto.match(/([a-z][a-z0-9]+)/i);
+								if(match) {
+									resultinto = match[1];
+								} else {
+									TTVST.ui.alert('Variable name is invalid');
+									return false;
+								}
+							}
+							resolve([resultinto, resultchannel, resultparameters]);
 						} else {
 							resolve([null, null, null]);
 						}
@@ -296,6 +360,7 @@
 					this.state.steps[flowIndex].resultinto = resultinto;
 					this.update();
 				}
+				this.state.editingIndex = -1;
 			},
 
 			async onEditFlowVariable(e) {
@@ -306,6 +371,8 @@
 				if(variable.discriminator != 'FlowVariable') {
 					return;
 				}
+
+				this.state.editingIndex = flowIndex;
 
 				const self = this;
 				let result = await new Promise((resolve, reject) => {
@@ -334,6 +401,7 @@
 					Object.assign(this.state.steps[flowIndex], result);
 					this.update();
 				}
+				this.state.editingIndex = -1;
 			},
 
 			async onEditFlowConditional(e) {
@@ -345,16 +413,29 @@
 					return;
 				}
 
+				this.state.editingIndex = flowIndex;
+
 				const self = this;
 				let result = await new Promise((resolve, reject) => {
 					let fce = document.createElement('conditionalgroupinput');
 					riot.mount(fce, { condgroup: new ConditionalGroup(JSON.parse(conditional.conditional)) });
 					let fceSym = fce[Object.getOwnPropertySymbols(fce)[0]];
+					let looplbl = document.createElement('label');
+					let loopinp = document.createElement('input');
+					let loopdesc = document.createElement('small');
+					looplbl.innerText = self.__('Loop');
+					loopinp.setAttribute('type', 'checkbox');
+					if(conditional.loop) {
+						loopinp.setAttribute('checked', 'checked');
+					}
+					looplbl.appendChild(loopinp);
+					loopdesc.innerText = self.__('Check this box to loop the subflow as long as the condition is met');
+					looplbl.appendChild(loopdesc);
 
 					let response = false;
-					let nfmodal = TTVST.ui.modal([fce], self.__('Edit Conditional'), 'HighlightMappedShapes', () => {
+					let nfmodal = TTVST.ui.modal([fce, looplbl], self.__('Edit Conditional'), 'HighlightMappedShapes', () => {
 						if(response) {
-							resolve(fceSym.condgroup);
+							resolve([fceSym.condgroup, loopinp.checked]);
 						} else {
 							resolve(null);
 						}
@@ -364,10 +445,112 @@
 					], true);
 				});
 				if(result !== null) {
-					this.state.steps[flowIndex].conditional = result.toString();
+					this.state.steps[flowIndex].conditional = result[0].toString();
+					this.state.steps[flowIndex].loop = result[1];
 					this.update();
 				}
+				this.state.editingIndex = -1;
+			},
+			
+			async onEditFlowWait(e) {
+				let btn = e.currentTarget;
+				let flowIndex = parseInt(btn.dataset.flow);
+				let wait = this.state.steps[flowIndex]
+				
+				if(wait.discriminator != 'FlowWait') {
+					return;
+				}
 
+				this.state.editingIndex = flowIndex;
+
+				const self = this;
+				let waittime = await new Promise((resolve, reject) => {
+					let waittimelbl = document.createElement('label');
+					let waittimeinp = document.createElement('input');
+					let waittimedesc = document.createElement('small');
+
+					waittimeinp.setAttribute('id', 'flowwaitedit_time');
+					waittimeinp.setAttribute('type', 'number');
+					waittimeinp.value = wait.time/1000;
+					waittimelbl.innerText = self.__('Time to wait in seconds');
+					waittimelbl.appendChild(waittimeinp);
+					waittimedesc.innerText = self.__('How long the execution is paused before continuing');
+					waittimelbl.appendChild(waittimeinp);
+					waittimelbl.appendChild(waittimedesc);
+
+					let response = false;
+					let nfmodal = TTVST.ui.modal([waittimelbl], self.__('Edit Wait'), 'Clock', () => {
+						if(response) {
+							let waittime = parseFloat(nfmodal.$('#flowwaitedit_time').value);
+							if(isNaN(waittime)) {
+								waittime = 0;
+							}
+							resolve(Math.round(waittime * 1000));
+						} else {
+							resolve(null);
+						}
+					}, [
+						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+						{ key: 'cancel', title: 'Cancel' }
+					], true);
+				});
+				if(waittime !== null) {
+					this.state.steps[flowIndex].time = waittime;
+					this.update();
+				}
+				this.state.editingIndex = -1;
+			},
+			
+			async onEditFlowWebRequest(e) {
+				let btn = e.currentTarget;
+				let flowIndex = parseInt(btn.dataset.flow);
+				let webrequest = this.state.steps[flowIndex]
+				
+				if(webrequest.discriminator != 'FlowWebRequest') {
+					return;
+				}
+
+				this.state.editingIndex = flowIndex;
+
+				const self = this;
+				let result = await new Promise(async (resolve, reject) => {
+					let botWrap = document.querySelector('chatbotwrap');
+					let wrapSym = botWrap[Object.getOwnPropertySymbols(botWrap)[0]];
+					let dyninput = [];
+					try {
+						dyninput = await ipcRenderer.invoke('app.ttvst.chatbot.getContextForDynamicInput', wrapSym.getMoreContextVars());
+					} catch(e) {
+						console.error(e);
+					}
+
+					let fve = document.createElement('webrequestinput');
+					let fveSym = WebRequestInputMount(fve, { step: webrequest, dyninput });
+
+					let response = false;
+					let nfmodal = TTVST.ui.modal([fve], self.__('Edit Web Request'), 'Globe', () => {
+						if(response) {
+							let flowobj = fveSym.getFlowObject();
+							if(flowobj.resultinto.length > 0) {
+								let match = flowobj.resultinto.match(/([a-z][a-z0-9]+)/i);
+								if(!match) {
+									TTVST.ui.alert('Variable name is invalid');
+									return false;
+								}
+							}
+							resolve(flowobj);
+						} else {
+							resolve(null);
+						}
+					}, [
+						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+						{ key: 'cancel', title: 'Cancel' }
+					], true);
+				});
+				if(result !== null) {
+					Object.assign(this.state.steps[flowIndex], result);
+					this.update();
+				}
+				this.state.editingIndex = -1;
 			}
 		}
 	</script>

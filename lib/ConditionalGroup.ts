@@ -33,9 +33,11 @@ class ConditionalGroup {
 	}
 
 	async meets(context: Context): Promise<boolean> {
+		if(this.conditions.length == 0) return true;
+
 		if(this.operator == IOperator.AND) {
 			for(let i = 0; i < this.conditions.length; i++) {
-				if(!this.conditions[i].meets(context)) {
+				if(!await this.conditions[i].meets(context)) {
 					return false;
 				}
 			}
@@ -43,7 +45,7 @@ class ConditionalGroup {
 			return true;
 		} else if(this.operator == IOperator.OR) {
 			for(let i = 0; i < this.conditions.length; i++) {
-				if(this.conditions[i].meets(context)) {
+				if(await this.conditions[i].meets(context)) {
 					return true;
 				}
 			}
@@ -51,7 +53,7 @@ class ConditionalGroup {
 		} else if(this.operator == IOperator.XOR) {
 			let isSolved = false;
 			for(let i = 0; i < this.conditions.length; i++) {
-				let solved = this.conditions[i].meets(context);
+				let solved = await this.conditions[i].meets(context);
 				if(solved && isSolved) {
 					return false;
 				} else if(solved && !isSolved) {

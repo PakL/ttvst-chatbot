@@ -7,6 +7,44 @@
 			<small class="accent-light-font">{ __('This is just a label for you to identify this flow. Like a file name. Put whatever you want in here.') }</small>
 		</label>
 		<label>
+			<span>{ __('Mode') }</span>:
+			<select class="mode" onchange={ onModeSelect }>
+				<option value="0" selected={ flowmode.mode === 0 }>{ __('Chat command') }</option>
+				<option value="1" selected={ flowmode.mode === 1 }>{ __('Channel point reward automation') }</option>
+				<option value="2" selected={ flowmode.mode === 2 }>{ __('Free mode') }</option>
+			</select>
+		</label>
+		<label if={ flowmode.mode == 0 }>
+			<span>{ __('Command phrase') }</span>:
+			<input type="text" data-flowprop="phrase" onchange={ onFlowpropChange } value={ flowmode.props.phrase }>
+			<small class="accent-light-font">{ __('A command phrase that stands in front of the message. You should also use a symobl (like !) to make sure it is not triggered on accident.') }</small>
+		</label>
+		<label if={ flowmode.mode == 0 }>
+			<span>{ __('Permission level') }</span>:
+			<select data-flowprop="perm" onchange={ onFlowpropChange }>
+				<option value="0" selected={ flowmode.props.perm === '0' }>{ __('Everyone') }</option>
+				<option value="1" selected={ flowmode.props.perm === '1' }>{ __('Subscriber') }</option>
+				<option value="2" selected={ flowmode.props.perm === '2' }>{ __('VIP') }</option>
+				<option value="3" selected={ flowmode.props.perm === '3' }>{ __('Moderator') }</option>
+				<option value="4" selected={ flowmode.props.perm === '4' }>{ __('Broadcaster') }</option>
+			</select>
+			<small class="accent-light-font">{ __('Select a badge that a user must have at least.') }</small>
+		</label>
+		<label if={ flowmode.mode == 0 }>
+			<span>{ __('Cooldown') }</span>:
+			<input type="number" min="0" data-flowprop="cooldown" onchange={ onFlowpropChange } value={ flowmode.props.cooldown }>
+			<small class="accent-light-font">{ __('The minimum time in seconds that should pass before the command can be executed again.') }</small>
+		</label>
+		<label if={ flowmode.mode == 1 }>
+			<span>{ __('Reward') }</span>:
+			<select if={ flowrewardselection === null } data-flowprop="pointreward" disabled><option value={ flowmode.props.pointreward }>{ __('Please wait') }</option></select>
+			<select if={ flowrewardselection !== null } data-flowprop="pointreward" onchange={ onFlowpropChange }>
+				<option if={ flowrewardselection.length == 0 } value={ flowmode.props.pointreward }>{ __(flowrewarderror) }</option>
+				<option each={ reward in flowrewardselection } value={ reward.id } selected={ flowmode.props.pointreward == reward.id }>{ reward.title }</option>
+			</select>
+			<small class="accent-light-font">{ __('Select the reward that triggers this flow.') }</small>
+		</label>
+		<label if={ flowmode.mode == 2 }>
 			<span>{ __('Execution condition') }</span>:
 			<conditionalgroupinput condgroup={ flowcond }></conditionalgroupinput>
 		</label>
@@ -17,7 +55,12 @@
 		<div class="step trigger">
 			<i class="ms-Icon ms-Icon--LightningBolt"></i>
 			<span><span>{ __(selectedTrigger.addon) }</span>: <b>{ __(selectedTrigger.label) }</b></span>
-			<button onclick={ onSelectTriggerClick }>{ __('Select Trigger') }</button>
+			
+			<div class="btngrp" if={ flowmode.mode == 2 }>
+				<button onclick={ onSelectTriggerClick }>{ __('Select Trigger') }</button>
+				<button onclick={ onClearTriggerClick } if={ selectedTrigger.channel.length > 0 }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
+			</div>
+			<span if={ flowmode.mode != 2 }></span>
 		</div>
 		<floweditor flow={ flow }></floweditor>
 		<div class="step">
@@ -80,6 +123,7 @@
 		}
 		:host .step > .ms-Icon {
 			font-size: 2em;
+			margin-right: 10px;
 		}
 		:host .downarrow {
 			display: block;
@@ -96,7 +140,7 @@
 			width: 70%;
 			margin: auto;
 		}
-		:host > div > label > input {
+		:host > div > label > input, :host > div > label > select {
 			margin-top: 5px;
 			display: block;
 			box-sizing: border-box;
@@ -136,12 +180,16 @@
 		export default {
 			openingFolder: -1,
 
-			selectedTrigger: { label: 'No trigger selected', addon: '', channel: '' },
 			page: 0,
+
+			flowmode: { mode: 0, props: { phrase:'', perm: 'everyone', cooldown: '5' } },
+			selectedTrigger: { label: 'No trigger selected', addon: '', channel: '', arguments: [] },
 			flowobj: null,
 			flow: [],
 			flowlabel: '',
 			flowcond: false,
+			flowrewardselection: null,
+			flowrewarderror: 'No point rewards found',
 
 			chatbotlistRiot: null,
 			rememberFolder: -1,
@@ -153,8 +201,90 @@
 			onMounted(props, state) {
 			},
 
+			onModeSelect(e) {
+				this.flowmode.mode = parseInt(e.currentTarget.value);
+				if(this.flowmode.mode == 0) {
+					this.flowmode.props = Object.assign({ phrase:'', perm: '0', cooldown: '5' }, this.flowmode.props);
+					
+					let triggers = TTVST.Broadcast.getTrigger({ channel: 'app.ttvst.tmi.message' });
+					if(triggers.length == 1) {
+						this.selectedTrigger = triggers[0];
+					}
+				} else if(this.flowmode.mode == 1) {
+					this.flowmode.props = Object.assign({ pointreward: '' }, this.flowmode.props);
+
+					let triggers = TTVST.Broadcast.getTrigger({ channel: 'app.ttvst.pubsub.reward' });
+					if(triggers.length == 1) {
+						this.selectedTrigger = triggers[0];
+					}
+					
+					this.flowrewardselection = null;
+					const self = this;
+					ipcRenderer.invoke('app.ttvst.chatbot.getChannelPointRewards').then((rewards) => {
+						self.flowrewardselection = rewards.data;
+						if(self.flowrewardselection.length == 0) {
+							self.flowrewarderror = 'No point rewards found';
+						}
+						self.update();
+					}).catch((e) => {
+						self.flowrewardselection = [];
+						if(e.message.endsWith('not logged in')) {
+							self.flowrewarderror = 'Please log in to select reward';
+						} else if(e.message.endsWith('channel points are not available for the broadcaster')) {
+							self.flowrewarderror = 'Your channel has no points enabled';
+						}
+						self.update();
+					});
+				} else if(this.flowmode.mode == 2) {
+					this.flowmode.props = Object.assign({}, this.flowmode.props);
+				}
+				this.onFlowpropChange();
+				this.update();
+			},
+
+			async onFlowpropChange(e) {
+				if(typeof(e) !== 'undefined') {
+					let inp = e.currentTarget;
+					let prop = inp.dataset.flowprop;
+					this.flowmode.props[prop] = inp.value;
+				}
+
+				if(this.flowmode.mode == 0) {
+					let reg = '^' + this.flowmode.props.phrase.replace(/([^\w\s])/gi, '\\$1') + '(\\s|$)';
+					let permcond = [];
+					let perm = parseInt(this.flowmode.props.perm);
+					if(perm <= 1) permcond.push({ discriminator: 'Condition', left: '${permissions["isSubscriber"]}', compare: 'true', right: '' });
+					if(perm <= 2) permcond.push({ discriminator: 'Condition', left: '${permissions["isVIP"]}', compare: 'true', right: '' });
+					if(perm <= 3) permcond.push({ discriminator: 'Condition', left: '${permissions["isModerator"]}', compare: 'true', right: '' });
+					if(perm <= 4) permcond.push({ discriminator: 'Condition', left: '${permissions["isBroadcaster"]}', compare: 'true', right: '' });
+					if(perm == 0) permcond = [];
+					
+					this.flowcond = new ConditionalGroup({
+						discriminator: 'ConditionGroup',
+						conditions: [
+							{ discriminator: 'Condition', left: '${SecondsSinceLastExecution}', compare: 'ge', right: this.flowmode.props.cooldown },
+							{ discriminator: 'Condition', left: '${message}', compare: 'matchi', right: reg },
+							{
+								discriminator: 'ConditionGroup',
+								conditions: permcond,
+								operator: 'or'
+							}
+						],
+						operator: 'and'
+					});
+				} else if(this.flowmode.mode == 1) {
+					this.flowcond = new ConditionalGroup({
+						discriminator: 'ConditionGroup',
+						conditions: [
+							{ discriminator: 'Condition', left: '${rewardid}', compare: 'eqc', right: this.flowmode.props.pointreward }
+						],
+						operator: 'and'
+					});
+				}
+			},
+
 			async onSelectTriggerClick() {
-				let triggerChannel = await TTVST.ui.selectTrigger();
+				let triggerChannel = await TTVST.ui.selectTrigger(this.selectedTrigger.channel);
 				if(triggerChannel !== null) {
 					let triggers = TTVST.Broadcast.getTrigger({ channel: triggerChannel });
 					if(triggers.length == 1) {
@@ -162,6 +292,11 @@
 						this.update();
 					}
 				}
+			},
+
+			async onClearTriggerClick() {
+				this.selectedTrigger = { label: 'No trigger selected', addon: '', channel: '' };
+				this.update();
 			},
 
 			async onFlowEdit(flow) {
@@ -177,6 +312,8 @@
 						this.selectedTrigger = triggers[0];
 					}
 				}
+				this.flowmode = flow.mode;
+
 				this.update();
 			},
 
@@ -189,14 +326,26 @@
 
 			async onSaveFlowClick() {
 				let cgi = this.$('conditionalgroupinput')
-				let cgiSym = cgi[Object.getOwnPropertySymbols(cgi)[0]];
 				let fe = this.$('floweditor')
 				let feSym = fe[Object.getOwnPropertySymbols(fe)[0]];
 
 				this.flowobj.name = this.$('input.flowlabel').value;
-				this.flowobj.conditionals = cgiSym.condgroup;
 				this.flowobj.flow = feSym.state.steps;
 				this.flowobj.trigger = this.selectedTrigger.channel;
+
+				this.flowobj.mode = { mode: this.flowmode.mode, props: {} };
+				if(this.flowmode.mode == 0) {
+					this.flowobj.mode.props = { phrase: this.flowmode.props.phrase, perm: this.flowmode.props.perm, cooldown: this.flowmode.props.cooldown };
+				} else if(this.flowmode.mode == 1) {
+					this.flowobj.mode.props = { pointreward: this.flowmode.props.pointreward };
+				}
+				if(this.flowmode.mode == 2) {
+					let cgiSym = cgi[Object.getOwnPropertySymbols(cgi)[0]];
+					this.flowobj.conditionals = cgiSym.condgroup;
+				} else {
+					this.flowobj.conditionals = this.flowcond;
+				}
+
 				await this.flowobj.save();
 
 				this.openingFolder = this.flowobj.superior;
@@ -217,6 +366,41 @@
 				this.openingFolder = this.rememberFolder;
 				this.page = 0;
 				this.update();
+			},
+
+			getMoreContextVars() {
+				let vars = [];
+				if(this.page === 1) {
+					vars.push({ name: 'FlowName', type: 'string' });
+					vars.push({ name: 'LastExecutionTime', type: 'number' });
+					vars.push({ name: 'SecondsSinceLastExecution', type: 'number' });
+
+					if(this.selectedTrigger.channel.length > 0) {
+						for(let i = 0; i < this.selectedTrigger.arguments.length; i++) {
+							let t = this.selectedTrigger.arguments[i].type;
+							if(t === 'list') t = 'array';
+							if(t === 'assoc') t = 'object';
+							vars.push({ name: this.selectedTrigger.arguments[i].label, type: t });
+						}
+					}
+
+					let fe = this.$('floweditor')
+					let feSym = fe[Object.getOwnPropertySymbols(fe)[0]];
+
+					let until = feSym.state.editingIndex;
+					if(until >= 0) {
+						for(let i = 0; i < feSym.state.steps.length; i++) {
+							if(i >= until) break;
+							let step = feSym.state.steps[i];
+							if(step.discriminator === 'FlowVariable') {
+								vars.push({ name: step.variable, type: step.type });
+							} else if(typeof(step.resultinto) === 'string') {
+								vars.push({ name: step.resultinto, type: (step.discriminator === 'FlowMath' ? 'number' : 'string' ) });
+							}
+						}
+					}
+				}
+				return vars;
 			}
 
 		}
