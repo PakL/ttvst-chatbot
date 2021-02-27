@@ -180,12 +180,12 @@ class Conditional {
 		} else if(typeof(left) === 'number') {
 			return left !== 0;
 		} else if(typeof(left) === 'string') {
+			if(left.toLowerCase() === 'false') return false;
+			if(left === '0') return false;
 			return left.length > 0;
-		} else {
-			return true;
 		}
 
-		return false;
+		return true;
 	}
 
 	serialize(): ICondition {

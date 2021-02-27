@@ -6,7 +6,7 @@ export interface IFlowVariable {
 	variable: string,
 	type: 'number'|'string'|'boolean'|'array'|'object',
 	content: number|string|boolean|Array<string|number>|{[key: string]: string},
-	processing: 'none'|'split'|'join'|'enjson'|'dejson'|'urlencode'|'urldecode'|'append'|'prepend'|'shift'|'pop',
+	processing: 'none'|'cast'|'split'|'join'|'enjson'|'dejson'|'urlencode'|'urldecode'|'append'|'prepend'|'shift'|'pop',
 	processingextra: string
 }
 
@@ -101,6 +101,34 @@ class FlowVariable {
 		} else if(this.data.type == 'boolean') {
 			if(typeof(this.data.content) === 'boolean') {
 				value = this.data.content;
+			} else if(typeof(this.data.content) === 'string') {
+				let content: boolean|string = false;
+				if(this.data.processing === 'shift') {
+					let varContent = await context.getFirstVariableRaw(this.data.content);
+					if(varContent !== null && Array.isArray(varContent)) {
+						content = varContent.shift();
+						await context.setValueOf(this.data.content, varContent);
+					}
+				} else if(this.data.processing === 'pop') {
+					let varContent = await context.getFirstVariableRaw(this.data.content);
+					if(varContent !== null && Array.isArray(varContent)) {
+						content = varContent.pop();
+						await context.setValueOf(this.data.content, varContent);
+					}
+				} else {
+					content = await context.interpolate(this.data.content);
+				}
+
+				if(typeof(content) !== 'boolean') {
+					if(content.toLowerCase() === 'false') {
+						content = false;
+					} else if(content === '0') {
+						content = false;
+					} else {
+						content = content.length > 0;
+					}
+				}
+				value = content;
 			}
 		} else if(this.data.type == 'array') {
 			let content : Array<string|number> = [];

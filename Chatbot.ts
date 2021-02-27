@@ -1,4 +1,5 @@
-import { ipcMain, Menu, MenuItem, MenuItemConstructorOptions } from 'electron';
+import { ipcMain, Menu, MenuItem, MenuItemConstructorOptions, dialog } from 'electron';
+import fs from 'fs';
 import winston from 'winston';
 
 import Flow from './lib/Flow';
@@ -28,6 +29,9 @@ class Chatbot {
 		this.openContextMenu = this.openContextMenu.bind(this);
 		this.onGetChannelPointRewards = this.onGetChannelPointRewards.bind(this);
 		this.onGetContextForDynamicInput = this.onGetContextForDynamicInput.bind(this);
+		
+		this.onExportData = this.onExportData.bind(this);
+		this.onImportData = this.onImportData.bind(this);
 
 		TTVST.startpage.broadcastStatus({ key: 'app.ttvst.chatbot', icon: 'ChatBot', status: 'error', title: 'Chatbot', info: 'Waiting for interface', buttons: [] });
 		ipcMain.on('app.ttvst.chatbot.registerFlows', this.registerFlow);
@@ -35,6 +39,9 @@ class Chatbot {
 		ipcMain.on('app.ttvst.chatbot.contextMenu', this.openContextMenu);
 		ipcMain.handle('app.ttvst.chatbot.getChannelPointRewards', this.onGetChannelPointRewards);
 		ipcMain.handle('app.ttvst.chatbot.getContextForDynamicInput', this.onGetContextForDynamicInput);
+
+		ipcMain.handle('app.ttvst.chatbot.exportdata', this.onExportData);
+		ipcMain.handle('app.ttvst.chatbot.importdata', this.onImportData);
 	}
 
 	private async registerFlow() {
@@ -173,12 +180,12 @@ class Chatbot {
 		};
 	}
 
-	private async openContextMenu(event: Electron.IpcMainEvent, x: number, y: number, additionalVars: Array<{ name: string, type: 'number'|'string'|'boolean'|'array'|'object' }> = []) {
+	private async openContextMenu(event: Electron.IpcMainEvent, x: number, y: number, additionalVars: Array<{ name: string, type: 'number'|'string'|'boolean'|'array'|'object'|'file' }> = []) {
 		let context = await this.createContext();
 
 		for(let i = 0; i < additionalVars.length; i++) {
 			let samplevalue: any = 0;
-			if(additionalVars[i].type === 'string') {
+			if(additionalVars[i].type === 'string' || additionalVars[i].type === 'file') {
 				samplevalue = '';
 			} else if(additionalVars[i].type === 'boolean') {
 				samplevalue = false;
@@ -236,11 +243,11 @@ class Chatbot {
 		TTVST.mainWindow.ipcSend('app.ttvst.chatbot.contextSelect', item.label);
 	}
 
-	private async onGetContextForDynamicInput(event: Electron.IpcMainInvokeEvent, additionalVars: Array<{ name: string, type: 'number'|'string'|'boolean'|'array'|'object' }> = []) {
+	private async onGetContextForDynamicInput(event: Electron.IpcMainInvokeEvent, additionalVars: Array<{ name: string, type: 'number'|'string'|'boolean'|'array'|'object'|'file' }> = []) {
 		let context = await this.createContext();
 		for(let i = 0; i < additionalVars.length; i++) {
 			let samplevalue: any = 0;
-			if(additionalVars[i].type === 'string') {
+			if(additionalVars[i].type === 'string' || additionalVars[i].type === 'file') {
 				samplevalue = '';
 			} else if(additionalVars[i].type === 'boolean') {
 				samplevalue = false;
@@ -275,6 +282,34 @@ class Chatbot {
 			throw new Error('not logged in');
 		}
 		return await TTVST.helix.getCustomRewards();
+	}
+
+	private async onExportData(event: Electron.IpcMainInvokeEvent, data: string) {
+		let saveFile = await dialog.showSaveDialog(TTVST.mainWindow.window, { filters: [{name: 'JSON', extensions: ['json']}]});
+		if(!saveFile.canceled) {
+			try {
+				fs.writeFileSync(saveFile.filePath, data);
+				return 1;
+			} catch(e) {
+				logger.error(e);
+				return -1;
+			}
+		}
+		return 0;
+	}
+
+	private async onImportData(event: Electron.IpcMainInvokeEvent) {
+		let loadFile = await dialog.showOpenDialog(TTVST.mainWindow.window, { filters: [{name: 'JSON', extensions: ['json']}]});
+		if(!loadFile.canceled) {
+			try {
+				let data = fs.readFileSync(loadFile.filePaths[0], { encoding: 'utf8' });
+				return data;
+			} catch(e) {
+				logger.error(e);
+				return false;
+			}
+		}
+		return null;
 	}
 
 }

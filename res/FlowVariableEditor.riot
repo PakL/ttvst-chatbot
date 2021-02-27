@@ -10,6 +10,7 @@
 	<div class={ processing !== 'disabled' ? 'visible' : 'hidden' }>
 		<label>{__('Processing')}<select class="processing" onchange={ onProcessingChange }>
 				<option value="none" selected={ processing === 'none' }>{__('None')}</option>
+				<option value="cast" selected={ processing === 'cast' } if={ ['string','number','boolean'].indexOf(variableType) >= 0 }>{__('Cast')}</option>
 				<option value="split" selected={ processing === 'split' } if={ ['array'].indexOf(variableType) >= 0 }>{__('Split')}</option>
 				<option value="join" selected={ processing === 'join' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Join')}</option>
 				<option value="enjson" selected={ processing === 'enjson' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Encode JSON')}</option>
@@ -18,11 +19,12 @@
 				<option value="urldecode" selected={ processing === 'urldecode' } if={ ['string', 'object'].indexOf(variableType) >= 0 }>{__('Decode for URI')}</option>
 				<option value="append" selected={ processing === 'append' } if={ ['string', 'array', 'object'].indexOf(variableType) >= 0 }>{__('Append')}</option>
 				<option value="prepend" selected={ processing === 'prepend' } if={ ['string', 'array'].indexOf(variableType) >= 0 }>{__('Prepend')}</option>
-				<option value="shift" selected={ processing === 'shift' } if={ ['number', 'string'].indexOf(variableType) >= 0 }>{__('List shift')}</option>
-				<option value="pop" selected={ processing === 'pop' } if={ ['number', 'string'].indexOf(variableType) >= 0 }>{__('List pop')}</option>
+				<option value="shift" selected={ processing === 'shift' } if={ ['number', 'string','boolean'].indexOf(variableType) >= 0 }>{__('List shift')}</option>
+				<option value="pop" selected={ processing === 'pop' } if={ ['number', 'string','boolean'].indexOf(variableType) >= 0 }>{__('List pop')}</option>
 			</select>
 			<small class="accent-light-font">{__('Process input below - select an option to see a description')}:&nbsp;
 				<template if={ processing == 'none' }>{__('No processing.')}</template>
+				<template if={ processing == 'cast' }>{__('Cast a from one type to another. Only works with strings, numbers and booleans. You can also use this to extract data from associative arrays or lists.')}</template>
 				<template if={ processing == 'split' }>{__('Split a string into a list by the splitter below.')}</template>
 				<template if={ processing == 'join' }>{__('Join a list into string by the glue below.')}</template>
 				<template if={ processing == 'enjson' }>{__('Encode an associative array or list into a JSON string. You can JSON escape strings too. Strings will be enclosed in double quotes (").')}</template>
@@ -36,8 +38,8 @@
 			</small>
 		</label>
 
-		<label if={ processing == 'split' }>{__('Splitter')}<input type="text" class="processingextra"><small>{__('Enter symbol(s) that the string will be splitted by.')}</small></label>
-		<label if={ processing == 'join' }>{__('Glue')}<input type="text" class="processingextra"><small>{__('Enter symbol(s) that the list items will be joined together by.')}</small></label>
+		<label if={ processing == 'split' }>{__('Splitter')}<input type="text" class="processingextra"><small class="accent-light-font">{__('Enter symbol(s) that the string will be splitted by.')}</small></label>
+		<label if={ processing == 'join' }>{__('Glue')}<input type="text" class="processingextra"><small class="accent-light-font">{__('Enter symbol(s) that the list items will be joined together by.')}</small></label>
 	</div>
 
 	<label class={ contentinput === 'boolean' ? 'win10-switch' : '' }>{__('Content')}
@@ -83,7 +85,7 @@
 			display: block;
 			margin: 10px;
 		}
-		:host .visible > label > select {
+		:host .visible > label > select, :host .visible > label > input  {
 			margin-top: 5px;
 			display: block;
 			box-sizing: border-box;
@@ -166,9 +168,8 @@
 				this.variableType = this.$('.variabletype').value;
 				if(this.processing !== 'none' && this.processing !== 'disabled') {
 					this.$('.processing').value = 'none';
-				} else {
-					this.onProcessingChange();
 				}
+				this.onProcessingChange();
 			},
 
 			onProcessingChange() {
@@ -194,34 +195,7 @@
 						this.content = '';
 						this.contentinput = 'assoc';
 					}
-				} else if(this.processing === 'split') {
-					this.content = '';
-					this.contentinput = 'simple';
-				} else if(this.processing === 'join') {
-					this.content = '';
-					this.contentinput = 'simple';
-				} else if(this.processing === 'enjson') {
-					this.content = '';
-					this.contentinput = 'simple';
-				} else if(this.processing === 'dejson') {
-					this.content = '';
-					this.contentinput = 'simple';
-				} else if(this.processing === 'urlencode') {
-					this.content = '';
-					this.contentinput = 'simple';
-				} else if(this.processing === 'urldecode') {
-					this.content = '';
-					this.contentinput = 'simple';
-				} else if(this.processing === 'append') {
-					this.content = '';
-					this.contentinput = 'simple';
-				} else if(this.processing === 'prepend') {
-					this.content = '';
-					this.contentinput = 'simple';
-				} else if(this.processing === 'shift') {
-					this.content = '';
-					this.contentinput = 'simple';
-				} else if(this.processing === 'pop') {
+				} else if(['cast','split','join','enjson','dejson','urlencode','urldecode','append','prepend','shift','pop'].indexOf(this.processing) >= 0) {
 					this.content = '';
 					this.contentinput = 'simple';
 				}

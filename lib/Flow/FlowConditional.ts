@@ -33,13 +33,13 @@ class FlowConditional {
 			let nowTime = (new Date()).getTime();
 			// Check for any conditions, or we get stuck in an "endless" loop
 			if(cond.conditions.length > 0) {
-				while(cond.meets(context) && (nowTime-startTime) < 60000) {
+				while(await cond.meets(context) && (nowTime-startTime) < 60000) {
 					await FlowConditional.execFlow(this.data.flow, context);
 					nowTime = (new Date()).getTime();
 				}
 			}
 		} else {
-			if(cond.meets(context)) {
+			if(await cond.meets(context)) {
 				await FlowConditional.execFlow(this.data.flow, context);
 			} else {
 				await FlowConditional.execFlow(this.data.elseflow, context);

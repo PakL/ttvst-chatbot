@@ -159,7 +159,7 @@
 					typlbl.appendChild(typdesc);
 
 					let response = false;
-					let nfmodal = TTVST.ui.modal([typlbl], self.__('Add step'), 'FabricNewFolder', () => {
+					let nfmodal = TTVST.ui.modal([typlbl], 'Add step', 'FabricNewFolder', () => {
 						if(response) {
 							resolve(nfmodal.$('select > option:checked').value);
 						} else {
@@ -168,7 +168,7 @@
 					}, [
 						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
 						{ key: 'cancel', title: 'Cancel' }
-					], true);
+					], false);
 				});
 				if(selectedStep.length > 0) {
 					switch(selectedStep) {
@@ -246,7 +246,7 @@
 					resultintolbl.appendChild(resultintodesc);
 
 					let response = false;
-					let nfmodal = TTVST.ui.modal([expressionlbl, resultintolbl], self.__('Edit Math'), 'CalculatorEqualTo', () => {
+					let nfmodal = TTVST.ui.modal([expressionlbl, resultintolbl], 'Edit Math', 'CalculatorEqualTo', () => {
 						if(response) {
 							let resultinto = nfmodal.$('#flowmathedit_resultinto').value;
 							if(resultinto.length > 0) {
@@ -265,7 +265,7 @@
 					}, [
 						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
 						{ key: 'cancel', title: 'Cancel' }
-					], true);
+					], false);
 				});
 				if(resultinto !== null) {
 					this.state.steps[flowIndex].expression = expression;
@@ -333,7 +333,7 @@
 					resultintolbl.appendChild(resultintodesc);
 
 					let response = false;
-					let nfmodal = TTVST.ui.modal([selectactionlbl, resultintolbl], self.__('Edit Action'), 'Processing', () => {
+					let nfmodal = TTVST.ui.modal([selectactionlbl, resultintolbl], 'Edit Action', 'Processing', () => {
 						if(response) {
 							let resultinto = nfmodal.$('#flowactionedit_resultinto').value;
 							if(resultinto.length > 0) {
@@ -352,7 +352,7 @@
 					}, [
 						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
 						{ key: 'cancel', title: 'Cancel' }
-					], true);
+					], false);
 				});
 				if(resultinto !== null) {
 					this.state.steps[flowIndex].channel = channel;
@@ -380,7 +380,7 @@
 					let fveSym = FlowVariableEditorMount(fve, variable);
 
 					let response = false;
-					let nfmodal = TTVST.ui.modal([fve], self.__('Edit Variable'), 'Variable', () => {
+					let nfmodal = TTVST.ui.modal([fve], 'Edit Variable', 'Variable', () => {
 						if(response) {
 							let iflowvar = fveSym.getIFlowVariable();
 							if(iflowvar.variable.match(/^[a-z]([a-z0-9]+)?$/i)) {
@@ -395,7 +395,7 @@
 					}, [
 						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
 						{ key: 'cancel', title: 'Cancel' }
-					], true);
+					], false);
 				});
 				if(result !== null) {
 					Object.assign(this.state.steps[flowIndex], result);
@@ -433,7 +433,7 @@
 					looplbl.appendChild(loopdesc);
 
 					let response = false;
-					let nfmodal = TTVST.ui.modal([fce, looplbl], self.__('Edit Conditional'), 'HighlightMappedShapes', () => {
+					let nfmodal = TTVST.ui.modal([fce, looplbl], 'Edit Conditional', 'HighlightMappedShapes', () => {
 						if(response) {
 							resolve([fceSym.condgroup, loopinp.checked]);
 						} else {
@@ -442,7 +442,7 @@
 					}, [
 						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
 						{ key: 'cancel', title: 'Cancel' }
-					], true);
+					], false);
 				});
 				if(result !== null) {
 					this.state.steps[flowIndex].conditional = result[0].toString();
@@ -479,7 +479,7 @@
 					waittimelbl.appendChild(waittimedesc);
 
 					let response = false;
-					let nfmodal = TTVST.ui.modal([waittimelbl], self.__('Edit Wait'), 'Clock', () => {
+					let nfmodal = TTVST.ui.modal([waittimelbl], 'Edit Wait', 'Clock', () => {
 						if(response) {
 							let waittime = parseFloat(nfmodal.$('#flowwaitedit_time').value);
 							if(isNaN(waittime)) {
@@ -492,7 +492,7 @@
 					}, [
 						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
 						{ key: 'cancel', title: 'Cancel' }
-					], true);
+					], false);
 				});
 				if(waittime !== null) {
 					this.state.steps[flowIndex].time = waittime;
@@ -527,7 +527,7 @@
 					let fveSym = WebRequestInputMount(fve, { step: webrequest, dyninput });
 
 					let response = false;
-					let nfmodal = TTVST.ui.modal([fve], self.__('Edit Web Request'), 'Globe', () => {
+					let nfmodal = TTVST.ui.modal([fve], 'Edit Web Request', 'Globe', () => {
 						if(response) {
 							let flowobj = fveSym.getFlowObject();
 							if(flowobj.resultinto.length > 0) {
@@ -544,7 +544,7 @@
 					}, [
 						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
 						{ key: 'cancel', title: 'Cancel' }
-					], true);
+					], false);
 				});
 				if(result !== null) {
 					Object.assign(this.state.steps[flowIndex], result);

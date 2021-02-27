@@ -48,7 +48,7 @@ class FlowAction {
 
 			let result = await TTVST.BroadcastMain.instance.execute(this.data.channel, ...parameters);
 			if(this.data.resultinto.length > 0 && typeof(result) !== 'undefined') {
-				context.setValueOf(this.data.resultinto, result);
+				await context.setValueOf(this.data.resultinto, result);
 			}
 		}
 	}

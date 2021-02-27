@@ -12,6 +12,9 @@
 		<button disabled class="btnDelete" onclick={ onDeleteClick }><i class="ms-Icon ms-Icon--RecycleBin"></i>{ __('Delete') }</button>
 		<button disabled class="btnEdit" onclick={ onEditClick }><i class="ms-Icon ms-Icon--Edit"></i>{ __('Edit') }</button>
 		<span class="vr accent-contrast-border"></span>
+		<button class="btnExport" onclick={ onExportClick }><i class="ms-Icon ms-Icon--Export"></i>{ __('Export') }</button>
+		<button class="btnImport" onclick={ onImportClick }><i class="ms-Icon ms-Icon--Import"></i>{ __('Import') }</button>
+		<span class="vr accent-contrast-border"></span>
 		<button onclick={ onNewFolderClick }><i class="ms-Icon ms-Icon--FabricNewFolder"></i>{ __('New Folder') }</button>
 		<button onclick={ onNewFlowClick }><i class="ms-Icon ms-Icon--FlowChart"></i>{ __('New Flow') }</button>
 		<span class="vr accent-contrast-border"></span>
@@ -587,6 +590,219 @@
 			onOpenVariableEditor() {
 				if(typeof(this.props.ongvaredit) === 'function') {
 					this.props.ongvaredit(this.currentFolder === null ? -1 : this.currentFolder.key);
+				}
+			},
+
+			async exportFlow(flow) {
+				if(flow === null) return null;
+
+				let data = Object.assign({}, flow.data);
+				data.type = 'Flow';
+				delete data.key;
+				delete data.superior;
+				delete data.path;
+				return data;
+			},
+
+			async exportFolder(folder) {
+				if(folder === null) return null;
+
+				let data = Object.assign({}, folder.data);
+
+				let subdata = [];
+				let subfolders = await Folder.getByIndex('superior', data.key);
+				for(let i = 0; i < subfolders.length; i++) {
+					subdata.push(await this.exportFolder(subfolders[i]));
+				}
+				let subflows = await Flow.getByIndex('superior', data.key);
+				for(let i = 0; i < subflows.length; i++) {
+					subdata.push(await this.exportFlow(subflows[i]));
+				}
+
+				data.type = 'Folder';
+				data.children = subdata;
+				delete data.key;
+				delete data.superior;
+				delete data.path;
+				return data;
+			},
+
+			async onExportClick() {
+				let selected = this.getSelectedElements();
+				let data = [];
+				
+				if(selected.length <= 0) {
+					if(!await TTVST.ui.confirm('Export everything in this folder?', true)) {
+						return;
+					}
+					let folders = await Folder.getByIndex('superior', -1);
+					for(let i = 0; i < folders.length; i++) {
+						data.push(await this.exportFolder(folders[i]));
+					}
+					let flows = await Flow.getByIndex('superior', -1);
+					for(let i = 0; i < flows.length; i++) {
+						data.push(await this.exportFlow(flows[i]));
+					}
+				} else {
+					for(let i = 0; i < selected.length; i++) {
+						if(selected[i].dataset.type == 'folder') {
+							let id = parseInt(selected[i].dataset.folder);
+							data.push(await this.exportFolder(await Folder.get(id)));
+						} else if(selected[i].dataset.type == 'flow') {
+							let id = parseInt(selected[i].dataset.flow);
+							data.push(await this.exportFlow(await Flow.get(id)));
+						}
+					}
+				}
+				if(data.length <= 0) {
+					TTVST.ui.alert('No elements to export selected.', 'Export error');
+				} else {
+					let result = await ipcRenderer.invoke('app.ttvst.chatbot.exportdata', JSON.stringify({ identifier: 'ttvst_chatbot', version: '2.0.0', data }));
+					if(result < 0) {
+						TTVST.ui.alert('An error occured while saving your file.', 'Export error');
+					} else if(result > 0) {
+						TTVST.ui.alert('Export has finished!', 'Export done', 'InfoSolid');
+					}
+				}
+			},
+
+			async importFlow(flow, superior, overwrite) {
+				delete flow.type;
+				let f = null;
+				let flows = await Flow.getByIndex('superior', (superior !== null ? superior.key : -1));
+				for(let i = 0; i < flows.length; i++) {
+					if(flows[i].name === flow.name) {
+						if(overwrite) {
+							f = flows[i];
+							Object.assign(f.data, flow, { lastModified: new Date(flow.lastModified) });
+						} else {
+							flow.name = flow.name + ' (Import '+TTVST.DateFormat(new Date(), 'isoDateTime')+')';
+						}
+						break;
+					}
+				}
+				if(f === null) {
+					f = Flow.factory(Object.assign(flow, {
+						path: (superior !== null ? superior.path + superior.key.toString() : '') + '/',
+						superior: (superior !== null ? superior.key : -1),
+						lastModified: new Date(flow.lastModified)
+					}));
+				}
+				if(f !== null)
+					await f.save();
+			},
+
+			async importFolder(folder, superior, overwrite) {
+				let children = folder.children.slice(0);
+				delete folder.type;
+				delete folder.children;
+				let f = null;
+				let folders = await Folder.getByIndex('superior', (superior !== null ? superior.key : -1));
+				for(let i = 0; i < folders.length; i++) {
+					if(overwrite) {
+						f = folders[i];
+						Object.assign(f.data, folder, { lastModified: new Date(folder.lastModified) });
+					} else {
+						folder.name = folder.name + ' (Import '+TTVST.DateFormat(new Date(), 'isoDateTime')+')';
+					}
+					break;
+				}
+				if(f === null) {
+					f = Folder.factory(Object.assign(folder, {
+						path: (superior !== null ? superior.path + superior.key.toString() : '') + '/',
+						superior: (superior !== null ? superior.key : -1),
+						lastModified: new Date(folder.lastModified)
+					}));
+				}
+				if(f !== null) {
+					await f.save();
+
+					for(let i = 0; i < children.length; i++) {
+						if(children[i].type ===  'Folder') {
+							await this.importFolder(children[i], f, overwrite);
+						} else if(children[i].type === 'Flow') {
+							await this.importFlow(children[i], f, overwrite);
+						}
+					}
+				}
+			},
+
+			async onImportClick() {
+				let result = await ipcRenderer.invoke('app.ttvst.chatbot.importdata');
+				if(result === false) {
+					TTVST.ui.alert('An error occured while loading your file.', 'Import error');
+					return;
+				} else if(result !== null) {
+					try {
+						let data = JSON.parse(result);
+						if(
+							typeof(data.identifier) === 'string' && data.identifier === 'ttvst_chatbot' &&
+							typeof(data.version) === 'string' && typeof(data.data) === 'object'
+						) {
+							if(data.version === '2.0.0') {
+								// placeholder for future versions
+							}
+
+							let newfolderlabel = document.createElement('label');
+							let newfolderinput = document.createElement('input');
+							newfolderinput.setAttribute('type', 'checkbox');
+							newfolderinput.setAttribute('checked', 'checked');
+							newfolderlabel.appendChild(newfolderinput);
+							newfolderlabel.appendChild(document.createTextNode(this.__('Create a new folder to import into')));
+							let overwritelabel = document.createElement('label');
+							let overwriteinput = document.createElement('input');
+							overwriteinput.setAttribute('type', 'checkbox');
+							overwritelabel.appendChild(overwriteinput);
+							overwritelabel.appendChild(document.createTextNode(this.__('Overwrite existing elements with the same name')));
+
+
+							let response = false;
+							TTVST.ui.modal([newfolderlabel, overwritelabel], 'How do you wish to import?', 'UnknownSolid', (async () => {
+								if(response) {
+									let overwrite = false;
+									let superior = this.currentFolder;
+
+									if(newfolderinput.checked) {
+										let f = Folder.factory({
+											name: 'Import '+TTVST.DateFormat(new Date(), 'isoDateTime'),
+											path: (this.currentFolder !== null ? this.currentFolder.path + this.currentFolder.key.toString() : '') + '/',
+											superior: (this.currentFolder !== null ? this.currentFolder.key : -1),
+											active: false,
+											conditionals: 'null',
+											lastModified: new Date()
+										});
+
+										await f.save();
+
+										superior = f;
+									}
+									if(overwriteinput.checked) {
+										overwrite = true;
+									}
+
+									for(let i = 0; i < data.data.length; i++) {
+										let obj = data.data[i];
+										if(obj.type === 'Folder') {
+											await this.importFolder(obj, superior, overwrite);
+										} else if(obj.type === 'Flow') {
+											await this.importFlow(obj, superior, overwrite);
+										}
+									}
+									
+									TTVST.ui.alert('Import has finished!', 'Import done', 'InfoSolid');
+									
+									this.openFolder(this.currentFolder === null ? -1 : this.currentFolder.key, 2);
+								}
+							}).bind(this), [
+								{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+								{ key: 'cancel', title: 'Cancel' }
+							], false);
+						} else {
+							TTVST.ui.alert('File content is not a valid chatbot export.', 'Import error');
+						}
+					} catch(e) {
+						TTVST.ui.alert('File is not in a valid json format or got corrupted.', 'Import error');
+					}
 				}
 			}
 		}

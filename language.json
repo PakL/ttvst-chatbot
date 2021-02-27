@@ -208,5 +208,263 @@
 	},
 	"is false": {
 		"de": "ist falsch"
+	},
+	" or ": {
+		"de": " oder "
+	},
+	"Add a condition": {
+		"de": "Kondition hinzufügen"
+	},
+	"Add a group": {
+		"de": "Gruppe hinzufügen"
+	},
+	"Method": {
+		"de": "Anforderung"
+	},
+	"What kind of HTTP request to make": {
+		"de": "Was für eine HTTP-Anforderung soll gestellt werden"
+	},
+	"URL": {
+		"de": "URL"
+	},
+	"URL the HTTP request is made to. Must start with http:// or https://": {
+		"de": "URL zu der die HTTP-Anforderung gestellt wird. Muss mit http:// oder https:// anfangen"
+	},
+	"Headers": {
+		"de": "Headers"
+	},
+	"No custom headers": {
+		"de": "Keine eignenen Header"
+	},
+	"Select a associative array for HTTP headers": {
+		"de": "Wähle assoziative Datenfelder die als HTTP-Header dienen"
+	},
+	"Result type": {
+		"de": "Ergebnistyp"
+	},
+	"Select what kind of result you want to put in the result variable": {
+		"de": "Wähle welches Ergebnis du in eine Variabel schriben möchtest"
+	},
+	"Result into variable": {
+		"de": "Ergebnis in Variabel"
+	},
+	"Enter a TTVST variable that you want the result put into": {
+		"de": "Gib eine Variabel ein, in die das Ergebnis gespeicher werden soll"
+	},
+	"Edit Web Request": {
+		"de": "Web-Anfrage bearbeiten"
+	},
+	"Condition / Loop": {
+		"de": "Kondition / Schleife"
+	},
+	"Action": {
+		"de": "Aktion"
+	},
+	"Math": {
+		"de": "Mathe"
+	},
+	"Variable": {
+		"de": "Variabel"
+	},
+	"Wait": {
+		"de": "Warten"
+	},
+	"Make a web request": {
+		"de": "Web-Anfrage durchführen"
+	},
+	"Select a step to insert": {
+		"de": "Schritt zum Einfügen auswählen"
+	},
+	"Add step": {
+		"de": "Schritt hinzufügen"
+	},
+	"If": {
+		"de": "Wenn"
+	},
+	"Else": {
+		"de": "Sonst"
+	},
+	"End if": {
+		"de": "Wenn Ende"
+	},
+	"Loop": {
+		"de": "Schleife"
+	},
+	"Check this box to loop the subflow as long as the condition is met": {
+		"de": "Setze den Haken um den Sub-Ablauf zu wiederholen solange die Kondition erfüllt ist"
+	},
+	"Edit Conditional": {
+		"de": "Kondition bearbeiten"
+	},
+	"Variable name": {
+		"de": "Variabelname"
+	},
+	"Enter variable name. Must start with a letter (A-Z, no umlauts). Case sensitive. If the variable already exists, it will be overwritten.": {
+		"de": "Gib einen Namen für die Variabel ein. Muss mit einem Buchstaben anfangen (A-Z, keine Umlaute). Beachtet Groß-/Kleinschreibung. Wenn die Variabel schon existiert, wird sie überschrieben."
+	},
+	"Variable type": {
+		"de": "Variabel-Typ"
+	},
+	"Select the type of content of the variable. Depending on the variable type you select you will have different processing options available.": {
+		"de": "Wähle den Type der Variabel. Abhängig vom Variabel-Typ wirst du unterschiedliche Verarbeitungsoptionen haben."
+	},
+	"Processing": {
+		"de": "Verarbeitung"
+	},
+	"None": {
+		"de": "Keine"
+	},
+	"Join": {
+		"de": "Zusammenfügen"
+	},
+	"Encode JSON": {
+		"de": "In JSON kodieren"
+	},
+	"Decode JSON": {
+		"de": "Aus JSON dekodieren"
+	},
+	"Encode for URI": {
+		"de": "Für URI kodieren"
+	},
+	"Decode for URI": {
+		"de": "Aus URI dekodieren"
+	},
+	"Append": {
+		"de": "Anhängen"
+	},
+	"Prepend": {
+		"de": "Voranstellen"
+	},
+	"List shift": {
+		"de": "Liste shiften"
+	},
+	"List pop": {
+		"de": "Liste pop-en"
+	},
+	"Process input below - select an option to see a description": {
+		"de": "Verarbeite Eingabe unten - wähle eine Option um eine Beschreibung zu bekommen"
+	},
+	"Encode an associative array or list into a JSON string. You can JSON escape strings too. Strings will be enclosed in double quotes (\").": {
+		"de": "Kodiere assoziative Datenfelder oder Listen in JSON-Strings. Du kannst auch Strings JSON-Kodieren. String werden dabei in doppelte Anführungszeichen (\") eingeschlossen."
+	},
+	"Content": {
+		"de": "Inhalt"
+	},
+	"Edit Variable": {
+		"de": "Variabel bearbeiten"
+	},
+	"Math.js expression": {
+		"de": "Math.js-Ausdruck"
+	},
+	"Enter your Math.js expression here. Learn more about the syntax on mathjs.org. You can use TTVST variables to input data.": {
+		"de": "Gib deinen Math.js-Ausdruck hier ein. Lerne mehr über die Syntax auf mathjs.org. Du kannst TTVST-Variabeln benutzen um Daten einzugeben."
+	},
+	"Edit Math": {
+		"de": "Mathe bearbeiten"
+	},
+	"Edit Action": {
+		"de": "Aktion bearbeiten"
+	},
+	"No processing.": {
+		"de": "Keine Verarbeitung."
+	},
+	"Split": {
+		"de": "Aufteilen"
+	},
+	"Waiting for {{seconds}} seconds": {
+		"de": "Warte {{seconds}} Sekunden"
+	},
+	"Time to wait in seconds": {
+		"de": "Wartezeit in Sekunden"
+	},
+	"How long the execution is paused before continuing": {
+		"de": "Wie lange die Ausführung pausiert wird, bevor sie wieder aufgenommen wird"
+	},
+	"Edit Wait": {
+		"de": "Warten bearbeiten"
+	},
+	"Puts the first element of a list into the variable and removes it from the list.": {
+		"de": "Das erste Element der Liste wird in die Variabel geschrieben und aus der Liste entfernt."
+	},
+	"Puts the last element of a list into the variable and removes it from the list.": {
+		"de": "Das letzte Element der Liste wird in die Variabel geschrieben und aus der Liste entfernt."
+	},
+	"Join a list into string by the glue below.": {
+		"de": "Alle Elemente der Liste in einen String verketten mit dem Kleber dazwischen."
+	},
+	"Glue": {
+		"de": "Kleber"
+	},
+	"Enter symbol(s) that the list items will be joined together by.": {
+		"de": "Gib ein Symbol/Symbole ein, die/das die Liste zusammenklebt."
+	},
+	"Decode a JSON string into a list or associative array. You can decode JSON escaped string too. Strings must be enclosed in double quotes (\").": {
+		"de": "Dekodiert ein JSON-String in Listen oder assoziative Datenfelder. Du kannst auch Strings dekodieren. Strings müssen in doppelten Anführungszeichen (\") eingeschlossen sein."
+	},
+	"Encode URI elements or associative arrays.": {
+		"de": "Kodiere URI-Elemente oder assoziative Datenfelder."
+	},
+	"Decode URI elements or associative arrays.": {
+		"de": "Dekodiere URI-Elemente oder assoziative Datenfelder."
+	},
+	"Append string/list to the end of a string/list. Associative arrays will be merged.": {
+		"de": "Hänge Strings/Listen an das Ende von Strings/Listen. Assoziative Datenfelder werden verschmolzen."
+	},
+	"Prepend string/list to the beginning of a string/list.": {
+		"de": "Hänge Strings/Listen an den Anfang von Strings/Listen."
+	},
+	"Split a string into a list by the splitter below.": {
+		"de": "Teilt einen String in eine Liste mit dem Teiler unten."
+	},
+	"Splitter": {
+		"de": "Teiler"
+	},
+	"Enter symbol(s) that the string will be splitted by.": {
+		"de": "Gib ein Symbol/Symbole ein, die/das den String teilen."
+	},
+	"Cast": {
+		"de": "Umwandeln"
+	},
+	"Cast a from one type to another. Only works with strings, numbers and booleans. You can also use this to extract data from associative arrays or lists.": {
+		"de": "Wandel einen Typ in einen anderen um. Funktioniert nur mit Strings, Nummern und Booleans. Du kannst es auch benutzen um Daten aus assoziativen Datenfeldern oder listen zu extrahieren."
+	},
+	"Type": {
+		"de": "Typ"
+	},
+	"Content preview": {
+		"de": "Inhaltsvorschau"
+	},
+	"Back": {
+		"de": "Zurück"
+	},
+	"New Variable": {
+		"de": "Neue Variabel"
+	},
+	"No global variables found. Create one by clicking on \"New Variable\" above.": {
+		"de": "Keine globalen Variabeln gefunden. Erstelle eine indem du oben auf \"Neue Variabel\" klickst."
+	},
+	"Create a new folder to import into": {
+		"de": "Erstelle einen Ordner in den importiert wird"
+	},
+	"Overwrite existing elements with the same name": {
+		"de": "Überschreibe existierende Elemente mit demselben Namen"
+	},
+	"How do you wish to import?": {
+		"de": "Wie möchtest du importieren?"
+	},
+	"Import done": {
+		"de": "Import abgeschlossen"
+	},
+	"Are you sure you want to delete these {{count}} items? Contents of folders will be deleted as well.": {
+		"de": "Bist du sicher, dass du diese {{count}} Elemente löschen möchtest? Inhalte von Ordnern werden ebenfalls gelöscht."
+	},
+	"Folder name": {
+		"de": "Ordnername"
+	},
+	"Enter your new folder name here": {
+		"de": "Gib deinen neuen Ordnername ein"
+	},
+	"New folder": {
+		"de": "Neuer Ordner"
 	}
 }
