@@ -9,6 +9,8 @@ class VarStreamGame extends VarInterface {
 		super('StreamGame', '');
 	}
 
+	async setTo(): Promise<void> {}
+
 	async getValue(): Promise<string> {
 		try {
 			return await TTVST.BroadcastMain.instance.execute('app.ttvst.helix.getGame');

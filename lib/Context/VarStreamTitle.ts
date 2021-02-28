@@ -9,6 +9,8 @@ class VarStreamTitle extends VarInterface {
 		super('StreamTitle', '');
 	}
 
+	async setTo(): Promise<void> {}
+
 	async getValue(): Promise<string> {
 		try {
 			return await TTVST.BroadcastMain.instance.execute('app.ttvst.helix.getStream');

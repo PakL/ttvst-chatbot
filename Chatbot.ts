@@ -9,6 +9,8 @@ import Context from './lib/Context/Context';
 import VarInterface from './lib/Context/VarInterface';
 import VarStreamTitle from './lib/Context/VarStreamTitle';
 import VarStreamGame from './lib/Context/VarStreamGame';
+import VarStreamUptime from './lib/Context/VarStreamUptime';
+import { VarFormatDate, VarFormatTime, VarFormatDateTime, VarFormatSince, VarFormatUntil } from './lib/Context/VarDateTimeFormat';
 
 import { IBroadcastArgument } from '../../dist/dev.pakl.ttvst/main/BroadcastMain';
 import TTVSTMain from '../../dist/dev.pakl.ttvst/main/TTVSTMain';
@@ -151,6 +153,13 @@ class Chatbot {
 
 		context.add(new VarStreamTitle());
 		context.add(new VarStreamGame());
+		context.add(new VarStreamUptime());
+
+		context.add(new VarFormatDate());
+		context.add(new VarFormatTime());
+		context.add(new VarFormatDateTime());
+		context.add(new VarFormatSince());
+		context.add(new VarFormatUntil());
 
 		let globalVars = await GVar.getAll(undefined);
 		for(let i = 0; i < globalVars.length; i++) {
