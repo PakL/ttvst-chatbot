@@ -458,6 +458,12 @@
 	"Are you sure you want to delete these {{count}} items? Contents of folders will be deleted as well.": {
 		"de": "Bist du sicher, dass du diese {{count}} Elemente löschen möchtest? Inhalte von Ordnern werden ebenfalls gelöscht."
 	},
+	"Are you sure you want to delete this folder? The contents of the folder will be deleted as well.": {
+		"de": "Bist du sicher, dass du diesen Ordner löschen möchtest? Die Inhalte des Ordners werden ebenfalls gelöscht."
+	},
+	"Are you sure you want to delete this flow?": {
+		"de": "Bist du sicher, dass du diesen Ablauf löschen möchtest?"
+	},
 	"Folder name": {
 		"de": "Ordnername"
 	},
@@ -466,5 +472,41 @@
 	},
 	"New folder": {
 		"de": "Neuer Ordner"
+	},
+	"Export": {
+		"de": "Exportieren"
+	},
+	"Import": {
+		"de": "Importieren"
+	},
+	"Export everything in this folder?": {
+		"de": "Alles in diesem Ordner exportieren?"
+	},
+	"No elements to export selected.": {
+		"de": "Keine Elemente zum exportieren ausgewählt."
+	},
+	"An error occured while saving your file.": {
+		"de": "Ein Fehler ist beim Speichern deiner Datei aufgetreten."
+	},
+	"Export has finished!": {
+		"de": "Export abgeschlossen!"
+	},
+	"An error occured while loading your file.": {
+		"de": "Ein Fehler ist beim Laden deiner Datei aufgetreten."
+	},
+	"Import error": {
+		"de": "Import-Fehler"
+	},
+	"Export error": {
+		"de": "Export-Fehler"
+	},
+	"Cannot move folder into itself.": {
+		"de": "Ordner kann nicht in sich selbst verschoben werden."
+	},
+	"File content is not a valid chatbot export.": {
+		"de": "Dateiinhalt ist kein gültiger Chatbot-Export."
+	},
+	"File is not in a valid json format or got corrupted.": {
+		"de": "Dateiinhalt ist nicht in einem gültigen JSON-Format oder wurde beschädigt."
 	}
 }

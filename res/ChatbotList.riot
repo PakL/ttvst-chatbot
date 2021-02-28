@@ -436,7 +436,7 @@
 								let folderId = parseInt(item.dataset.folder);
 								let folder = await Folder.get(folderId);
 								if(await this.checkForMovingProblems(folder, this.currentFolder === null ? -1 : this.currentFolder.key)) {
-									TTVST.ui.alert('Cannot move folder into itself.');
+									TTVST.ui.alert(this.__('Cannot move folder into itself.'));
 									return;
 								}
 							}
@@ -561,9 +561,9 @@
 					let confirmText = TTVST.i18n.__('Are you sure you want to delete these {{count}} items? Contents of folders will be deleted as well.', { count: selected.length });
 					if(selected.length == 1) {
 						if(selected[0].dataset.type === 'folder') {
-							confirmText = 'Are you sure you want to delete this folder? The contents of the folder will be deleted as well.';
+							confirmText = TTVST.i18n.__('Are you sure you want to delete this folder? The contents of the folder will be deleted as well.');
 						} else {
-							confirmText = 'Are you sure you want to delete this flow?';
+							confirmText = TTVST.i18n.__('Are you sure you want to delete this flow?');
 						}
 					}
 					if(await TTVST.ui.confirm(confirmText, true)) {
@@ -632,7 +632,7 @@
 				let data = [];
 				
 				if(selected.length <= 0) {
-					if(!await TTVST.ui.confirm('Export everything in this folder?', true)) {
+					if(!await TTVST.ui.confirm(this.__('Export everything in this folder?'), true)) {
 						return;
 					}
 					let folders = await Folder.getByIndex('superior', -1);
@@ -655,13 +655,13 @@
 					}
 				}
 				if(data.length <= 0) {
-					TTVST.ui.alert('No elements to export selected.', 'Export error');
+					TTVST.ui.alert(this.__('No elements to export selected.'), 'Export error');
 				} else {
 					let result = await ipcRenderer.invoke('app.ttvst.chatbot.exportdata', JSON.stringify({ identifier: 'ttvst_chatbot', version: '2.0.0', data }));
 					if(result < 0) {
-						TTVST.ui.alert('An error occured while saving your file.', 'Export error');
+						TTVST.ui.alert(this.__('An error occured while saving your file.'), 'Export error');
 					} else if(result > 0) {
-						TTVST.ui.alert('Export has finished!', 'Export done', 'InfoSolid');
+						TTVST.ui.alert(this.__('Export has finished!'), 'Export done', 'InfoSolid');
 					}
 				}
 			},
@@ -730,7 +730,7 @@
 			async onImportClick() {
 				let result = await ipcRenderer.invoke('app.ttvst.chatbot.importdata');
 				if(result === false) {
-					TTVST.ui.alert('An error occured while loading your file.', 'Import error');
+					TTVST.ui.alert(this.__('An error occured while loading your file.'), 'Import error');
 					return;
 				} else if(result !== null) {
 					try {
@@ -789,7 +789,7 @@
 										}
 									}
 									
-									TTVST.ui.alert('Import has finished!', 'Import done', 'InfoSolid');
+									TTVST.ui.alert(this.__('Import has finished!'), 'Import done', 'InfoSolid');
 									
 									this.openFolder(this.currentFolder === null ? -1 : this.currentFolder.key, 2);
 								}
@@ -798,10 +798,10 @@
 								{ key: 'cancel', title: 'Cancel' }
 							], false);
 						} else {
-							TTVST.ui.alert('File content is not a valid chatbot export.', 'Import error');
+							TTVST.ui.alert(this.__('File content is not a valid chatbot export.'), 'Import error');
 						}
 					} catch(e) {
-						TTVST.ui.alert('File is not in a valid json format or got corrupted.', 'Import error');
+						TTVST.ui.alert(this.__('File is not in a valid json format or got corrupted.'), 'Import error');
 					}
 				}
 			}
