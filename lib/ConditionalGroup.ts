@@ -79,6 +79,14 @@ class ConditionalGroup {
 		return { discriminator: 'ConditionGroup', conditions, operator: this.operator };
 	}
 
+	readable(): string {
+		let conds: Array<string> = [];
+		for(let i = 0; i < this.conditions.length; i++) {
+			conds.push(this.conditions[i].readable());
+		}
+		return '(' + conds.join(' ' + this.operator.toUpperCase() + ' ') + ')';
+	}
+
 	toString(): string {
 		return JSON.stringify(this.serialize());
 	}

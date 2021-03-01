@@ -508,5 +508,8 @@
 	},
 	"File is not in a valid json format or got corrupted.": {
 		"de": "Dateiinhalt ist nicht in einem gültigen JSON-Format oder wurde beschädigt."
+	},
+	"Import has finished!": {
+		"de": "Import abgeschlossen!"
 	}
 }

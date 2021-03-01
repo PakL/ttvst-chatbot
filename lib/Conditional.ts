@@ -26,6 +26,32 @@ export enum IConditionCompare {
 	IS_TRUE = 'true',
 	IS_FALSE = 'false'
 }
+
+const readableCompare: {[key: string]: string} = {
+	eq: '==',
+	not: '!=',
+	gt: '>',
+	ge: '>=',
+	lt: '<',
+	le: '<=',
+
+	contains: 'contains',
+	similar: 'similar to',
+	match: 'matches regex',
+	matchi: 'matches regex(i)',
+	like: 'is like',
+	has: 'has',
+	
+	eqc: '==(i)',
+	notc: '!=(i)',
+	starts: 'starts with',
+	ends: 'ends with',
+	startsc: 'starts with(i)',
+	endsc: 'ends with(i)',
+	true: 'is true',
+	false: 'is false'
+}
+
 export interface ICondition {
 	discriminator: 'Condition',
 	left: string,
@@ -190,6 +216,10 @@ class Conditional {
 
 	serialize(): ICondition {
 		return this.condition;
+	}
+
+	readable(): string {
+		return this.condition.left + ' ' + readableCompare[this.condition.compare] + (this.condition.right.length > 0 ? ' ' + this.condition.right : '');
 	}
 
 	toString(): string {

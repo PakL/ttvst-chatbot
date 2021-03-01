@@ -106,7 +106,7 @@
 							}
 						} },
 						{ key: 'cancel', title: 'Cancel' }
-					], true);
+					], false);
 				});
 				if(result !== null && result.variable.match(/^[a-z]([a-z0-9]+)?$/i)) {
 					let v = GVar.factory({ name: result.variable, value: result.content });
@@ -139,7 +139,7 @@
 					}, [
 						{ key: 'ok', title: 'Save', callback: () => { response = true; } },
 						{ key: 'cancel', title: 'Cancel' }
-					], true);
+					], false);
 				});
 				if(result !== null && result.variable.match(/^[a-z]([a-z0-9]+)?$/i)) {
 					gvar.value = result.content;

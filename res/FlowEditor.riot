@@ -4,7 +4,7 @@
 		<div class="step">
 			<template if={ step.discriminator === 'FlowConditional' }>
 				<i class="ms-Icon ms-Icon--HighlightMappedShapes"></i>
-				<span>{ __(step.loop ? 'Loop while' : 'If') }</span>
+				<span>{ __(step.loop ? 'Loop while' : 'If') + ' ' + __readableCondition(step.conditional) }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowConditional } data-flow={ index }>{ __('Edit') }</button>
 					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
@@ -28,7 +28,7 @@
 			</template>
 			<template if={ step.discriminator === 'FlowVariable' }>
 				<i class="ms-Icon ms-Icon--Variable"></i>
-				<span>{ step.variable } = { __(step.type) }</span>
+				<span>{ step.variable } ({ __(step.type) }) = { JSON.stringify(step.content) }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowVariable } data-flow={ index }>{ __('Edit') }</button>
 					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
@@ -116,6 +116,11 @@
 				} else {
 					return channel;
 				}
+			},
+
+			__readableCondition(conditionjson) {
+				let cond = new ConditionalGroup(JSON.parse(conditionjson));
+				return cond.readable();
 			},
 
 			onBeforeMount(props, state) {

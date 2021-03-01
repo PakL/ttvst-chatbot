@@ -107,6 +107,7 @@
 		const Folder = require('../lib/Folder').default;
 		const Flow = require('../lib/Flow').default;
 		const ConditionalGroup = require('../lib/ConditionalGroup').default;
+		const GVar = require('../lib/GVar').default;
 
 		import ConditionalGroupInput from './ConditionalGroupInput.riot';
 		const conditionalGroupInputCmpnt = riot.component(ConditionalGroupInput);
@@ -657,12 +658,47 @@
 				if(data.length <= 0) {
 					TTVST.ui.alert(this.__('No elements to export selected.'), 'Export error');
 				} else {
-					let result = await ipcRenderer.invoke('app.ttvst.chatbot.exportdata', JSON.stringify({ identifier: 'ttvst_chatbot', version: '2.0.0', data }));
-					if(result < 0) {
-						TTVST.ui.alert(this.__('An error occured while saving your file.'), 'Export error');
-					} else if(result > 0) {
-						TTVST.ui.alert(this.__('Export has finished!'), 'Export done', 'InfoSolid');
+					let gvars = await GVar.getAll();
+
+					let varexportlabel = document.createElement('label');
+					let varexportinput = document.createElement('select');
+					let varexportdescr = document.createElement('small');
+					varexportdescr.appendChild(document.createTextNode(this.__('Hold ctrl key to select multiple')));
+					varexportinput.setAttribute('multiple', 'multiple');
+					for(let i = 0; i < gvars.length; i++) {
+						let option = document.createElement('option');
+						option.setAttribute('value', gvars[i].name);
+						option.appendChild(document.createTextNode(gvars[i].name));
+						varexportinput.appendChild(option);
 					}
+					varexportlabel.appendChild(document.createTextNode(this.__('Global variables to export')));
+					varexportlabel.appendChild(varexportinput);
+					varexportlabel.appendChild(varexportdescr);
+
+					let response = false;
+					TTVST.ui.modal([varexportlabel], 'Select global variables to export', 'UnknownSolid', (async () => {
+						if(response) {
+							let options = varexportinput.querySelectorAll('option:checked')
+							for(let i = 0; i < options.length; i++) {
+								for(let j = 0; j < gvars.length; j++) {
+									if(gvars[j].name === options[i].getAttribute('value')) {
+										data.push({ type: 'GVar', name: gvars[j].name, value: gvars[j].value });
+										break;
+									}
+								}
+							}
+
+							let result = await ipcRenderer.invoke('app.ttvst.chatbot.exportdata', JSON.stringify({ identifier: 'ttvst_chatbot', version: '2.0.0', data }));
+							if(result < 0) {
+								TTVST.ui.alert(this.__('An error occured while saving your file.'), 'Export error');
+							} else if(result > 0) {
+								TTVST.ui.alert(this.__('Export has finished!'), 'Export done', 'InfoSolid');
+							}
+						}
+					}).bind(this), [
+						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+						{ key: 'cancel', title: 'Cancel' }
+					], false);
 				}
 			},
 
@@ -786,6 +822,10 @@
 											await this.importFolder(obj, superior, overwrite);
 										} else if(obj.type === 'Flow') {
 											await this.importFlow(obj, superior, overwrite);
+										} else if(obj.type === 'GVar') {
+											delete obj.type;
+											let v = GVar.factory(obj);
+											await v.save();
 										}
 									}
 									
