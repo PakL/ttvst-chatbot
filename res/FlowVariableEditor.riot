@@ -38,8 +38,8 @@
 			</small>
 		</label>
 
-		<label if={ processing == 'split' }>{__('Splitter')}<input type="text" class="processingextra"><small class="accent-light-font">{__('Enter symbol(s) that the string will be splitted by.')}</small></label>
-		<label if={ processing == 'join' }>{__('Glue')}<input type="text" class="processingextra"><small class="accent-light-font">{__('Enter symbol(s) that the list items will be joined together by.')}</small></label>
+		<label if={ processing == 'split' }>{__('Splitter')}<input type="text" class="processingextra" value={ processingextra }><small class="accent-light-font">{__('Enter symbol(s) that the string will be splitted by.')}</small></label>
+		<label if={ processing == 'join' }>{__('Glue')}<input type="text" class="processingextra" value={ processingextra }><small class="accent-light-font">{__('Enter symbol(s) that the list items will be joined together by.')}</small></label>
 	</div>
 
 	<label class={ contentinput === 'boolean' ? 'win10-switch' : '' }>{__('Content')}

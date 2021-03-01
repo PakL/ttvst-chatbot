@@ -1,4 +1,3 @@
-import { threadId } from 'worker_threads';
 import Context from '../Context/Context';
 
 export interface IFlowVariable {
@@ -170,10 +169,15 @@ class FlowVariable {
 					}
 				}
 			}
+			value = content;
 		} else if(this.data.type == 'object') {
 			let content : {[key: string]: string} = {};
 			if(typeof(this.data.content) === 'object' && !Array.isArray(this.data.content)) {
-				content = this.data.content;
+				let dataContent: {[key: string]: string} = this.data.content;
+				let keys = Object.keys(dataContent);
+				for(let i = 0; i < keys.length; i++) {
+					content[await context.interpolate(keys[i])] = await context.interpolate(dataContent[keys[i]]);
+				}
 			} else if(typeof(this.data.content) === 'string') {
 				let contentStr = await context.interpolate(this.data.content);
 				if(this.data.processing === 'dejson') {
@@ -204,10 +208,11 @@ class FlowVariable {
 					}
 				}
 			}
+			value = content;
 		}
 
 
-		if(typeof(value) === this.data.type) {
+		if(typeof(value) === this.data.type || (typeof(value) === 'object' && this.data.type === 'array' && Array.isArray(value))) {
 			context.setValueOf(this.data.variable, value);
 		}
 	}

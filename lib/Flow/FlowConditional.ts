@@ -8,6 +8,7 @@ import FlowWebRequest, { IFlowWebRequest } from './FlowWebRequest';
 
 import ConditionalGroup, { IConditionGroup } from '../ConditionalGroup';
 
+
 export interface IFlowConditional {
 	discriminator: 'FlowConditional',
 	conditional: string,
