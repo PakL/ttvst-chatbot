@@ -70,6 +70,10 @@ class ChatbotPage extends TTVST.ui.Page {
 						input.value = val.substring(0, selStart) + v + val.substring(selEnd);
 						input.selectionStart = selStart;
 						input.selectionEnd = selStart + v.length;
+
+						var evt = document.createEvent("HTMLEvents");
+						evt.initEvent("change", false, true);
+						input.dispatchEvent(evt);
 					}
 				};
 				ipcRenderer.once('app.ttvst.chatbot.contextSelect', this.contextResultListener);

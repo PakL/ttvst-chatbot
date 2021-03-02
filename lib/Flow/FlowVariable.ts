@@ -5,7 +5,7 @@ export interface IFlowVariable {
 	variable: string,
 	type: 'number'|'string'|'boolean'|'array'|'object',
 	content: number|string|boolean|Array<string|number>|{[key: string]: string},
-	processing: 'none'|'cast'|'split'|'join'|'enjson'|'dejson'|'urlencode'|'urldecode'|'append'|'prepend'|'shift'|'pop',
+	processing: 'none'|'cast'|'split'|'join'|'enjson'|'dejson'|'urlencode'|'urldecode'|'append'|'prepend'|'shift'|'pop'|'searchremove',
 	processingextra: string
 }
 
@@ -158,14 +158,39 @@ class FlowVariable {
 				} else if(this.data.processing === 'append') {
 					let varContent = await context.valueOf(this.data.variable);
 					let contentVal = await context.getFirstVariableRaw(this.data.content);
-					if(varContent !== null && Array.isArray(varContent) && contentVal !== null && Array.isArray(contentVal)) {
-						content = varContent.concat(contentVal);
+					if(varContent !== null && Array.isArray(varContent)) {
+						if(contentVal !== null && Array.isArray(contentVal)) {
+							content = varContent.concat(contentVal);
+						} else if(typeof(contentVal) === 'string' || typeof(contentVal) === 'number' || typeof(contentVal) === 'boolean') {
+							if(typeof(contentVal) === 'string') {
+								contentVal = contentStr;
+							}
+							varContent.push(contentVal);
+							content = varContent;
+						}
 					}
 				} else if(this.data.processing === 'prepend') {
 					let varContent = await context.valueOf(this.data.variable);
 					let contentVal = await context.getFirstVariableRaw(this.data.content);
-					if(varContent !== null && Array.isArray(varContent) && contentVal !== null && Array.isArray(contentVal)) {
-						content = contentVal.concat(varContent);
+					if(varContent !== null && Array.isArray(varContent)) {
+						if(contentVal !== null && Array.isArray(contentVal)) {
+							content = contentVal.concat(varContent);
+						} else if(typeof(contentVal) === 'string' || typeof(contentVal) === 'number' || typeof(contentVal) === 'boolean') {
+							if(typeof(contentVal) === 'string') {
+								contentVal = contentStr;
+							}
+							varContent.unshift(contentVal);
+							content = varContent;
+						}
+					}
+				} else if(this.data.processing === 'searchremove') {
+					let varContent = await context.valueOf(this.data.variable);
+					if(varContent !== null && Array.isArray(varContent)) {
+						let index = varContent.indexOf(contentStr);
+						if(index >= 0) {
+							varContent.splice(index, 1);
+						}
+						content = varContent;
 					}
 				}
 			}
@@ -205,6 +230,14 @@ class FlowVariable {
 					if(varContent !== null && typeof(varContent) === 'object' && !Array.isArray(varContent) &&
 						contentVal !== null && typeof(contentVal) === 'object' && !Array.isArray(contentVal)) {
 						content = Object.assign(varContent, contentVal);
+					}
+				} else if(this.data.processing === 'searchremove') {
+					let varContent = await context.valueOf(this.data.variable);
+					if(varContent !== null && typeof(varContent) === 'object' && !Array.isArray(varContent)) {
+						if(typeof(varContent[contentStr]) !== 'undefined') {
+							delete varContent[contentStr];
+						}
+						content = varContent;
 					}
 				}
 			}

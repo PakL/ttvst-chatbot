@@ -511,5 +511,14 @@
 	},
 	"Import has finished!": {
 		"de": "Import abgeschlossen!"
+	},
+	"Variable name is invalid. Must start with a letter and can only consist of numbers and letters.": {
+		"de": "Variabelname ist ungültig. Muss mit einem Buchstaben (keine Umlaute) starten und darf nur aus Nummern und Buchstaben (keine Umlaute) bestehen."
+	},
+	"Search and remove": {
+		"de": "Suchen und Entfernen"
+	},
+	"Searches a list for the content and removes it or searches an associative arrays for a key and removes that entry.": {
+		"de": "Durchsucht eine Liste nach Inhalt und entfernt es oder sucht nach einem Schlüssel in assoziative Datenfelder und entfernt dort den Eintrag."
 	}
 }

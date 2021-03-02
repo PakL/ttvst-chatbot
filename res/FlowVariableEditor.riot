@@ -21,6 +21,7 @@
 				<option value="prepend" selected={ processing === 'prepend' } if={ ['string', 'array'].indexOf(variableType) >= 0 }>{__('Prepend')}</option>
 				<option value="shift" selected={ processing === 'shift' } if={ ['number', 'string','boolean'].indexOf(variableType) >= 0 }>{__('List shift')}</option>
 				<option value="pop" selected={ processing === 'pop' } if={ ['number', 'string','boolean'].indexOf(variableType) >= 0 }>{__('List pop')}</option>
+				<option value="searchremove" selected={ processing === 'searchremove' } if={ ['array', 'object'].indexOf(variableType) >= 0 }>{__('Search and remove')}</option>
 			</select>
 			<small class="accent-light-font">{__('Process input below - select an option to see a description')}:&nbsp;
 				<template if={ processing == 'none' }>{__('No processing.')}</template>
@@ -35,6 +36,7 @@
 				<template if={ processing == 'prepend' }>{__('Prepend string/list to the beginning of a string/list.')}</template>
 				<template if={ processing == 'shift' }>{__('Puts the first element of a list into the variable and removes it from the list.')}</template>
 				<template if={ processing == 'pop' }>{__('Puts the last element of a list into the variable and removes it from the list.')}</template>
+				<template if={ processing == 'searchremove' }>{__('Searches a list for the content and removes it or searches an associative arrays for a key and removes that entry.')}</template>
 			</small>
 		</label>
 
@@ -195,7 +197,7 @@
 						this.content = '';
 						this.contentinput = 'assoc';
 					}
-				} else if(['cast','split','join','enjson','dejson','urlencode','urldecode','append','prepend','shift','pop'].indexOf(this.processing) >= 0) {
+				} else if(['cast','split','join','enjson','dejson','urlencode','urldecode','append','prepend','shift','pop','searchremove'].indexOf(this.processing) >= 0) {
 					this.content = '';
 					this.contentinput = 'simple';
 				}

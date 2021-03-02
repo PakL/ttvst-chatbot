@@ -1,7 +1,7 @@
 <FlowEditor>
-	<div class="downarrow" data-insertat="0" onclick={ onAddStepClick }></div>
+	<div class="downarrow" data-insertat="0" onclick={ onAddStepClick } ondragover={ onStepDropOver } ondrop={ onStepDrop }></div>
 	<div each={ (step, index) in state.steps } key={ step.key }>
-		<div class="step">
+		<div class="step" draggable="true" ondragstart={ onStepDragStart } data-step={ index }>
 			<template if={ step.discriminator === 'FlowConditional' }>
 				<i class="ms-Icon ms-Icon--HighlightMappedShapes"></i>
 				<span>{ __(step.loop ? 'Loop while' : 'If') + ' ' + __readableCondition(step.conditional) }</span>
@@ -64,7 +64,7 @@
 			<div class="step else" if={ !step.loop }><span>{ __('End if') }</span></div>
 			<div class="step else" if={ step.loop }><span>{ __('End loop') }</span></div>
 		</template>
-		<div class="downarrow" data-insertat={ index+1 } onclick={ onAddStepClick }></div>
+		<div class="downarrow" data-insertat={ index+1 } onclick={ onAddStepClick } ondragover={ onStepDropOver } ondrop={ onStepDrop }></div>
 	</div>
 
 	<style>
@@ -183,11 +183,11 @@
 							break;
 						case 'FlowMath':
 							this.state.keystate++;
-							this.state.steps.splice(insertAt, 0, { k: this.state.keystate,discriminator: 'FlowMath', expression: '', resultinto: '' });
+							this.state.steps.splice(insertAt, 0, { k: this.state.keystate, discriminator: 'FlowMath', expression: '', resultinto: '' });
 							break;
 						case 'FlowAction':
 							this.state.keystate++;
-							this.state.steps.splice(insertAt, 0, { k: this.state.keystate,discriminator: 'FlowAction', channel: '', parameters: [], resultinto: '' });
+							this.state.steps.splice(insertAt, 0, { k: this.state.keystate, discriminator: 'FlowAction', channel: '', parameters: [], resultinto: '' });
 							break;
 						case 'FlowVariable':
 							this.state.keystate++;
@@ -251,24 +251,29 @@
 					resultintolbl.appendChild(resultintodesc);
 
 					let response = false;
+					let _resultinto = '';
 					let nfmodal = TTVST.ui.modal([expressionlbl, resultintolbl], 'Edit Math', 'CalculatorEqualTo', () => {
 						if(response) {
-							let resultinto = nfmodal.$('#flowmathedit_resultinto').value;
-							if(resultinto.length > 0) {
-								let match = resultinto.match(/([a-z][a-z0-9]+)/i);
-								if(match) {
-									resultinto = match[1];
-								} else {
-									TTVST.ui.alert('Variable name is invalid');
-									return false;
-								}
-							}
 							resolve([resultinto, nfmodal.$('#flowmathedit_expression').value]);
 						} else {
 							resolve([null, null]);
 						}
 					}, [
-						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+						{ key: 'ok', title: 'OK', callback: () => {
+							 _resultinto = nfmodal.$('#flowmathedit_resultinto').value;
+							if(_resultinto.length > 0) {
+								let match = _resultinto.match(/([a-z][a-z0-9]+)/i);
+								if(match) {
+									response = true;
+									_resultinto = match[1];
+								} else {
+									TTVST.ui.alert(self.__('Variable name is invalid. Must start with a letter and can only consist of numbers and letters.'));
+									return false;
+								}
+							} else {
+								response = true;
+							}
+						} },
 						{ key: 'cancel', title: 'Cancel' }
 					], false);
 				});
@@ -338,24 +343,29 @@
 					resultintolbl.appendChild(resultintodesc);
 
 					let response = false;
+					let _resultinto = '';
 					let nfmodal = TTVST.ui.modal([selectactionlbl, resultintolbl], 'Edit Action', 'Processing', () => {
 						if(response) {
-							let resultinto = nfmodal.$('#flowactionedit_resultinto').value;
-							if(resultinto.length > 0) {
-								let match = resultinto.match(/([a-z][a-z0-9]+)/i);
-								if(match) {
-									resultinto = match[1];
-								} else {
-									TTVST.ui.alert('Variable name is invalid');
-									return false;
-								}
-							}
-							resolve([resultinto, resultchannel, resultparameters]);
+							resolve([_resultinto, resultchannel, resultparameters]);
 						} else {
 							resolve([null, null, null]);
 						}
 					}, [
-						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+						{ key: 'ok', title: 'OK', callback: () => {
+							 _resultinto = nfmodal.$('#flowactionedit_resultinto').value;
+							if(_resultinto.length > 0) {
+								let match = _resultinto.match(/([a-z][a-z0-9]+)/i);
+								if(match) {
+									response = true;
+									_resultinto = match[1];
+								} else {
+									TTVST.ui.alert(self.__('Variable name is invalid. Must start with a letter and can only consist of numbers and letters.'));
+									return false;
+								}
+							} else {
+								response = true;
+							}
+						} },
 						{ key: 'cancel', title: 'Cancel' }
 					], false);
 				});
@@ -385,20 +395,23 @@
 					let fveSym = FlowVariableEditorMount(fve, variable);
 
 					let response = false;
+					let _iflowvar = null;
 					let nfmodal = TTVST.ui.modal([fve], 'Edit Variable', 'Variable', () => {
 						if(response) {
-							let iflowvar = fveSym.getIFlowVariable();
-							if(iflowvar.variable.match(/^[a-z]([a-z0-9]+)?$/i)) {
-								resolve(iflowvar);
-							} else {
-								TTVST.ui.alert('Variable name is invalid. Must start with a letter and can only consist of numbers and letters.');
-								return false;
-							}
+							resolve(_iflowvar);
 						} else {
 							resolve(null);
 						}
 					}, [
-						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+						{ key: 'ok', title: 'OK', callback: () => {
+							_iflowvar = fveSym.getIFlowVariable();
+							if(_iflowvar.variable.match(/^[a-z]([a-z0-9]+)?$/i)) {
+								response = true;
+							} else {
+								TTVST.ui.alert(self.__('Variable name is invalid. Must start with a letter and can only consist of numbers and letters.'));
+								return false;
+							}
+						} },
 						{ key: 'cancel', title: 'Cancel' }
 					], false);
 				});
@@ -532,22 +545,29 @@
 					let fveSym = WebRequestInputMount(fve, { step: webrequest, dyninput });
 
 					let response = false;
+					let _flowobj = null;
 					let nfmodal = TTVST.ui.modal([fve], 'Edit Web Request', 'Globe', () => {
 						if(response) {
-							let flowobj = fveSym.getFlowObject();
-							if(flowobj.resultinto.length > 0) {
-								let match = flowobj.resultinto.match(/([a-z][a-z0-9]+)/i);
-								if(!match) {
-									TTVST.ui.alert('Variable name is invalid');
-									return false;
-								}
-							}
-							resolve(flowobj);
+							resolve(_flowobj);
 						} else {
 							resolve(null);
 						}
 					}, [
-						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+						{ key: 'ok', title: 'OK', callback: () => {
+							_flowobj = fveSym.getFlowObject();
+							if(_flowobj.resultinto.length > 0) {
+								let match = _flowobj.resultinto.match(/([a-z][a-z0-9]+)/i);
+								if(match) {
+									_flowobj.resultinto = match[1];
+									response = true;
+								} else {
+									TTVST.ui.alert(self.__('Variable name is invalid. Must start with a letter and can only consist of numbers and letters.'));
+									return false;
+								}
+							} else {
+								response = true;
+							}
+						} },
 						{ key: 'cancel', title: 'Cancel' }
 					], false);
 				});
@@ -556,7 +576,31 @@
 					this.update();
 				}
 				this.state.editingIndex = -1;
+			},
+
+
+			onStepDragStart(e) {
+				let index = parseInt(e.currentTarget.dataset.step);
+				let step = this.state.steps[index];
+				e.dataTransfer.setData('application/json', JSON.stringify(step));
+			},
+			onStepDropOver(e) {
+				e.preventDefault();
+				e.dataTransfer.dropEffect = 'copy';
+			},
+			onStepDrop(e) {
+				try {
+					let step = JSON.parse(e.dataTransfer.getData('application/json'));
+					let insertAt = parseInt(e.currentTarget.dataset.insertat);
+					if(typeof(step.discriminator) === 'string' && !isNaN(insertAt)) {
+						this.state.keystate++;
+						step.k = this.state.keystate;
+						this.state.steps.splice(insertAt, 0, step);
+						this.update();
+					}
+				} catch(e) {}
 			}
+
 		}
 	</script>
 
