@@ -246,6 +246,7 @@ class FlowVariable {
 
 
 		if(typeof(value) === this.data.type || (typeof(value) === 'object' && this.data.type === 'array' && Array.isArray(value))) {
+			console.log(this.data.variable, value);
 			context.setValueOf(this.data.variable, value);
 		}
 	}

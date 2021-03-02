@@ -100,6 +100,8 @@
 	<script>
 		const { ipcRenderer } = require('electron');
 		const riot = require('riot');
+
+		const Context = require('../lib/Context/Context');
 		const ConditionalGroup = require('../lib/ConditionalGroup').default;
 		import FlowVariableEditor from './FlowVariableEditor.riot';
 		const FlowVariableEditorMount = riot.component(FlowVariableEditor);
@@ -262,10 +264,10 @@
 						{ key: 'ok', title: 'OK', callback: () => {
 							 _resultinto = nfmodal.$('#flowmathedit_resultinto').value;
 							if(_resultinto.length > 0) {
-								let match = _resultinto.match(/([a-z][a-z0-9]+)/i);
-								if(match) {
+								let match = Context.validateVariable(_resultinto);
+								if(match !== false) {
 									response = true;
-									_resultinto = match[1];
+									_resultinto = match;
 								} else {
 									TTVST.ui.alert(self.__('Variable name is invalid. Must start with a letter and can only consist of numbers and letters.'));
 									return false;
@@ -354,10 +356,10 @@
 						{ key: 'ok', title: 'OK', callback: () => {
 							 _resultinto = nfmodal.$('#flowactionedit_resultinto').value;
 							if(_resultinto.length > 0) {
-								let match = _resultinto.match(/([a-z][a-z0-9]+)/i);
-								if(match) {
+								let match = Context.validateVariable(_resultinto);
+								if(match !== false) {
 									response = true;
-									_resultinto = match[1];
+									_resultinto = match;
 								} else {
 									TTVST.ui.alert(self.__('Variable name is invalid. Must start with a letter and can only consist of numbers and letters.'));
 									return false;
@@ -405,7 +407,9 @@
 					}, [
 						{ key: 'ok', title: 'OK', callback: () => {
 							_iflowvar = fveSym.getIFlowVariable();
-							if(_iflowvar.variable.match(/^[a-z]([a-z0-9]+)?$/i)) {
+							let match = Context.validateVariable(_iflowvar.variable);
+							if(match !== false) {
+								_iflowvar.variable = match;
 								response = true;
 							} else {
 								TTVST.ui.alert(self.__('Variable name is invalid. Must start with a letter and can only consist of numbers and letters.'));
@@ -556,9 +560,9 @@
 						{ key: 'ok', title: 'OK', callback: () => {
 							_flowobj = fveSym.getFlowObject();
 							if(_flowobj.resultinto.length > 0) {
-								let match = _flowobj.resultinto.match(/([a-z][a-z0-9]+)/i);
-								if(match) {
-									_flowobj.resultinto = match[1];
+								let match = Context.validateVariable(_flowobj.resultinto);
+								if(match !== false) {
+									_flowobj.resultinto = match;
 									response = true;
 								} else {
 									TTVST.ui.alert(self.__('Variable name is invalid. Must start with a letter and can only consist of numbers and letters.'));

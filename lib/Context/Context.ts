@@ -5,6 +5,14 @@ const variablePartsRegex = /(?<varname>[a-z]([a-z0-9]+)?)(\[(\s+)?(?<varindex>([
 
 class Context {
 
+	static validateVariable(str: string): string|boolean {
+		let match = str.match(new RegExp(variablePartsRegex, 'i'));
+		if(match) {
+			return match[0];
+		}
+		return false;
+	}
+
 	private variables: { [name: string]: VarInterface } = {};
 
 	add(...variables: VarInterface[]): this {

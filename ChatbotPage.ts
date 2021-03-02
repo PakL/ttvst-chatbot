@@ -67,6 +67,9 @@ class ChatbotPage extends TTVST.ui.Page {
 							selStart = selEnd;
 							selEnd = input.selectionStart;
 						}
+						if(val.substr(selStart-1, 1) == '[' && val.substr(selEnd, 1) == ']') {
+							v = v.substr(2, v.length-3);
+						}
 						input.value = val.substring(0, selStart) + v + val.substring(selEnd);
 						input.selectionStart = selStart;
 						input.selectionEnd = selStart + v.length;
