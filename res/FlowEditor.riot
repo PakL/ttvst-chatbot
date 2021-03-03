@@ -138,6 +138,7 @@
 		import WebRequestInput from './WebRequestInput.riot';
 		const WebRequestInputMount = riot.component(WebRequestInput);
 
+		let scrollBefore = 0;
 
 		export default {
 
@@ -168,6 +169,13 @@
 					}
 					this.state.steps = props.flow;
 				}
+			},
+
+			onBeforeUpdate() {
+				scrollBefore = document.querySelector('#contentWrapper').scrollTop;
+			},
+			onUpdated() {
+				document.querySelector('#contentWrapper').scrollTop = scrollBefore;
 			},
 
 			async onAddStepClick(e) {
