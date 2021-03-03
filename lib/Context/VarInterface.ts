@@ -66,7 +66,10 @@ class VarInterface {
 		const self = this
 		return new Promise((resolve) => {
 			if(typeof(index) == 'number' && self.getType() == 'array') {
-				if(index >= self.value.length) index = Math.random()
+				if(index >= self.value.length) {
+					resolve(null);
+					return;
+				}
 				if(index % 1 !== 0) {
 					if(index >= 1) index = index - Math.floor(index)
 					index = Math.floor(index * self.value.length)
