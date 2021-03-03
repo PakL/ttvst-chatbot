@@ -3,7 +3,7 @@
 	<div each={ (step, index) in state.steps } key={ step.key }>
 		<div class={ ["step", 'step-'+step.discriminator].join(' ') } draggable="true" ondragstart={ onStepDragStart } data-step={ index }>
 			<template if={ step.discriminator === 'FlowConditional' }>
-				<i class="ms-Icon ms-Icon--HighlightMappedShapes"></i>
+				<i class="ms-Icon ms-Icon--HighlightMappedShapes" data-step={ index } onclick={ toggleCollapse }></i>
 				<span>{ __(step.loop ? 'Loop while' : 'If') + ' ' + __readableCondition(step.conditional) }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowConditional } data-flow={ index }>{ __('Edit') }</button>
@@ -52,10 +52,10 @@
 			</template>
 		</div>
 		<template if={ step.discriminator === 'FlowConditional' }>
-			<div class="subflow">
+			<div class="subflow" if={ !isCollapsed(step) }>
 				<floweditor flow={ step.flow }></floweditor>
 			</div>
-			<template if={ !step.loop }>
+			<template if={ !step.loop && !isCollapsed(step) }>
 				<div class="step else"><span>{ __('Else') }</span></div>
 				<div class="subflow">
 					<floweditor flow={ step.elseflow }></floweditor>
@@ -108,23 +108,27 @@
 			border-left: 1px solid rgba(255, 255, 255, 0.3);
 		}
 
-		.step-FlowConditional {
+		:host .step-FlowConditional {
 			background: rgba(255,255,0, 0.1);
 		}
-		.step-FlowMath {
+		:host .step-FlowMath {
 			background: rgba(0,0,255, 0.1);
 		}
-		.step-FlowAction {
+		:host .step-FlowAction {
 			background: rgba(0,255,0, 0.1);
 		}
-		.step-FlowVariable {
+		:host .step-FlowVariable {
 			background: rgba(255,0,0, 0.1);
 		}
-		.step-FlowWait {
+		:host .step-FlowWait {
 			background: rgba(255,0,255, 0.1);
 		}
-		.step-FlowWebRequest {
+		:host .step-FlowWebRequest {
 			background: rgba(0,255,255, 0.1);
+		}
+
+		:host .step .ms-Icon--HighlightMappedShapes {
+			cursor: pointer;
 		}
 	</style>
 	<script>
@@ -161,6 +165,7 @@
 				this.state.steps = [];
 				this.state.keystate = 0;
 				this.state.editingIndex = -1;
+				this.state.collapsedCondition = [];
 
 				if(typeof(props.flow) === 'object' && Array.isArray(props.flow)) {
 					for(let i = 0; i < props.flow.length; i++) {
@@ -641,6 +646,25 @@
 						this.update();
 					}
 				} catch(e) {}
+			},
+
+			isCollapsed(step) {
+				if(this.state.collapsedCondition.indexOf(step.k) >= 0) {
+					return true;
+				}
+				return false;
+			},
+
+			toggleCollapse(e) {
+				let index = parseInt(e.currentTarget.dataset.step);
+				let step = this.state.steps[index];
+				if(this.isCollapsed(step)) {
+					let i = this.state.collapsedCondition.indexOf(step.k);
+					this.state.collapsedCondition.splice(i, 1);
+				} else {
+					this.state.collapsedCondition.push(step.k);
+				}
+				this.update();
 			}
 
 		}
