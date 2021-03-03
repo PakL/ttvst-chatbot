@@ -20,11 +20,11 @@ class FlowMath {
 		let result = mathjs.evaluate(expr);
 		if(this.data.resultinto.length > 0) {
 			if((typeof(result) === 'number' || typeof(result) === 'string')) {
-				context.setValueOf(this.data.resultinto, result);
+				await context.setValueOf(this.data.resultinto, result);
 			} else if(typeof(result) === 'object' && result.hasOwnProperty('entries')) {
 				let v = result.entries;
 				if(v.length > 0) {
-					context.setValueOf(this.data.resultinto, v[v.length-1]);
+					await context.setValueOf(this.data.resultinto, v[v.length-1]);
 				}
 			}
 		}

@@ -62,7 +62,7 @@ class FlowWebRequest {
 						}
 					}
 
-					context.setValueOf(this.data.resultinto, data);
+					await context.setValueOf(this.data.resultinto, data);
 				}
 			} catch(e){}
 		}
