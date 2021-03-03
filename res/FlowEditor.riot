@@ -294,7 +294,7 @@
 					let _resultinto = '';
 					let nfmodal = TTVST.ui.modal([expressionlbl, resultintolbl], 'Edit Math', 'CalculatorEqualTo', () => {
 						if(response) {
-							resolve([resultinto, nfmodal.$('#flowmathedit_expression').value]);
+							resolve([_resultinto, nfmodal.$('#flowmathedit_expression').value]);
 						} else {
 							resolve([null, null]);
 						}
