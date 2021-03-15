@@ -5,11 +5,11 @@
 		<option value="xor" selected={ condgroup.operator === 'xor' }>{ __('XOR: ONLY one condition must be met') }</option>
 	</select>
 	<div class="conditions">
-		<template each={ (condition, index) in this.condgroup.conditions }>
+		<div each={ (condition, index) in this.condgroup.conditions } key={ condition.key } >
 			<span class="delete" onclick={ onRemoveConditionClick } data-index={ index }><i class="ms-Icon ms-Icon--Cancel"></i></span>
 			<ConditionalGroupInput if={ condition.discriminator === 'ConditionGroup' } condgroup={ condition }></ConditionalGroupInput>
 			<ConditionalInput if={ condition.discriminator === 'Condition' } cond={ condition }></ConditionalInput>
-		</template>
+		</div>
 	</div>
 	<div class="addbtns"><button onclick={ onAddConditionClick }>{ __('Add a condition') }</button>{ __(' or ') }<button onclick={ onAddConditionGroupClick }>{ __('Add a group') }</button></div>
 
@@ -26,13 +26,13 @@
 			margin-left: 10px;
 			position: relative;
 		}
-		:host > .conditions > conditionalinput, :host > .conditions > conditionalgroupinput, :host > .addbtns {
+		:host > .conditions > div > conditionalinput, :host > .conditions > div > conditionalgroupinput, :host > .addbtns {
 			margin-bottom: 5px;
 		}
-		:host > .conditions > conditionalgroupinput {
+		:host > .conditions > div > conditionalgroupinput {
 			background: rgba(255, 255, 255, 0.02);
 		}
-		:host > .conditions > conditionalinput::before, :host > .conditions > conditionalgroupinput::before {
+		:host > .conditions > div > conditionalinput::before, :host > .conditions > div > conditionalgroupinput::before {
 			content: ' ';
 			display: inline-block;
 			height: 1px;
@@ -41,23 +41,23 @@
 			vertical-align: middle;
 			margin-right: 5px;
 		}
-		:host > .conditions > span {
+		:host > .conditions > div > span {
 			display: block;
 			position: absolute;
 			color: #ff0000;
 			cursor: pointer;
 			margin: 7px 2px;
 		}
-		:host > .conditions > span > i {
+		:host > .conditions > div > span > i {
 			visibility: hidden;
 		}
-		:host > .conditions > span:hover > i {
+		:host > .conditions > div > span:hover > i {
 			visibility: visible;
 		}
-		:host > .conditions > conditionalgroupinput > .conditions {
+		:host > .conditions > div > conditionalgroupinput > .conditions {
 			margin-left: 35px;
 		}
-		:host > .conditions > conditionalgroupinput > .addbtns {
+		:host > .conditions > div > conditionalgroupinput > .addbtns {
 			margin-left: 25px;
 		}
 	</style>
@@ -79,19 +79,32 @@
 				} else {
 					this.condgroup = new ConditionalGroup({ discriminator: 'ConditionGroup', conditions: [], operator: 'and' });
 				}
+				this.state.keystate = 0;
+				for(let i = 0; i < this.condgroup.conditions.length; i++) {
+					this.condgroup.conditions[i].key = this.nextKey();
+				}
 			},
 
 			onOperatorChange(e) {
 				this.condgroup.operator = e.currentTarget.value;
 			},
 
+			nextKey() {
+				this.state.keystate++;
+				return this.state.keystate;
+			},
+
 			onAddConditionClick() {
-				this.condgroup.add(new Conditional({ discriminator: 'Condition', left: '', right: '', compare: 'eq' }));
+				let c = new Conditional({ discriminator: 'Condition', left: '', right: '', compare: 'eq' });
+				c.key = this.nextKey();
+				this.condgroup.add(c);
 				this.update();
 			},
 
 			onAddConditionGroupClick() {
-				this.condgroup.add(new ConditionalGroup({ discriminator: 'ConditionGroup', conditions: [], operator: 'and' }));
+				let cg = new ConditionalGroup({ discriminator: 'ConditionGroup', conditions: [], operator: 'and' });
+				cg.key = this.nextKey();
+				this.condgroup.add(cg);
 				this.update();
 			},
 
