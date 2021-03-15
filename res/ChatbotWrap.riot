@@ -201,6 +201,26 @@
 			onMounted(props, state) {
 			},
 
+			refreshChannelPointRewards() {
+				this.flowrewardselection = null;
+				const self = this;
+				ipcRenderer.invoke('app.ttvst.chatbot.getChannelPointRewards').then((rewards) => {
+					self.flowrewardselection = rewards.data;
+					if(self.flowrewardselection.length == 0) {
+						self.flowrewarderror = 'No point rewards found';
+					}
+					self.update();
+				}).catch((e) => {
+					self.flowrewardselection = [];
+					if(e.message.endsWith('not logged in')) {
+						self.flowrewarderror = 'Please log in to select reward';
+					} else if(e.message.endsWith('channel points are not available for the broadcaster')) {
+						self.flowrewarderror = 'Your channel has no points enabled';
+					}
+					self.update();
+				});
+			},
+
 			onModeSelect(e) {
 				this.flowmode.mode = parseInt(e.currentTarget.value);
 				if(this.flowmode.mode == 0) {
@@ -217,24 +237,7 @@
 					if(triggers.length == 1) {
 						this.selectedTrigger = triggers[0];
 					}
-					
-					this.flowrewardselection = null;
-					const self = this;
-					ipcRenderer.invoke('app.ttvst.chatbot.getChannelPointRewards').then((rewards) => {
-						self.flowrewardselection = rewards.data;
-						if(self.flowrewardselection.length == 0) {
-							self.flowrewarderror = 'No point rewards found';
-						}
-						self.update();
-					}).catch((e) => {
-						self.flowrewardselection = [];
-						if(e.message.endsWith('not logged in')) {
-							self.flowrewarderror = 'Please log in to select reward';
-						} else if(e.message.endsWith('channel points are not available for the broadcaster')) {
-							self.flowrewarderror = 'Your channel has no points enabled';
-						}
-						self.update();
-					});
+					this.refreshChannelPointRewards();
 				} else if(this.flowmode.mode == 2) {
 					this.flowmode.props = Object.assign({}, this.flowmode.props);
 				}
@@ -313,6 +316,9 @@
 					}
 				}
 				this.flowmode = flow.mode;
+				if(this.flowmode.mode == 1) {
+					this.refreshChannelPointRewards();
+				}
 
 				this.update();
 			},
