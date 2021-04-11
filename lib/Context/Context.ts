@@ -1,7 +1,7 @@
 import VarInterface from './VarInterface';
 
-const placeholderRegex = /\$\{(\s+)?(?<var>([a-z]([a-z0-9]+)?)(\[(\s+)?(([a-z]([a-z0-9]+)?)|[0-9]+|"(.*?[^\\])?")(\s+)?\])?)(\s+)?\}/;
-const variablePartsRegex = /(?<varname>[a-z]([a-z0-9]+)?)(\[(\s+)?(?<varindex>([a-z]([a-z0-9]+)?)|[0-9]+|"(.*?[^\\])?")(\s+)?\])?/;
+const placeholderRegex = /\$\{(\s+)?(?<var>([a-z]([a-z0-9_]+)?)(\[(\s+)?(([a-z]([a-z0-9_]+)?)|[0-9]+|"(.*?[^\\])?")(\s+)?\])?)(\s+)?\}/;
+const variablePartsRegex = /(?<varname>[a-z]([a-z0-9_]+)?)(\[(\s+)?(?<varindex>([a-z]([a-z0-9_]+)?)|[0-9]+|"(.*?[^\\])?")(\s+)?\])?/;
 
 class Context {
 
