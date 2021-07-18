@@ -209,6 +209,12 @@
 	"is false": {
 		"de": "ist falsch"
 	},
+	"exists": {
+		"de": "existiert"
+	},
+	"not exists": {
+		"de": "existiert nicht"
+	},
 	" or ": {
 		"de": " oder "
 	},

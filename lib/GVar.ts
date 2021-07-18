@@ -93,7 +93,7 @@ class GVar extends IDBOrm {
 		if(this.type === 'assoc') {
 			let assoclist = [];
 			for(let key of Object.keys(this.value)) {
-				assoclist.push(key + ': ' + JSON.parse((this.value as {[key: string]: string})[key]));
+				assoclist.push(key + ': ' + JSON.stringify((this.value as {[key: string]: string})[key]));
 			}
 			let assocstr = assoclist.join(', ');
 			return (assocstr.length > 128 ? assocstr.substr(0, 127) + '…' : assocstr);

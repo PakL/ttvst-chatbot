@@ -28,6 +28,8 @@
 		<optgroup label={ __('Boolean check') }>
 			<option value="true" selected={ cond.condition.compare === 'true' }>{ __('is true') }</option>
 			<option value="false" selected={ cond.condition.compare === 'false' }>{ __('is false') }</option>
+			<option value="exists" selected={ cond.condition.compare === 'exists' }>{ __('exists') }</option>
+			<option value="nexists" selected={ cond.condition.compare === 'nexists' }>{ __('not exists') }</option>
 		</optgroup>
 	</select>
 	<input type="text" class="right" value={ cond.condition.right } onchange={ onInputChange } />

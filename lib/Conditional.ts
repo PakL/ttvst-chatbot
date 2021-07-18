@@ -24,7 +24,9 @@ export enum IConditionCompare {
 	ENDS_WITH_NOCASE = 'endsc',
 
 	IS_TRUE = 'true',
-	IS_FALSE = 'false'
+	IS_FALSE = 'false',
+	EXISTS = 'exists',
+	NOT_EXISTS = 'nexists'
 }
 
 const readableCompare: {[key: string]: string} = {
@@ -49,7 +51,9 @@ const readableCompare: {[key: string]: string} = {
 	startsc: 'starts with(i)',
 	endsc: 'ends with(i)',
 	true: 'is true',
-	false: 'is false'
+	false: 'is false',
+	exists: 'exists',
+	nexists: 'not exists'
 }
 
 export interface ICondition {
@@ -155,6 +159,10 @@ class Conditional {
 				return await this.is(context);
 			case IConditionCompare.IS_FALSE:
 				return !await this.is(context);
+			case IConditionCompare.EXISTS:
+				return await this.exists(context);
+			case IConditionCompare.NOT_EXISTS:
+				return !await this.exists(context);
 		}
 
 		return false;
@@ -211,6 +219,12 @@ class Conditional {
 			return left.length > 0;
 		}
 
+		return true;
+	}
+
+	private async exists(context: Context): Promise<boolean> {
+		let left = await context.getFirstVariableRaw(this.condition.left);
+		if(left === null) return false;
 		return true;
 	}
 
