@@ -37,7 +37,6 @@ class FlowAction {
 				if(t === 'assoc') {
 					if(typeof(parameters[i]) !== 'object') {
 						parameters[i] = await context.getFirstVariableRaw(this.data.parameters[i].toString());
-						console.log(parameters[i]);
 					}
 				} else if(t === 'list') {
 					if(typeof(parameters[i]) !== 'object') {
