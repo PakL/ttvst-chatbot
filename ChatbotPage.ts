@@ -1,7 +1,7 @@
 import { ipcRenderer } from 'electron';
 import * as riot from 'riot';
 
-import ChatbotWrap from './res/ChatbotWrap';
+import ChatbotWrap, * as ChatbotWrapComp from './res/ChatbotWrap';
 
 import TTVSTRenderer from '../../dist/dev.pakl.ttvst/renderer/TTVST';
 declare var TTVST: TTVSTRenderer;
@@ -12,7 +12,7 @@ let chatbotWrapCmpnt: any = null;
 
 class ChatbotPage extends TTVST.ui.Page {
 	
-	contentComponent: riot.RiotComponent = null;
+	contentComponent: ChatbotWrapComp.Component = null;
 	contextResultListener: (e: Electron.IpcRendererEvent, v: string) => void = null;
 
 	constructor() {
@@ -21,7 +21,7 @@ class ChatbotPage extends TTVST.ui.Page {
 		ipcRenderer.send('app.ttvst.chatbot.registerFlows');
 
 		this.onRightClick = this.onRightClick.bind(this);
-		chatbotWrapCmpnt = riot.component<null, null>(ChatbotWrap);
+		chatbotWrapCmpnt = riot.component(ChatbotWrap);
 	}
 
 	get icon(): string {
