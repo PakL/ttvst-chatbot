@@ -35,12 +35,22 @@ class FlowAction {
 				if(i >= parameters.length) continue;
 				let t = action.parameters[i].type
 				if(t === 'assoc') {
-					if(typeof(parameters[i]) !== 'string') {
+					if(typeof(parameters[i]) !== 'object') {
 						parameters[i] = await context.getFirstVariableRaw(this.data.parameters[i].toString());
+						console.log(parameters[i]);
 					}
 				} else if(t === 'list') {
-					if(typeof(parameters[i]) !== 'string') {
+					if(typeof(parameters[i]) !== 'object') {
 						parameters[i] = await context.getFirstVariableRaw(this.data.parameters[i].toString());
+					}
+				} else if(t === 'number') {
+					if(typeof(parameters[i]) !== 'number') {
+						parameters[i] = parseFloat(parameters[i] as string);
+						if(isNaN(parameters[i] as number)) parameters[i] = 0;
+					}
+				} else if(t === 'boolean') {
+					if(typeof(parameters[i]) !== 'boolean') {
+						parameters[i] = parameters[i] === 'false' || parameters[i] === 0 ? false : true;
 					}
 				}
 			}
