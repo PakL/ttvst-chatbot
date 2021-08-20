@@ -1,3 +1,4 @@
+import { i } from 'mathjs';
 import Context from '../Context/Context';
 
 export interface IFlowVariable {
@@ -5,7 +6,7 @@ export interface IFlowVariable {
 	variable: string,
 	type: 'number'|'string'|'boolean'|'array'|'object',
 	content: number|string|boolean|Array<string|number>|{[key: string]: string},
-	processing: 'none'|'cast'|'split'|'join'|'enjson'|'dejson'|'urlencode'|'urldecode'|'append'|'prepend'|'shift'|'pop'|'searchremove',
+	processing: 'none'|'cast'|'split'|'join'|'enjson'|'dejson'|'urlencode'|'urldecode'|'append'|'prepend'|'shift'|'pop'|'searchremove'|'searchreplace'|'substring',
 	processingextra: string
 }
 
@@ -94,6 +95,42 @@ class FlowVariable {
 					try {
 						content = JSON.stringify(varContent);
 					} catch(e) {}
+				} else if(this.data.processing === 'searchreplace') {
+					let extra: { needle: string, regexp: boolean, global: boolean, ignorecase: boolean, replace: string } = { needle: '', regexp: false, global: false, ignorecase: false, replace: '' };
+					try {
+						extra = Object.assign(extra, JSON.parse(this.data.processingextra));
+					} catch(e) {}
+
+					extra.replace = await context.interpolate(extra.replace);
+					if(!extra.regexp) {
+						extra.needle = extra.needle.replace(/[\\\^\$\.\|\?\*\+\(\)\[\]\{\}]/g, '\\$&');
+						extra.replace = extra.replace.replace(/\$/g, '$$$$');
+					}
+
+					try {
+						let r = new RegExp(extra.needle, (extra.global ? 'g' : '')+(extra.ignorecase ? 'i' : ''));
+						content = content.replace(r, extra.replace);
+					} catch(e) {}
+				} else if(this.data.processing === 'substring') {
+					let extra: { index: string|number, length: string|number } = { index: 0, length: 0 };
+					try {
+						extra = Object.assign(extra, JSON.parse(this.data.processingextra));
+					} catch(e) {}
+
+					if(typeof(extra.index) !== 'number') {
+						extra.index = await context.interpolate(extra.index);
+						extra.index = parseInt(extra.index);
+					}
+					if(typeof(extra.length) !== 'number') {
+						extra.length = await context.interpolate(extra.length);
+						extra.length = parseInt(extra.length);
+					}
+
+					if(!isNaN(extra.index) && !isNaN(extra.length)) {
+						if(extra.length < 1) delete extra.length;
+						content = content.substr(extra.index, extra.length as number);
+					}
+					console.log(content);
 				}
 			}
 			value = content;

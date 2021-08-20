@@ -526,5 +526,59 @@
 	},
 	"Searches a list for the content and removes it or searches an associative arrays for a key and removes that entry.": {
 		"de": "Durchsucht eine Liste nach Inhalt und entfernt es oder sucht nach einem Schlüssel in assoziative Datenfelder und entfernt dort den Eintrag."
+	},
+	"Search and replace": {
+		"de": "Suchen und ersetzen"
+	},
+	"Cut out": {
+		"de": "Ausschneiden"
+	},
+	"Searches part of a text and replaces it.": {
+		"de": "Sucht einen Teiltext und ersetzt ihn."
+	},
+	"Cut part of a text out and put it into the variable.": {
+		"de": "Schneidet einen Teil aus einem Text raus und schreibt ihn in die Variabel."
+	},
+	"Needle": {
+		"de": "Nadel"
+	},
+	"Enter phrase to search in content.": {
+		"de": "Gib eine Phrase, die in Inhalt gesucht werden soll."
+	},
+	"Regular expression": {
+		"de": "Regulärer Ausdruck"
+	},
+	"Is needle a regular expression?": {
+		"de": "Ist Nadel ein regulärer Ausdruck?"
+	},
+	"Replace all": {
+		"de": "Alle ersetzen"
+	},
+	"Replace all occurrences instead of just the first?": {
+		"de": "Alle Vorkommen ersetzen statt nur dem ersten Fund?"
+	},
+	"Ignore case": {
+		"de": "Groß-/Kleinschreibung ignorieren"
+	},
+	"Case insensitive search?": {
+		"de": "Groß- und Kleinschreibung bei Suche ignorieren?"
+	},
+	"Replace with": {
+		"de": "Ersetzen mit"
+	},
+	"Enter phrase to replace needle by.": {
+		"de": "Phrase eingeben, die Nadel ersetzen soll"
+	},
+	"Start Index": {
+		"de": "Anfangsindex"
+	},
+	"Index of the start of the cutout, starting at 0. When negative, the index starts counting from the end of the text.": {
+		"de": "Index an dem der Ausschnitt beginnen soll, angefangen bei 0. Bei negativ zählt der Index rückwärts vom Ende des Textes."
+	},
+	"Length": {
+		"de": "Länge"
+	},
+	"Length of the cutout in number of characters. Any number below 1 will mean until the end of the text.": {
+		"de": "Länge des Ausschnitts in Anzahl der Zeichen. Jede Nummer unter 1 wird als bis zum Ende des Textes interpretiert."
 	}
 }

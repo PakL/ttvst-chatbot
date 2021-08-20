@@ -22,6 +22,8 @@
 				<option value="shift" selected={ processing === 'shift' } if={ ['number', 'string','boolean'].indexOf(variableType) >= 0 }>{__('List shift')}</option>
 				<option value="pop" selected={ processing === 'pop' } if={ ['number', 'string','boolean'].indexOf(variableType) >= 0 }>{__('List pop')}</option>
 				<option value="searchremove" selected={ processing === 'searchremove' } if={ ['array', 'object'].indexOf(variableType) >= 0 }>{__('Search and remove')}</option>
+				<option value="searchreplace" selected={ processing === 'searchreplace' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Search and replace')}</option>
+				<option value="substring" selected={ processing === 'substring' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Cut out')}</option>
 			</select>
 			<small class="accent-light-font">{__('Process input below - select an option to see a description')}:&nbsp;
 				<template if={ processing == 'none' }>{__('No processing.')}</template>
@@ -37,11 +39,23 @@
 				<template if={ processing == 'shift' }>{__('Puts the first element of a list into the variable and removes it from the list.')}</template>
 				<template if={ processing == 'pop' }>{__('Puts the last element of a list into the variable and removes it from the list.')}</template>
 				<template if={ processing == 'searchremove' }>{__('Searches a list for the content and removes it or searches an associative arrays for a key and removes that entry.')}</template>
+				<template if={ processing == 'searchreplace' }>{__('Searches part of a text and replaces it.')}</template>
+				<template if={ processing == 'substring' }>{__('Cut part of a text out and put it into the variable.')}</template>
 			</small>
 		</label>
 
 		<label if={ processing == 'split' }>{__('Splitter')}<input type="text" class="processingextra" value={ processingextra }><small class="accent-light-font">{__('Enter symbol(s) that the string will be splitted by.')}</small></label>
 		<label if={ processing == 'join' }>{__('Glue')}<input type="text" class="processingextra" value={ processingextra }><small class="accent-light-font">{__('Enter symbol(s) that the list items will be joined together by.')}</small></label>
+
+		<input if={ ['searchreplace', 'substring'].indexOf(processing) >= 0 } type="hidden" class="processingextra extrajson" value={ processingextra }>
+		<label if={ processing == 'searchreplace' }>{__('Needle')}<input type="text" class="extraval" data-extra="needle" onchange={ processExtrajson }><small class="accent-light-font">{__('Enter phrase to search in content.')}</small></label>
+		<label if={ processing == 'searchreplace' }>{__('Regular expression')}<input type="checkbox" class="extraval" data-extra="regexp" onchange={ processExtrajson }><small class="accent-light-font">{__('Is needle a regular expression?')}</small></label>
+		<label if={ processing == 'searchreplace' }>{__('Replace all')}<input type="checkbox" class="extraval" data-extra="global" onchange={ processExtrajson }><small class="accent-light-font">{__('Replace all occurrences instead of just the first?')}</small></label>
+		<label if={ processing == 'searchreplace' }>{__('Ignore case')}<input type="checkbox" class="extraval" data-extra="ignorecase" onchange={ processExtrajson }><small class="accent-light-font">{__('Case insensitive search?')}</small></label>
+		<label if={ processing == 'searchreplace' }>{__('Replace with')}<input type="text" class="extraval" data-extra="replace" onchange={ processExtrajson }><small class="accent-light-font">{__('Enter phrase to replace needle by.')}</small></label>
+		
+		<label if={ processing == 'substring' }>{__('Start Index')}<input type="text" class="extraval" data-extra="index" onchange={ processExtrajson }><small class="accent-light-font">{__('Index of the start of the cutout, starting at 0. When negative, the index starts counting from the end of the text.')}</small></label>
+		<label if={ processing == 'substring' }>{__('Length')}<input type="text" class="extraval" data-extra="length" onchange={ processExtrajson }><small class="accent-light-font">{__('Length of the cutout in number of characters. Any number below 1 will mean until the end of the text.')}</small></label>
 	</div>
 
 	<label class={ contentinput === 'boolean' ? 'win10-switch' : '' }>{__('Content')}
@@ -164,6 +178,10 @@
 						}
 					}
 				}
+
+				window.requestAnimationFrame((function(){
+					this.unprocessExtrajson();
+				}).bind(this));
 			},
 
 			onTypeChange() {
@@ -197,7 +215,7 @@
 						this.content = '';
 						this.contentinput = 'assoc';
 					}
-				} else if(['cast','split','join','enjson','dejson','urlencode','urldecode','append','prepend','shift','pop','searchremove'].indexOf(this.processing) >= 0) {
+				} else if(['cast','split','join','enjson','dejson','urlencode','urldecode','append','prepend','shift','pop','searchremove','searchreplace','substring'].indexOf(this.processing) >= 0) {
 					this.content = '';
 					this.contentinput = 'simple';
 				}
@@ -298,7 +316,8 @@
 					this.content = this.$('.variablecontent').checked;
 				}
 
-				if(this.processing == 'join' || this.processing == 'split') {
+				let proext = this.$('.processingextra');
+				if(typeof(proext) !== 'undefined') {
 					this.processingextra = this.$('.processingextra').value;
 				}
 
@@ -309,6 +328,40 @@
 					content: this.content,
 					processing: this.processing,
 					processingextra: this.processingextra
+				}
+			},
+
+			unprocessExtrajson() {
+				let extrajson = this.$('.extrajson');
+				if(typeof(extrajson) !== 'undefined') {
+					let extra = {};
+					try {
+						extra = JSON.parse(extrajson.value);
+					} catch(e) {}
+					let extraInputs = this.$$('.extraval');
+					for(let e of extraInputs) {
+						if(typeof(extra[e.dataset.extra]) === 'undefined') continue;
+						if(e.getAttribute('type') === 'checkbox') {
+							e.checked = (extra[e.dataset.extra] ? true : false);
+						} else {
+							e.value = extra[e.dataset.extra];
+						}
+					}
+				}
+			},
+			processExtrajson() {
+				let extrajson = this.$('.extrajson');
+				if(typeof(extrajson) !== 'undefined') {
+					let extra = {};
+					let extraInputs = this.$$('.extraval');
+					for(let e of extraInputs) {
+						if(e.getAttribute('type') === 'checkbox') {
+							extra[e.dataset.extra] = e.checked;
+						} else {
+							extra[e.dataset.extra] = e.value;
+						}
+					}
+					extrajson.value = JSON.stringify(extra);
 				}
 			}
 		}
