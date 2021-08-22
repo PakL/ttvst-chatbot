@@ -53,12 +53,12 @@
 		</div>
 		<template if={ step.discriminator === 'FlowConditional' }>
 			<div class="subflow" if={ !isCollapsed(step) }>
-				<floweditor flow={ step.flow }></floweditor>
+				<floweditor id={ 'chatbot_'+index+'_floweditor' } flow={ step.flow }></floweditor>
 			</div>
 			<template if={ !step.loop && !isCollapsed(step) }>
 				<div class="step else"><span>{ __('Else') }</span></div>
 				<div class="subflow">
-					<floweditor flow={ step.elseflow }></floweditor>
+					<floweditor id={ 'chatbot_'+index+'_alt_floweditor' } flow={ step.elseflow }></floweditor>
 				</div>
 			</template>
 			<div class="step else" if={ !step.loop }><span>{ __('End if') }</span></div>
@@ -665,6 +665,89 @@
 					this.state.collapsedCondition.push(step.k);
 				}
 				this.update();
+			},
+
+
+
+			getContextVars() {
+				let vars = [];
+				let until = this.state.editingIndex;
+				
+				for(let i = 0; i < this.state.steps.length; i++) {
+					if(until >= 0 && i >= until) break;
+					let step = this.state.steps[i];
+					if(step.discriminator === 'FlowVariable') {
+						vars.push({ name: step.variable, type: step.type });
+					} else if(step.discriminator === 'FlowConditional') {
+						var flowcond = this.$('#chatbot_'+i+'_floweditor');
+						var flowcondalt = this.$('#chatbot_'+i+'_alt_floweditor');
+
+						let flowcondSym = flowcond[Object.getOwnPropertySymbols(flowcond)[0]];
+						let [flowcondVars, flowcondStop] = flowcondSym.getContextVars();
+
+						let flowcondaltStop = false, flowcondaltVars = [];
+						if(typeof(flowcondalt) !== 'undefined') {
+							let flowcondaltSym = flowcondalt[Object.getOwnPropertySymbols(flowcondalt)[0]];
+							[flowcondaltVars, flowcondaltStop] = flowcondaltSym.getContextVars();
+						}
+
+						if(flowcondStop || (!flowcondStop && !flowcondaltStop)) {
+							for(let j = 0; j < flowcondVars.length; j++) {
+								let found = false;
+								for(let k = 0; k < vars.length; k++) {
+									if(vars[k].name === flowcondVars[j].name) {
+										vars[k] = flowcondVars[j];
+										found = true;
+									}
+									var x = vars.indexOf(flowcondVars[j]);
+									if(x < 0) {
+										vars.push(flowcondVars[j]);
+									} else {
+										vars[x] = flowcondVars[j];
+									}
+								}
+								if(!found) vars.push(flowcondVars[j]);
+							}
+						}
+						if(flowcondaltStop || (!flowcondStop && !flowcondaltStop)) {
+							for(let j = 0; j < flowcondaltVars.length; j++) {
+								let found = false;
+								for(let k = 0; k < vars.length; k++) {
+									if(vars[k].name === flowcondaltVars[j].name) {
+										vars[k] = flowcondaltVars[j];
+										found = true;
+									}
+									var x = vars.indexOf(flowcondaltVars[j]);
+									if(x < 0) {
+										vars.push(flowcondaltVars[j]);
+									} else {
+										vars[x] = flowcondaltVars[j];
+									}
+								}
+								if(!found) vars.push(flowcondaltVars[j]);
+							}
+						}
+
+						if(flowcondStop || flowcondaltStop) {
+							return [vars, true];
+						}
+					} else if(step.discriminator === 'FlowAction') {
+						let actions = TTVST.Broadcast.getAction({ channel: step.channel });
+						if(actions.length > 0) {
+							let t = actions[0].result.type;
+							if(t === 'list') t = 'array';
+							if(t === 'assoc') t = 'object';
+							vars.push({ name: step.resultinto, type: t });
+						}
+					} else if(typeof(step.resultinto) === 'string') {
+						vars.push({ name: step.resultinto, type: (step.discriminator === 'FlowMath' ? 'number' : 'string' ) });
+					}
+				}
+
+				if(this.root.getAttribute('id') === 'chatbot_main_floweditor' && until < 0) {
+					return [[], false];
+				}
+				return [vars, until >= 0];
 			}
 
 		}

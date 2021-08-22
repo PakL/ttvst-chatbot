@@ -62,7 +62,7 @@
 			</div>
 			<span if={ flowmode.mode != 2 }></span>
 		</div>
-		<floweditor flow={ flow }></floweditor>
+		<floweditor id="chatbot_main_floweditor" flow={ flow }></floweditor>
 		<div class="step">
 			<i class="ms-Icon ms-Icon--EntitlementRedemption"></i>
 			<span>{ __('End of Flow') }</span>
@@ -390,21 +390,10 @@
 						}
 					}
 
-					let fe = this.$('floweditor')
+					let fe = this.$('floweditor#chatbot_main_floweditor')
 					let feSym = fe[Object.getOwnPropertySymbols(fe)[0]];
 
-					let until = feSym.state.editingIndex;
-					if(until >= 0) {
-						for(let i = 0; i < feSym.state.steps.length; i++) {
-							if(i >= until) break;
-							let step = feSym.state.steps[i];
-							if(step.discriminator === 'FlowVariable') {
-								vars.push({ name: step.variable, type: step.type });
-							} else if(typeof(step.resultinto) === 'string') {
-								vars.push({ name: step.resultinto, type: (step.discriminator === 'FlowMath' ? 'number' : 'string' ) });
-							}
-						}
-					}
+					vars = feSym.getContextVars()[0];
 				}
 				return vars;
 			}
