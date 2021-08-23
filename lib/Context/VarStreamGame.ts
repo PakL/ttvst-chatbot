@@ -11,9 +11,9 @@ class VarStreamGame extends VarInterface {
 
 	async setTo(): Promise<void> {}
 
-	async getValue(): Promise<string> {
+	async getValue(index?: string): Promise<string> {
 		try {
-			return await TTVST.BroadcastMain.instance.execute('app.ttvst.helix.getGame');
+			return await TTVST.BroadcastMain.instance.execute('app.ttvst.helix.getGame', (typeof(index) === 'string' ? index : ''));
 		} catch(e) {}
 		return '';
 	}
