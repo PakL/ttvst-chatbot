@@ -19,7 +19,7 @@ class FlowWebRequest {
 	constructor(data: IFlowWebRequest) {
 		this.data = data;
 	}
-	async execute(context: Context) {
+	async execute(context: Context): Promise<{ [key: string]: any }> {
 		if(this.data.url.toLowerCase().startsWith('http://') || this.data.url.toLowerCase().startsWith('https://')) {
 			let options: {
 				method: 'HEAD'|'GET'|'POST'|'PUT'|'PATCH'|'DELETE'|'OPTIONS',
@@ -63,8 +63,15 @@ class FlowWebRequest {
 					}
 
 					await context.setValueOf(this.data.resultinto, data);
+					return { url: this.data.url, options, response, resultinto: this.data.resultinto, result: data };
+				} else {
+					return { url: this.data.url, options, response };
 				}
-			} catch(e){}
+			} catch(e){
+				return { url: this.data.url, options, error: e.message };
+			}
+		} else {
+			return { msg: 'Invalid URL' };
 		}
 	}
 

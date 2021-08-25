@@ -580,5 +580,23 @@
 	},
 	"Length of the cutout in number of characters. Any number below 1 will mean until the end of the text.": {
 		"de": "Länge des Ausschnitts in Anzahl der Zeichen. Jede Nummer unter 1 wird als bis zum Ende des Textes interpretiert."
+	},
+	"Step debug information": {
+		"de": "Debuginformationen für Schritt"
+	},
+	"Point reached last at:": {
+		"de": "Punkt wurde erreicht um:"
+	},
+	"No data": {
+		"de": "Keine Daten"
+	},
+	"Data:": {
+		"de": "Daten:"
+	},
+	"Flow was changed. Data may not match.": {
+		"de": "Ablauf wurde geändert. Daten könnten nicht stimmen."
+	},
+	"Save and close": {
+		"de": "Speichern und schließen"
 	}
 }

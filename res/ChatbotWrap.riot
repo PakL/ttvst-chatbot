@@ -51,6 +51,7 @@
 		<div class="btngrp">
 			<button onclick={ onCancelFlowClick }>{ __('Cancel') }</button>
 			<button onclick={ onSaveFlowClick }>{ __('Save') }</button>
+			<button onclick={ onSaveAndCloseFlowClick }>{ __('Save and close') }</button>
 		</div>
 		<div class="step trigger">
 			<i class="ms-Icon ms-Icon--LightningBolt"></i>
@@ -58,11 +59,14 @@
 			
 			<div class="btngrp" if={ flowmode.mode == 2 }>
 				<button onclick={ onSelectTriggerClick }>{ __('Select Trigger') }</button>
+				<button onclick={ onDebugClick }><i class="ms-Icon ms-Icon--BugSolid"></i></button>
 				<button onclick={ onClearTriggerClick } if={ selectedTrigger.channel.length > 0 }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
 			</div>
-			<span if={ flowmode.mode != 2 }></span>
+			<div class="btngrp" if={ flowmode.mode != 2 }>
+				<button onclick={ onDebugClick }><i class="ms-Icon ms-Icon--BugSolid"></i></button>
+			</div>
 		</div>
-		<floweditor id="chatbot_main_floweditor" flow={ flow }></floweditor>
+		<floweditor id="chatbot_main_floweditor" flow={ flow } ondebugclick={ onDebugClick }></floweditor>
 		<div class="step">
 			<i class="ms-Icon ms-Icon--EntitlementRedemption"></i>
 			<span>{ __('End of Flow') }</span>
@@ -196,6 +200,7 @@
 
 			onBeforeMount(props, state) {
 				this.__ = global.TTVST.i18n.__;
+				this.state.changesmade = false;
 			},
 
 			onMounted(props, state) {
@@ -284,6 +289,7 @@
 						operator: 'and'
 					});
 				}
+				this.state.changesmade = true;
 			},
 
 			async onSelectTriggerClick() {
@@ -291,7 +297,8 @@
 				if(triggerChannel !== null) {
 					let triggers = TTVST.Broadcast.getTrigger({ channel: triggerChannel });
 					if(triggers.length == 1) {
-						this.selectedTrigger = triggers[0]
+						this.selectedTrigger = triggers[0];
+						this.state.changesmade = true;
 						this.update();
 					}
 				}
@@ -299,6 +306,7 @@
 
 			async onClearTriggerClick() {
 				this.selectedTrigger = { label: 'No trigger selected', addon: '', channel: '' };
+				this.state.changesmade = true;
 				this.update();
 			},
 
@@ -327,10 +335,11 @@
 				this.openingFolder = this.flowobj.superior;
 				this.flowobj = null;
 				this.page = 0;
+				this.state.changesmade = false;
 				this.update();
 			},
 
-			async onSaveFlowClick() {
+			async onSaveFlowClick(e) {
 				let cgi = this.$('conditionalgroupinput')
 				let fe = this.$('floweditor')
 				let feSym = fe[Object.getOwnPropertySymbols(fe)[0]];
@@ -354,12 +363,28 @@
 
 				await this.flowobj.save();
 
+				if(typeof(e) !== 'undefined') {
+					let check = document.createElement('i');
+					let target = e.currentTarget ?? e.target;
+					check.className = 'ms-Icon ms-Icon--CheckMark';
+					check.style.marginLeft = '5px';
+					target.appendChild(check);
+					setTimeout(() => {
+						target.removeChild(check);
+					}, 2000);
+				}
+				
+				ipcRenderer.send('app.ttvst.chatbot.registerFlows');
+			},
+
+			async onSaveAndCloseFlowClick() {
+				await this.onSaveFlowClick();
+
 				this.openingFolder = this.flowobj.superior;
 				this.flowobj = null;
 				this.page = 0;
+				this.state.changesmade = false;
 				this.update();
-				
-				ipcRenderer.send('app.ttvst.chatbot.registerFlows');
 			},
 
 			onGVarEdit(currentfolder) {
@@ -396,6 +421,30 @@
 					vars = feSym.getContextVars()[0];
 				}
 				return vars;
+			},
+
+			async onDebugClick(step, flowupdated) {
+				if(this.flowobj !== null) {
+					let result = await ipcRenderer.invoke('app.ttvst.chatbot.getDebug', this.flowobj.key, typeof(step) !== 'string' ? '_-1' : step);
+
+
+					let errormsg = document.createElement('div');errormsg.style.fontWeight = 'bold';errormsg.style.color='red';
+					if((typeof(flowupdated) === 'boolean' && flowupdated) || this.state.changesmade) {
+						errormsg.innerText = this.__('Flow was changed. Data may not match.');
+						errormsg.style.marginBottom = '10px';
+					}
+					
+					let lblTime = document.createElement('div');lblTime.style.fontWeight = 'bold';lblTime.innerText = this.__('Point reached last at:');
+					let time = document.createElement('div');time.innerText = result.created < 0 ? this.__('No data') : TTVST.DateFormat(new Date(result.created), 'yyyy-mm-dd HH:MM:ss');
+
+					let lblData = document.createElement('div');lblData.style.fontWeight = 'bold';lblData.style.marginTop = '10px';lblData.innerText = this.__('Data:');
+					let data = document.createElement('pre');data.innerText = JSON.stringify(result.data, null, '  ');
+					data.style.border = '1px solid #000';data.style.padding = '5px';data.style.background = '#161616';data.style.margin = '0';data.style.borderRadius = '5px';
+					data.style.overflowWrap = 'break-word';data.style.whiteSpace = 'pre-wrap';data.style.userSelect = 'text';
+
+
+					let nfmodal = TTVST.ui.modal([errormsg, lblTime, time, lblData, data], 'Step debug information', 'BugSolid', () => {}, [{ key: 'ok', title: 'OK' }], true);
+				}
 			}
 
 		}

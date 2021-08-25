@@ -236,6 +236,10 @@ class Conditional {
 		return this.condition.left + ' ' + readableCompare[this.condition.compare] + (this.condition.right.length > 0 ? ' ' + this.condition.right : '');
 	}
 
+	async debug(context: Context): Promise<{ left: string, compare: string, right: string }> {
+		return { left: await context.interpolate(this.condition.left), compare: this.condition.compare, right: await context.interpolate(this.condition.right) };
+	}
+
 	toString(): string {
 		return JSON.stringify(this.serialize());
 	}

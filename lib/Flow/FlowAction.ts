@@ -18,7 +18,7 @@ class FlowAction {
 		this.data = data;
 	}
 
-	async execute(context: Context) {
+	async execute(context: Context): Promise<{ [key: string]: any }> {
 		let parameters: Array<string|number|boolean|Array<string>|{[key:string]:string}> = [];
 		for(let i = 0; i < this.data.parameters.length; i++) {
 			if(typeof(this.data.parameters[i]) === 'string') {
@@ -58,6 +58,9 @@ class FlowAction {
 			let result = await TTVST.BroadcastMain.instance.execute(this.data.channel, ...parameters);
 			if(this.data.resultinto.length > 0 && typeof(result) !== 'undefined') {
 				await context.setValueOf(this.data.resultinto, result);
+				return { channel: this.data.channel, parameters, resultintovar: this.data.resultinto, result };
+			} else {
+				return { channel: this.data.channel, parameters, result };
 			}
 		}
 	}

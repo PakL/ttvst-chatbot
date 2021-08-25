@@ -13,7 +13,7 @@ class FlowWait {
 		this.data = data;
 	}
 
-	async execute(context: Context) {
+	async execute(context: Context): Promise<{ [key: string]: any }> {
 		if(this.data.time <= 0) {
 			return;
 		}
@@ -23,6 +23,7 @@ class FlowWait {
 				res();
 			}, waittime);
 		});
+		return { timeout: waittime };
 	}
 
 	serialize() {

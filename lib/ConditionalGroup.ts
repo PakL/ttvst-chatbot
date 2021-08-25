@@ -13,6 +13,11 @@ export interface IConditionGroup {
 	operator: IOperator
 }
 
+interface IConditionGroupDebug {
+	operator: IOperator,
+	conditions: Array<{ left: string, compare: string, right: string }|IConditionGroupDebug>
+}
+
 class ConditionalGroup {
 
 	discriminator = 'ConditionGroup';
@@ -85,6 +90,17 @@ class ConditionalGroup {
 			conds.push(this.conditions[i].readable());
 		}
 		return '(' + conds.join(' ' + this.operator.toUpperCase() + ' ') + ')';
+	}
+
+	async debug(context: Context): Promise<IConditionGroupDebug> {
+		let conds: Array<{ left: string, compare: string, right: string }|IConditionGroupDebug> = [];
+		for(let i = 0; i < this.conditions.length; i++) {
+			conds.push(await this.conditions[i].debug(context));
+		}
+		return {
+			operator: this.operator,
+			conditions: conds
+		};
 	}
 
 	toString(): string {

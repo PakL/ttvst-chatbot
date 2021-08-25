@@ -1,3 +1,4 @@
+import FlowDebug from '../FlowDebug';
 import VarInterface from './VarInterface';
 
 const placeholderRegex = /\$\{(\s+)?(?<var>([a-z]([a-z0-9_]+)?)(\[(\s+)?(([a-z]([a-z0-9_]+)?)|[0-9]+|"(.*?[^\\])?")(\s+)?\])?)(\s+)?\}/;
@@ -14,6 +15,7 @@ class Context {
 	}
 
 	private variables: { [name: string]: VarInterface } = {};
+	private debug: FlowDebug = null;
 
 	add(...variables: VarInterface[]): this {
 		for(let i = 0; i < variables.length; i++) {
@@ -132,6 +134,15 @@ class Context {
 	
 	iterable(): Array<VarInterface> {
 		return Object.values(this.variables);
+	}
+
+	setDebug(debug: FlowDebug) {
+		this.debug = debug;
+	}
+
+	pushDebug(step: string, data: { [key: string]: any }) {
+		if(this.debug !== null)
+			this.debug.pushData({ created: new Date().getTime(), step, data });
 	}
 
 }

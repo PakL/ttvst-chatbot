@@ -18,7 +18,7 @@ class FlowVariable {
 		this.data = data;
 	}
 
-	async execute(context: Context) {
+	async execute(context: Context): Promise<{ [key: string]: any }> {
 		let value: any;
 
 		if(this.data.type == 'number') {
@@ -284,6 +284,9 @@ class FlowVariable {
 
 		if(typeof(value) === this.data.type || (typeof(value) === 'object' && this.data.type === 'array' && Array.isArray(value))) {
 			await context.setValueOf(this.data.variable, value);
+			return { variable: this.data.variable, value };
+		} else {
+			return { msg: 'Nothing happend' };
 		}
 	}
 

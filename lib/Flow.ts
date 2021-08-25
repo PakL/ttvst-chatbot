@@ -157,7 +157,7 @@ class Flow extends IDBOrm {
 	}
 
 	async execute(context: Context) {
-		FlowConditional.execFlow(this.flow, context);
+		await FlowConditional.execFlow(this.flow, context);
 	}
 
 	async getAbsolutePath(): Promise<Folder[]> {

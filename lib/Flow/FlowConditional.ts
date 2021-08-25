@@ -20,12 +20,14 @@ export interface IFlowConditional {
 class FlowConditional {
 
 	data: IFlowConditional;
+	stepPrefix: string;
 
-	constructor(data: IFlowConditional) {
+	constructor(data: IFlowConditional, stepPrefix: string = '') {
 		this.data = data;
+		this.stepPrefix = stepPrefix;
 	}
 
-	async execute(context: Context) {
+	async execute(context: Context): Promise<{ [key: string]: any }> {
 		let condJ: IConditionGroup = JSON.parse(this.data.conditional);
 		let cond = new ConditionalGroup(condJ);
 		
@@ -34,26 +36,36 @@ class FlowConditional {
 			let nowTime = (new Date()).getTime();
 			// Check for any conditions, or we get stuck in an "endless" loop
 			if(cond.conditions.length > 0) {
+				let i = 0;
 				while(await cond.meets(context) && (nowTime-startTime) < 60000) {
-					await FlowConditional.execFlow(this.data.flow, context);
+					await FlowConditional.execFlow(this.data.flow, context, this.stepPrefix);
 					nowTime = (new Date()).getTime();
+					i++;
 				}
+
+				return { conditions: await cond.debug(context), loopruns: i };
+			} else {
+				return { conditions: {}, loopruns: 0 };
 			}
 		} else {
 			if(await cond.meets(context)) {
-				await FlowConditional.execFlow(this.data.flow, context);
+				let debugData = JSON.parse(JSON.stringify({ conditions: await cond.debug(context), results: true }));
+				await FlowConditional.execFlow(this.data.flow, context, this.stepPrefix);
+				return debugData;
 			} else {
-				await FlowConditional.execFlow(this.data.elseflow, context);
+				let debugData = JSON.parse(JSON.stringify({ conditions: await cond.debug(context), results: false }));
+				await FlowConditional.execFlow(this.data.elseflow, context, this.stepPrefix + '_alt');
+				return debugData;
 			}
 		}
 	}
 	
-	static async execFlow(f: Array<IFlowVariable|IFlowAction|IFlowMath|IFlowConditional|IFlowWait|IFlowWebRequest>, context: Context) {
+	static async execFlow(f: Array<IFlowVariable|IFlowAction|IFlowMath|IFlowConditional|IFlowWait|IFlowWebRequest>, context: Context, stepPrefix: string = '') {
 		for(let i = 0; i < f.length; i++) {
 			let fl = null;
 			switch(f[i].discriminator) {
 				case 'FlowConditional':
-					fl = new FlowConditional(f[i] as IFlowConditional);
+					fl = new FlowConditional(f[i] as IFlowConditional, stepPrefix + '_' + i.toString());
 					break;
 				case 'FlowMath':
 					fl = new FlowMath(f[i] as IFlowMath);
@@ -73,7 +85,8 @@ class FlowConditional {
 			}
 
 			if(fl !== null) {
-				await fl.execute(context);
+				let debug = await fl.execute(context);
+				context.pushDebug(stepPrefix + '_' + i.toString(), JSON.parse(JSON.stringify(debug)));
 			}
 		}
 	}

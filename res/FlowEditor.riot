@@ -7,6 +7,7 @@
 				<span>{ __(step.loop ? 'Loop while' : 'If') + ' ' + __readableCondition(step.conditional) }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowConditional } data-flow={ index }>{ __('Edit') }</button>
+					<button onclick={ onDebugStep } data-flow={ index }><i class="ms-Icon ms-Icon--BugSolid"></i></button>
 					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
 				</div>
 			</template>
@@ -15,6 +16,7 @@
 				<span><span if={step.resultinto.length > 0}>{ step.resultinto } = </span>{ step.expression.replace(/\n/g,'⮐') }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowMath } data-flow={ index }>{ __('Edit') }</button>
+					<button onclick={ onDebugStep } data-flow={ index }><i class="ms-Icon ms-Icon--BugSolid"></i></button>
 					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
 				</div>
 			</template>
@@ -23,6 +25,7 @@
 				<span><span if={step.resultinto.length > 0}>{ step.resultinto } = </span>{ __actionByChannel(step.channel) }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowAction } data-flow={ index }>{ __('Edit') }</button>
+					<button onclick={ onDebugStep } data-flow={ index }><i class="ms-Icon ms-Icon--BugSolid"></i></button>
 					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
 				</div>
 			</template>
@@ -31,6 +34,7 @@
 				<span>{ step.variable } ({ __(step.type) }) = { JSON.stringify(step.content) }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowVariable } data-flow={ index }>{ __('Edit') }</button>
+					<button onclick={ onDebugStep } data-flow={ index }><i class="ms-Icon ms-Icon--BugSolid"></i></button>
 					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
 				</div>
 			</template>
@@ -39,6 +43,7 @@
 				<span>{ __('Waiting for {{seconds}} seconds', { seconds: (step.time/1000) }) }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowWait } data-flow={ index }>{ __('Edit') }</button>
+					<button onclick={ onDebugStep } data-flow={ index }><i class="ms-Icon ms-Icon--BugSolid"></i></button>
 					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
 				</div>
 			</template>
@@ -47,18 +52,19 @@
 				<span>{ step.method + ' ' + step.url }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowWebRequest } data-flow={ index }>{ __('Edit') }</button>
+					<button onclick={ onDebugStep } data-flow={ index }><i class="ms-Icon ms-Icon--BugSolid"></i></button>
 					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
 				</div>
 			</template>
 		</div>
 		<template if={ step.discriminator === 'FlowConditional' }>
 			<div class="subflow" if={ !isCollapsed(step) }>
-				<floweditor id={ 'chatbot_'+index+'_floweditor' } flow={ step.flow }></floweditor>
+				<floweditor id={ 'chatbot_'+index+'_floweditor' } stepprefix={ state.stepprefix + '_' + index.toString() } ondebugclick={ props.ondebugclick } flow={ step.flow }></floweditor>
 			</div>
 			<template if={ !step.loop && !isCollapsed(step) }>
 				<div class="step else"><span>{ __('Else') }</span></div>
 				<div class="subflow">
-					<floweditor id={ 'chatbot_'+index+'_alt_floweditor' } flow={ step.elseflow }></floweditor>
+					<floweditor id={ 'chatbot_'+index+'_alt_floweditor' } stepprefix={ state.stepprefix + '_' + index.toString() } ondebugclick={ props.ondebugclick } flow={ step.elseflow }></floweditor>
 				</div>
 			</template>
 			<div class="step else" if={ !step.loop }><span>{ __('End if') }</span></div>
@@ -166,6 +172,13 @@
 				this.state.keystate = 0;
 				this.state.editingIndex = -1;
 				this.state.collapsedCondition = [];
+				this.state.changesmade = false;
+
+				if(typeof(props.stepprefix) === 'undefined') {
+					this.state.stepprefix = '';
+				} else {
+					this.state.stepprefix = props.stepprefix;
+				}
 
 				if(typeof(props.flow) === 'object' && Array.isArray(props.flow)) {
 					for(let i = 0; i < props.flow.length; i++) {
@@ -247,6 +260,7 @@
 							this.state.steps.splice(insertAt, 0, { k: this.state.keystate, discriminator: 'FlowWebRequest', url: '', method: 'GET', contentType: 'application/json', headers: '', body: '', whattoresult: 'body', resultinto: '' });
 							break;
 					}
+					this.state.changesmade = true;
 					this.update();
 				}
 			},
@@ -255,6 +269,7 @@
 				let btn = e.currentTarget;
 				let flowIndex = parseInt(btn.dataset.flow);
 				this.state.steps.splice(flowIndex, 1);
+				this.state.changesmade = true;
 				this.update();
 			},
 
@@ -325,6 +340,7 @@
 				if(resultinto !== null) {
 					this.state.steps[flowIndex].expression = expression;
 					this.state.steps[flowIndex].resultinto = resultinto;
+					this.state.changesmade = true;
 					this.update();
 				}
 				this.state.editingIndex = -1;
@@ -418,6 +434,7 @@
 					this.state.steps[flowIndex].channel = channel;
 					this.state.steps[flowIndex].parameters = parameters;
 					this.state.steps[flowIndex].resultinto = resultinto;
+					this.state.changesmade = true;
 					this.update();
 				}
 				this.state.editingIndex = -1;
@@ -464,6 +481,7 @@
 				});
 				if(result !== null) {
 					Object.assign(this.state.steps[flowIndex], result);
+					this.state.changesmade = true;
 					this.update();
 				}
 				this.state.editingIndex = -1;
@@ -512,6 +530,7 @@
 				if(result !== null) {
 					this.state.steps[flowIndex].conditional = result[0].toString();
 					this.state.steps[flowIndex].loop = result[1];
+					this.state.changesmade = true;
 					this.update();
 				}
 				this.state.editingIndex = -1;
@@ -561,6 +580,7 @@
 				});
 				if(waittime !== null) {
 					this.state.steps[flowIndex].time = waittime;
+					this.state.changesmade = true;
 					this.update();
 				}
 				this.state.editingIndex = -1;
@@ -620,6 +640,7 @@
 				});
 				if(result !== null) {
 					Object.assign(this.state.steps[flowIndex], result);
+					this.state.changesmade = true;
 					this.update();
 				}
 				this.state.editingIndex = -1;
@@ -643,6 +664,7 @@
 						this.state.keystate++;
 						step.k = this.state.keystate;
 						this.state.steps.splice(insertAt, 0, step);
+						this.state.changesmade = true;
 						this.update();
 					}
 				} catch(e) {}
@@ -666,8 +688,6 @@
 				}
 				this.update();
 			},
-
-
 
 			getContextVars() {
 				let vars = [];
@@ -748,6 +768,14 @@
 					return [[], false];
 				}
 				return [vars, until >= 0];
+			},
+
+			onDebugStep(e) {
+				let btn = e.currentTarget;
+				let flowIndex = btn.dataset.flow;
+				//let step = this.state.steps[flowIndex]
+
+				this.props.ondebugclick(this.state.stepprefix + '_' + flowIndex, this.state.changesmade);
 			}
 
 		}

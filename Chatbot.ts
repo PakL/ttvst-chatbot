@@ -6,11 +6,11 @@ import Flow from './lib/Flow';
 import Folder from './lib/Folder';
 import GVar from './lib/GVar';
 import Context from './lib/Context/Context';
-import VarInterface from './lib/Context/VarInterface';
 import VarStreamTitle from './lib/Context/VarStreamTitle';
 import VarStreamGame from './lib/Context/VarStreamGame';
 import VarStreamUptime from './lib/Context/VarStreamUptime';
 import { VarFormatDate, VarFormatTime, VarFormatDateTime, VarFormatSince, VarFormatUntil } from './lib/Context/VarDateTimeFormat';
+import FlowDebug, { FlowDebugData } from './lib/FlowDebug';
 
 import { IBroadcastArgument } from '../../dist/dev.pakl.ttvst/main/BroadcastMain';
 import TTVSTMain from '../../dist/dev.pakl.ttvst/main/TTVSTMain';
@@ -25,12 +25,14 @@ class Chatbot {
 	flows: Array<Flow> = [];
 	broadcastListeners: { [channel: string]: Array<(...args: any[]) => void> } = {};
 	lastExecution: { [flowkey: string]: number } = {};
+	debugData: { [flow: string]: FlowDebug } = {};
 
 	constructor() {
 		this.registerFlow = this.registerFlow.bind(this);
 		this.openContextMenu = this.openContextMenu.bind(this);
 		this.onGetChannelPointRewards = this.onGetChannelPointRewards.bind(this);
 		this.onGetContextForDynamicInput = this.onGetContextForDynamicInput.bind(this);
+		this.onGetDebug = this.onGetDebug.bind(this);
 		
 		this.onExportData = this.onExportData.bind(this);
 		this.onImportData = this.onImportData.bind(this);
@@ -41,6 +43,7 @@ class Chatbot {
 		ipcMain.on('app.ttvst.chatbot.contextMenu', this.openContextMenu);
 		ipcMain.handle('app.ttvst.chatbot.getChannelPointRewards', this.onGetChannelPointRewards);
 		ipcMain.handle('app.ttvst.chatbot.getContextForDynamicInput', this.onGetContextForDynamicInput);
+		ipcMain.handle('app.ttvst.chatbot.getDebug', this.onGetDebug);
 
 		ipcMain.handle('app.ttvst.chatbot.exportdata', this.onExportData);
 		ipcMain.handle('app.ttvst.chatbot.importdata', this.onImportData);
@@ -49,10 +52,14 @@ class Chatbot {
 	private async registerFlow() {
 		if(this.registering) {
 			this.redoRegistering = true;
+			return;
 		}
 		this.registering = true;
 
 		TTVST.startpage.broadcastStatus({ key: 'app.ttvst.chatbot', icon: 'ChatBot', status: 'warn', title: 'Chatbot', info: 'Registering flows', buttons: [] });
+
+		logger.debug('[Chatbot] Clear debug info');
+		this.debugData = {};
 
 		logger.info('[Chatbot] Resetting flows');
 		logger.debug('[Chatbot] Removing flow actions');
@@ -134,6 +141,11 @@ class Chatbot {
 		let context = new Context();
 
 		if(flow !== null) {
+			if(typeof(this.debugData[flow.key.toString()]) === 'undefined') {
+				this.debugData[flow.key.toString()] = new FlowDebug();
+			}
+			context.setDebug(this.debugData[flow.key.toString()]);
+
 			if(flow.trigger.length > 0) {
 				let argobj = TTVST.BroadcastMain.argumentsToObject(flow.trigger, ...args);
 				for(let name of Object.keys(argobj)) {
@@ -184,6 +196,8 @@ class Chatbot {
 			
 			if(await flow.conditionals.meets(context)) {
 				this.lastExecution[flow.key.toString()] = new Date().getTime();
+				let condDebug = await flow.conditionals.debug(context)
+				context.pushDebug('_-1', JSON.parse(JSON.stringify({ conditionals: condDebug, trigger: flow.trigger, args })));
 				flow.execute(context);
 			}
 		};
@@ -307,7 +321,7 @@ class Chatbot {
 		return 0;
 	}
 
-	private async onImportData(event: Electron.IpcMainInvokeEvent) {
+	private async onImportData(event: Electron.IpcMainInvokeEvent): Promise<boolean|string> {
 		let loadFile = await dialog.showOpenDialog(TTVST.mainWindow.window, { filters: [{name: 'JSON', extensions: ['json']}]});
 		if(!loadFile.canceled) {
 			try {
@@ -319,6 +333,14 @@ class Chatbot {
 			}
 		}
 		return null;
+	}
+
+	private async onGetDebug(event: Electron.IpcMainInvokeEvent, flow: number, step: string): Promise<FlowDebugData> {
+		if(typeof(this.debugData[flow.toString()]) !== 'undefined') {
+			let data = this.debugData[flow.toString()].getData(step);
+			return data;
+		}
+		return { created: -1, step, data: {} };
 	}
 
 }
