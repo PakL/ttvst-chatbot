@@ -17,7 +17,19 @@ class FlowMath {
 
 	async execute(context: Context): Promise<{ [key: string]: any }> {
 		let expr = await context.interpolate(this.data.expression);
-		let result = mathjs.evaluate(expr);
+		let result: number|{entries?:number[]} = -1;
+
+		try {
+			result = await new Promise((res, rej) => {
+				try {
+					res(mathjs.evaluate(expr));
+				} catch(e) {
+					rej(e);
+				}
+			});
+		} catch(e) {
+			return { math: expr, result: e.message };
+		}
 		if(this.data.resultinto.length > 0) {
 			if((typeof(result) === 'number' || typeof(result) === 'string')) {
 				await context.setValueOf(this.data.resultinto, result);
