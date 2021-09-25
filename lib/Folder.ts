@@ -37,15 +37,15 @@ class Folder extends IDBOrm {
 		}
 	}
 
-	static get(query: number | IDBArrayKey | IDBKeyRange): Promise<Folder> {
+	static get(query: number | IDBKeyRange): Promise<Folder> {
 		return (super.get(query) as Promise<Folder>);
 	}
 
-	static getAll(query: number | IDBArrayKey | IDBKeyRange): Promise<Folder[]> {
+	static getAll(query: number | IDBKeyRange): Promise<Folder[]> {
 		return (super.getAll(query) as Promise<Folder[]>);
 	}
 
-	static getByIndex(index: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBArrayKey | IDBKeyRange): Promise<Folder[]> {
+	static getByIndex(index: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBKeyRange): Promise<Folder[]> {
 		return (super.getByIndex(index, query) as Promise<Folder[]>);
 	}
 

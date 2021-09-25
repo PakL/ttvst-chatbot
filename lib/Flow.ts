@@ -49,15 +49,15 @@ class Flow extends IDBOrm {
 		}
 	}
 
-	static get(query: number | IDBArrayKey | IDBKeyRange): Promise<Flow> {
+	static get(query: number | IDBKeyRange): Promise<Flow> {
 		return (super.get(query) as Promise<Flow>);
 	}
 
-	static getAll(query: number | IDBArrayKey | IDBKeyRange): Promise<Flow[]> {
+	static getAll(query: number | IDBKeyRange): Promise<Flow[]> {
 		return (super.getAll(query) as Promise<Flow[]>);
 	}
 
-	static getByIndex(index: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBArrayKey | IDBKeyRange): Promise<Flow[]> {
+	static getByIndex(index: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBKeyRange): Promise<Flow[]> {
 		return (super.getByIndex(index, query) as Promise<Flow[]>);
 	}
 

@@ -342,7 +342,7 @@
 			async onSaveFlowClick(e) {
 				let cgi = this.$('conditionalgroupinput')
 				let fe = this.$('floweditor')
-				let feSym = fe[Object.getOwnPropertySymbols(fe)[0]];
+				let feSym = global.TTVST.getRiotComponent(fe);
 
 				this.flowobj.name = this.$('input.flowlabel').value;
 				this.flowobj.flow = feSym.state.steps;
@@ -355,7 +355,7 @@
 					this.flowobj.mode.props = { pointreward: this.flowmode.props.pointreward };
 				}
 				if(this.flowmode.mode == 2) {
-					let cgiSym = cgi[Object.getOwnPropertySymbols(cgi)[0]];
+					let cgiSym = global.TTVST.getRiotComponent(cgi);
 					this.flowobj.conditionals = cgiSym.condgroup;
 				} else {
 					this.flowobj.conditionals = this.flowcond;
@@ -416,7 +416,7 @@
 					}
 
 					let fe = this.$('floweditor#chatbot_main_floweditor')
-					let feSym = fe[Object.getOwnPropertySymbols(fe)[0]];
+					let feSym = global.TTVST.getRiotComponent(fe);
 
 					vars = feSym.getContextVars()[0];
 				}

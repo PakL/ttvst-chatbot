@@ -47,15 +47,15 @@ class GVar extends IDBOrm {
 		}
 	}
 
-	static get(query: string | IDBArrayKey | IDBKeyRange): Promise<GVar> {
+	static get(query: string | IDBKeyRange): Promise<GVar> {
 		return (super.get(query) as Promise<GVar>);
 	}
 
-	static getAll(query: string | IDBArrayKey | IDBKeyRange): Promise<GVar[]> {
+	static getAll(query: string | IDBKeyRange): Promise<GVar[]> {
 		return (super.getAll(query) as Promise<GVar[]>);
 	}
 
-	static getByIndex(index: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBArrayKey | IDBKeyRange): Promise<GVar[]> {
+	static getByIndex(index: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBKeyRange): Promise<GVar[]> {
 		return (super.getByIndex(index, query) as Promise<GVar[]>);
 	}
 

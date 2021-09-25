@@ -6,14 +6,14 @@ import TTVSTMain from '../../../dist/dev.pakl.ttvst/main/TTVSTMain';
 declare var TTVST: TTVSTMain;
 
 if(typeof(ipcRenderer) !== 'undefined') {
-	ipcRenderer.on('app.ttvst.chatbot.idborm.get', async (event, ipcKey: string, store: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBArrayKey | IDBKeyRange) => {
+	ipcRenderer.on('app.ttvst.chatbot.idborm.get', async (event, ipcKey: string, store: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBKeyRange) => {
 		let orm = null;
 		try {
 			orm = (await IDBOrm.get(query, store)).data;
 		} catch(e) {}
 		ipcRenderer.send('app.ttvst.chatbot.idborm.get.' + ipcKey, orm);
 	});
-	ipcRenderer.on('app.ttvst.chatbot.idborm.getAll', async (event, ipcKey: string, store: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBArrayKey | IDBKeyRange) => {
+	ipcRenderer.on('app.ttvst.chatbot.idborm.getAll', async (event, ipcKey: string, store: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBKeyRange) => {
 		let orm = [];
 		try {
 			let ormtemp = await IDBOrm.getAll(query, store);
@@ -25,7 +25,7 @@ if(typeof(ipcRenderer) !== 'undefined') {
 		}
 		ipcRenderer.send('app.ttvst.chatbot.idborm.getAll.' + ipcKey, orm);
 	});
-	ipcRenderer.on('app.ttvst.chatbot.idborm.getIndex', async (event, ipcKey: string, store: string, index: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBArrayKey | IDBKeyRange) => {
+	ipcRenderer.on('app.ttvst.chatbot.idborm.getIndex', async (event, ipcKey: string, store: string, index: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBKeyRange) => {
 		let orm = [];
 		try {
 			let ormtemp = await IDBOrm.getByIndex(index, query, store);
@@ -62,7 +62,7 @@ class IDBOrm {
 	static store: string = '';
 	static keyPath: string = '';
 	
-	static get(query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBArrayKey | IDBKeyRange, store: string = null): Promise<IDBOrm> {
+	static get(query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBKeyRange, store: string = null): Promise<IDBOrm> {
 		const self = this;
 		if(store === null) {
 			store = self.store
@@ -98,7 +98,7 @@ class IDBOrm {
 		});
 	}
 	
-	static getAll(query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBArrayKey | IDBKeyRange, store: string = null): Promise<IDBOrm[]> {
+	static getAll(query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBKeyRange, store: string = null): Promise<IDBOrm[]> {
 		const self = this;
 		if(store === null) {
 			store = self.store
@@ -143,7 +143,7 @@ class IDBOrm {
 		});
 	}
 
-	static getByIndex(index: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBArrayKey | IDBKeyRange, store: string = null): Promise<IDBOrm[]> {
+	static getByIndex(index: string, query: string | number | Date | ArrayBufferView | ArrayBuffer | IDBKeyRange, store: string = null): Promise<IDBOrm[]> {
 		const self = this;
 		if(store === null) {
 			store = self.store

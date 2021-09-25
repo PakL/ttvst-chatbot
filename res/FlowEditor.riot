@@ -373,7 +373,7 @@
 					if(resultaction.length > 0) selectactiontxt.nodeValue = self.__(resultaction[0].label);
 					selectactioninp.onclick = async () => {
 						let botWrap = document.querySelector('chatbotwrap');
-						let wrapSym = botWrap[Object.getOwnPropertySymbols(botWrap)[0]];
+						let wrapSym = global.TTVST.getRiotComponent(botWrap);
 
 						let dyninput = [];
 						try {
@@ -502,7 +502,7 @@
 				let result = await new Promise((resolve, reject) => {
 					let fce = document.createElement('conditionalgroupinput');
 					riot.mount(fce, { condgroup: new ConditionalGroup(JSON.parse(conditional.conditional)) });
-					let fceSym = fce[Object.getOwnPropertySymbols(fce)[0]];
+					let fceSym = global.TTVST.getRiotComponent(fce);
 					let looplbl = document.createElement('label');
 					let loopinp = document.createElement('input');
 					let loopdesc = document.createElement('small');
@@ -600,7 +600,7 @@
 				const self = this;
 				let result = await new Promise(async (resolve, reject) => {
 					let botWrap = document.querySelector('chatbotwrap');
-					let wrapSym = botWrap[Object.getOwnPropertySymbols(botWrap)[0]];
+					let wrapSym = global.TTVST.getRiotComponent(botWrap);
 					let dyninput = [];
 					try {
 						dyninput = await ipcRenderer.invoke('app.ttvst.chatbot.getContextForDynamicInput', wrapSym.getMoreContextVars());
@@ -702,12 +702,12 @@
 						var flowcond = this.$('#chatbot_'+i+'_floweditor');
 						var flowcondalt = this.$('#chatbot_'+i+'_alt_floweditor');
 
-						let flowcondSym = flowcond[Object.getOwnPropertySymbols(flowcond)[0]];
+						let flowcondSym = global.TTVST.getRiotComponent(flowcond);
 						let [flowcondVars, flowcondStop] = flowcondSym.getContextVars();
 
 						let flowcondaltStop = false, flowcondaltVars = [];
 						if(typeof(flowcondalt) !== 'undefined') {
-							let flowcondaltSym = flowcondalt[Object.getOwnPropertySymbols(flowcondalt)[0]];
+							let flowcondaltSym = global.TTVST.getRiotComponent(flowcondalt);
 							[flowcondaltVars, flowcondaltStop] = flowcondaltSym.getContextVars();
 						}
 
