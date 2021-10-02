@@ -39,10 +39,13 @@ class FlowVariable {
 				} else {
 					content = await context.interpolate(this.data.content);
 				}
+			} else if(typeof(this.data.content) === 'number') {
+				content = this.data.content;
 			}
 			if(typeof(content) !== 'number') {
 				let temp = parseFloat(content);
 				if(!isNaN(temp)) content = temp;
+				else content = 0;
 			}
 			value = content;
 		} else if(this.data.type == 'string') {
