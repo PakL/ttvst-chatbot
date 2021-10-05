@@ -753,14 +753,18 @@
 						}
 					} else if(step.discriminator === 'FlowAction') {
 						let actions = TTVST.Broadcast.getAction({ channel: step.channel });
-						if(actions.length > 0) {
+						if(step.resultinto.length > 0 && actions.length > 0 && typeof(actions[0].result) === 'object') {
 							let t = actions[0].result.type;
 							if(t === 'list') t = 'array';
 							if(t === 'assoc') t = 'object';
 							vars.push({ name: step.resultinto, type: t });
 						}
-					} else if(typeof(step.resultinto) === 'string') {
-						vars.push({ name: step.resultinto, type: (step.discriminator === 'FlowMath' ? 'number' : 'string' ) });
+					} else if(step.discriminator === 'FlowMath') {
+						vars.push({ name: step.resultinto, type: 'number' });
+						vars.push({ name: step.resultinto, type: 'string' });
+						vars.push({ name: step.resultinto, type: 'boolean' });
+					} else if(typeof(step.resultinto) === 'string' && step.resultinto.length > 0) {
+						vars.push({ name: step.resultinto, type: 'string' });
 					}
 				}
 

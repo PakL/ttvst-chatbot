@@ -196,8 +196,12 @@ class Chatbot {
 			
 			if(await flow.conditionals.meets(context)) {
 				this.lastExecution[flow.key.toString()] = new Date().getTime();
-				let condDebug = await flow.conditionals.debug(context)
-				context.pushDebug('_-1', JSON.parse(JSON.stringify({ conditionals: condDebug, trigger: flow.trigger, args })));
+				let condDebug = await flow.conditionals.debug(context);
+				let argobj: any = args;
+				if(TTVST.BroadcastMain.getTrigger({ channel: flow.trigger }).length > 0) {
+					argobj = TTVST.BroadcastMain.argumentsToObject(flow.trigger, ...args);
+				}
+				context.pushDebug('_-1', JSON.parse(JSON.stringify({ conditionals: condDebug, trigger: flow.trigger, args: argobj })));
 				flow.execute(context);
 			}
 		};
@@ -205,20 +209,6 @@ class Chatbot {
 
 	private async openContextMenu(event: Electron.IpcMainEvent, x: number, y: number, additionalVars: Array<{ name: string, type: 'number'|'string'|'boolean'|'array'|'object'|'file' }> = []) {
 		let context = await this.createContext();
-
-		for(let i = 0; i < additionalVars.length; i++) {
-			let samplevalue: any = 0;
-			if(additionalVars[i].type === 'string' || additionalVars[i].type === 'file') {
-				samplevalue = '';
-			} else if(additionalVars[i].type === 'boolean') {
-				samplevalue = false;
-			} else if(additionalVars[i].type === 'array') {
-				samplevalue = [];
-			} else if(additionalVars[i].type === 'object') {
-				samplevalue = {};
-			}
-			context.setValueOf(additionalVars[i].name, samplevalue);
-		}
 
 		let numbersMenu: Array<MenuItemConstructorOptions> = [];
 		let stringsMenu: Array<MenuItemConstructorOptions> = [];
@@ -239,6 +229,20 @@ class Chatbot {
 				listsMenu.push({ label: vars[i].name, click: this.sendContextMenuCommand });
 			} else if(t === 'object') {
 				assocsMenu.push({ label: vars[i].name, click: this.sendContextMenuCommand });
+			}
+		}
+
+		for(let i = 0; i < additionalVars.length; i++) {
+			if(additionalVars[i].type === 'string' || additionalVars[i].type === 'file') {
+				stringsMenu.push({ label: additionalVars[i].name, click: this.sendContextMenuCommand });
+			} else if(additionalVars[i].type === 'boolean') {
+				booleansMenu.push({ label: additionalVars[i].name, click: this.sendContextMenuCommand });
+			} else if(additionalVars[i].type === 'array') {
+				listsMenu.push({ label: additionalVars[i].name, click: this.sendContextMenuCommand });
+			} else if(additionalVars[i].type === 'object') {
+				assocsMenu.push({ label: additionalVars[i].name, click: this.sendContextMenuCommand });
+			} else {
+				numbersMenu.push({ label: additionalVars[i].name, click: this.sendContextMenuCommand });
 			}
 		}
 

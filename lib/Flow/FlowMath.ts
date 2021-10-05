@@ -31,7 +31,7 @@ class FlowMath {
 			return { math: expr, result: e.message };
 		}
 		if(this.data.resultinto.length > 0) {
-			if((typeof(result) === 'number' || typeof(result) === 'string')) {
+			if((typeof(result) === 'number' || typeof(result) === 'string') || typeof(result) === 'boolean') {
 				await context.setValueOf(this.data.resultinto, result);
 				return { math: expr, result, resultinto: this.data.resultinto };
 			} else if(typeof(result) === 'object' && result.hasOwnProperty('entries')) {
