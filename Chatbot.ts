@@ -272,19 +272,6 @@ class Chatbot {
 
 	private async onGetContextForDynamicInput(event: Electron.IpcMainInvokeEvent, additionalVars: Array<{ name: string, type: 'number'|'string'|'boolean'|'array'|'object'|'file' }> = []) {
 		let context = await this.createContext();
-		for(let i = 0; i < additionalVars.length; i++) {
-			let samplevalue: any = 0;
-			if(additionalVars[i].type === 'string' || additionalVars[i].type === 'file') {
-				samplevalue = '';
-			} else if(additionalVars[i].type === 'boolean') {
-				samplevalue = false;
-			} else if(additionalVars[i].type === 'array') {
-				samplevalue = [];
-			} else if(additionalVars[i].type === 'object') {
-				samplevalue = {};
-			}
-			context.setValueOf(additionalVars[i].name, samplevalue);
-		}
 
 		let vars = context.iterable();
 		let dynVars: Array<{ value: string, param: { label: string, description: string, type: string }}> = [];
@@ -299,6 +286,19 @@ class Chatbot {
 			dynVars.push({ value: '${' + vars[i].name + '}', param: { label: vars[i].name, description: vars[i].description, type: t } });
 			if(t === 'string') {
 				dynVars.push({ value: '${' + vars[i].name + '}', param: { label: vars[i].name, description: vars[i].description, type: 'file' } });
+			}
+		}
+
+		for(let i = 0; i < additionalVars.length; i++) {
+			if(additionalVars[i].type === 'file') {
+				dynVars.push({ value: '${' + additionalVars[i].name + '}', param: { label: additionalVars[i].name, description: '', type: 'string' } });
+			} else if(additionalVars[i].type === 'array') {
+				dynVars.push({ value: '${' + additionalVars[i].name + '}', param: { label: additionalVars[i].name, description: '', type: 'list' } });
+			} else if(additionalVars[i].type === 'object') {
+				dynVars.push({ value: '${' + additionalVars[i].name + '}', param: { label: additionalVars[i].name, description: '', type: 'assoc' } });
+			} else {
+				dynVars.push({ value: '${' + additionalVars[i].name + '}', param: { label: additionalVars[i].name, description: '', type: additionalVars[i].type } });
+
 			}
 		}
 		return dynVars;
