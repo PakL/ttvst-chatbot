@@ -63,9 +63,9 @@ class FlowWebRequest {
 					}
 
 					await context.setValueOf(this.data.resultinto, data);
-					return { url: this.data.url, options, response, resultinto: this.data.resultinto, result: data };
+					return { url: this.data.url, options, response: response.body, headers: response.headers, resultinto: this.data.resultinto, result: data };
 				} else {
-					return { url: this.data.url, options, response };
+					return { url: this.data.url, options, response: response.body, headers: response.headers };
 				}
 			} catch(e){
 				return { url: this.data.url, options, error: e.message };
