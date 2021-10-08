@@ -290,15 +290,15 @@ class Chatbot {
 		}
 
 		for(let i = 0; i < additionalVars.length; i++) {
-			if(additionalVars[i].type === 'file') {
+			if(additionalVars[i].type === 'string') {
 				dynVars.push({ value: '${' + additionalVars[i].name + '}', param: { label: additionalVars[i].name, description: '', type: 'string' } });
+				dynVars.push({ value: '${' + additionalVars[i].name + '}', param: { label: additionalVars[i].name, description: '', type: 'file' } });
 			} else if(additionalVars[i].type === 'array') {
 				dynVars.push({ value: '${' + additionalVars[i].name + '}', param: { label: additionalVars[i].name, description: '', type: 'list' } });
 			} else if(additionalVars[i].type === 'object') {
 				dynVars.push({ value: '${' + additionalVars[i].name + '}', param: { label: additionalVars[i].name, description: '', type: 'assoc' } });
 			} else {
 				dynVars.push({ value: '${' + additionalVars[i].name + '}', param: { label: additionalVars[i].name, description: '', type: additionalVars[i].type } });
-
 			}
 		}
 		return dynVars;

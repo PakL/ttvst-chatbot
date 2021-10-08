@@ -406,7 +406,6 @@
 					vars.push({ name: 'LastExecutionTime', type: 'number' });
 					vars.push({ name: 'SecondsSinceLastExecution', type: 'number' });
 
-					console.log(this.selectedTrigger);
 					if(this.selectedTrigger.channel.length > 0) {
 						for(let i = 0; i < this.selectedTrigger.arguments.length; i++) {
 							let t = this.selectedTrigger.arguments[i].type;
