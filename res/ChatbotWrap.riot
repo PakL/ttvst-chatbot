@@ -418,7 +418,8 @@
 					let fe = this.$('floweditor#chatbot_main_floweditor')
 					let feSym = global.TTVST.getRiotComponent(fe);
 
-					vars = vars.concat(feSym.getContextVars()[0]);
+					let cv = feSym.getContextVars()[0];
+					vars = vars.concat(cv);
 				}
 				return vars;
 			},

@@ -715,7 +715,7 @@
 							for(let j = 0; j < flowcondVars.length; j++) {
 								let found = false;
 								for(let k = 0; k < vars.length; k++) {
-									if(vars[k].name === flowcondVars[j].name) {
+									if(vars[k].name === flowcondVars[j].name && vars[k].type === flowcondVars[j].type) {
 										vars[k] = flowcondVars[j];
 										found = true;
 									}
@@ -733,7 +733,7 @@
 							for(let j = 0; j < flowcondaltVars.length; j++) {
 								let found = false;
 								for(let k = 0; k < vars.length; k++) {
-									if(vars[k].name === flowcondaltVars[j].name) {
+									if(vars[k].name === flowcondaltVars[j].name && vars[k].type === flowcondaltVars[j].type) {
 										vars[k] = flowcondaltVars[j];
 										found = true;
 									}
