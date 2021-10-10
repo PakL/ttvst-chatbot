@@ -56,6 +56,14 @@
 					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
 				</div>
 			</template>
+			<template if={ step.discriminator === 'FlowNotes' }>
+				<i class="ms-Icon ms-Icon--KnowledgeArticle"></i>
+				<span style="white-space:pre;">{ step.notes }</span>
+				<div class="btngrp">
+					<button onclick={ onEditFlowNotes } data-flow={ index }>{ __('Edit') }</button>
+					<button onclick={ onDeleteStep } data-flow={ index }><i class="ms-Icon ms-Icon--RecycleBin"></i></button>
+				</div>
+			</template>
 		</div>
 		<template if={ step.discriminator === 'FlowConditional' }>
 			<div class="subflow" if={ !isCollapsed(step) }>
@@ -132,6 +140,9 @@
 		:host .step-FlowWebRequest {
 			background: rgba(0,255,255, 0.1);
 		}
+		:host .step-FlowNotes {
+			background: rgba(0,0,0, 0.1);
+		}
 
 		:host .step .ms-Icon--HighlightMappedShapes {
 			cursor: pointer;
@@ -205,14 +216,15 @@
 				let selectedStep = await new Promise((resolve, reject) => {
 					let typlbl = document.createElement('label');
 					let typinp = document.createElement('select');
-					let options = [document.createElement('option'),document.createElement('option'),document.createElement('option'),document.createElement('option'),document.createElement('option'),document.createElement('option')];
-					options[0].value = 'FlowConditional';options[1].value = 'FlowMath';options[2].value = 'FlowAction';options[3].value = 'FlowVariable';options[4].value = 'FlowWait';options[5].value = 'FlowWebRequest';
+					let options = [document.createElement('option'),document.createElement('option'),document.createElement('option'),document.createElement('option'),document.createElement('option'),document.createElement('option'),document.createElement('option')];
+					options[0].value = 'FlowConditional';options[1].value = 'FlowMath';options[2].value = 'FlowAction';options[3].value = 'FlowVariable';options[4].value = 'FlowWait';options[5].value = 'FlowWebRequest';options[6].value = 'FlowNotes';
 					options[0].appendChild(document.createTextNode(self.__('Condition / Loop')));
 					options[1].appendChild(document.createTextNode(self.__('Math')));
 					options[2].appendChild(document.createTextNode(self.__('Action')));
 					options[3].appendChild(document.createTextNode(self.__('Variable')));
 					options[4].appendChild(document.createTextNode(self.__('Wait')));
 					options[5].appendChild(document.createTextNode(self.__('Make a web request')));
+					options[6].appendChild(document.createTextNode(self.__('Notes')));
 					for(let i = 0; i < options.length; i++)
 						typinp.appendChild(options[i]);
 					
@@ -258,6 +270,10 @@
 						case 'FlowWebRequest':
 							this.state.keystate++;
 							this.state.steps.splice(insertAt, 0, { k: this.state.keystate, discriminator: 'FlowWebRequest', url: '', method: 'GET', contentType: 'application/json', headers: '', body: '', whattoresult: 'body', resultinto: '' });
+							break;
+						case 'FlowNotes':
+							this.state.keystate++;
+							this.state.steps.splice(insertAt, 0, { k: this.state.keystate, discriminator: 'FlowNotes', notes: '' });
 							break;
 					}
 					this.state.changesmade = true;
@@ -640,6 +656,52 @@
 				});
 				if(result !== null) {
 					Object.assign(this.state.steps[flowIndex], result);
+					this.state.changesmade = true;
+					this.update();
+				}
+				this.state.editingIndex = -1;
+			},
+
+			async onEditFlowNotes(e) {
+				let btn = e.currentTarget;
+				let flowIndex = parseInt(btn.dataset.flow);
+				let notesf = this.state.steps[flowIndex]
+				
+				if(notesf.discriminator != 'FlowNotes') {
+					return;
+				}
+
+				this.state.editingIndex = flowIndex;
+
+				const self = this;
+				let notes = await new Promise((resolve, reject) => {
+					let noteslbl = document.createElement('label');
+					let notesinp = document.createElement('textarea');
+					let notesdesc = document.createElement('small');
+
+					notesinp.setAttribute('id', 'flownotesedit_notes');
+					notesinp.value = notesf.notes;
+					noteslbl.innerText = self.__('Notes');
+					noteslbl.appendChild(notesinp);
+					notesdesc.innerText = self.__('This step is just for documentation purposes and will be skipped in flow execution.');
+					noteslbl.appendChild(notesinp);
+					noteslbl.appendChild(notesdesc);
+
+					let response = false;
+					let nfmodal = TTVST.ui.modal([noteslbl], 'Edit Notes', 'KnowledgeArticle', () => {
+						if(response) {
+							let notes = nfmodal.$('#flownotesedit_notes').value;
+							resolve(notes);
+						} else {
+							resolve(null);
+						}
+					}, [
+						{ key: 'ok', title: 'OK', callback: () => { response = true; } },
+						{ key: 'cancel', title: 'Cancel' }
+					], false);
+				});
+				if(notes !== null) {
+					this.state.steps[flowIndex].notes = notes;
 					this.state.changesmade = true;
 					this.update();
 				}

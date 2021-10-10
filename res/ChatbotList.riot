@@ -688,7 +688,7 @@
 								}
 							}
 
-							let result = await ipcRenderer.invoke('app.ttvst.chatbot.exportdata', JSON.stringify({ identifier: 'ttvst_chatbot', version: '2.0.0', data }));
+							let result = await ipcRenderer.invoke('app.ttvst.chatbot.exportdata', JSON.stringify({ identifier: 'ttvst_chatbot', version: '2.1.0', data }));
 							if(result < 0) {
 								TTVST.ui.alert(this.__('An error occured while saving your file.'), 'Export error');
 							} else if(result > 0) {

@@ -87,6 +87,8 @@ class FlowConditional {
 			if(fl !== null) {
 				let debug = await fl.execute(context);
 				context.pushDebug(stepPrefix + '_' + i.toString(), JSON.parse(JSON.stringify(debug)));
+			} else {
+				context.pushDebug(stepPrefix + '_' + i.toString(), {});
 			}
 		}
 	}

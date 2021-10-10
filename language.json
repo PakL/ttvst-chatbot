@@ -598,5 +598,14 @@
 	},
 	"Save and close": {
 		"de": "Speichern und schließen"
+	},
+	"Notes": {
+		"de": "Notizen"
+	},
+	"Edit Notes": {
+		"de": "Notizen bearbeiten"
+	},
+	"This step is just for documentation purposes and will be skipped in flow execution.": {
+		"de": "Dieser Schritt ist nur zu Dokumentationszwecken und wird bei Ablauf-Ausführung übersprungen"
 	}
 }
