@@ -6,6 +6,7 @@ import Flow from './lib/Flow';
 import Folder from './lib/Folder';
 import GVar from './lib/GVar';
 import Context from './lib/Context/Context';
+import VarTimestamp from './lib/Context/VarTimestamp';
 import VarStreamTitle from './lib/Context/VarStreamTitle';
 import VarStreamGame from './lib/Context/VarStreamGame';
 import VarStreamUptime from './lib/Context/VarStreamUptime';
@@ -161,7 +162,7 @@ class Chatbot {
 			context.setValueOf('SecondsSinceLastExecution', (new Date().getTime() - lastExecution) / 1000);
 		}
 
-		context.setValueOf('Timestamp', new Date().getTime());
+		context.add(new VarTimestamp());
 
 		context.add(new VarStreamTitle());
 		context.add(new VarStreamGame());
