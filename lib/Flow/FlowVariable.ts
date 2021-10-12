@@ -6,7 +6,7 @@ export interface IFlowVariable {
 	variable: string,
 	type: 'number'|'string'|'boolean'|'array'|'object',
 	content: number|string|boolean|Array<string|number>|{[key: string]: string},
-	processing: 'none'|'cast'|'split'|'join'|'enjson'|'dejson'|'urlencode'|'urldecode'|'append'|'prepend'|'shift'|'pop'|'searchremove'|'searchreplace'|'substring',
+	processing: 'none'|'cast'|'split'|'join'|'enjson'|'dejson'|'enbase64'|'debase64'|'urlencode'|'urldecode'|'append'|'prepend'|'shift'|'pop'|'searchremove'|'searchreplace'|'substring',
 	processingextra: string
 }
 
@@ -97,6 +97,16 @@ class FlowVariable {
 					let varContent = await context.getFirstVariableRaw(this.data.content);
 					try {
 						content = JSON.stringify(varContent);
+					} catch(e) {}
+				} else if(this.data.processing === 'enbase64') {
+					let varContent = await context.interpolate(this.data.content);
+					try {
+						content = Buffer.from(varContent, 'utf-8').toString('base64');
+					} catch(e) {}
+				} else if(this.data.processing === 'debase64') {
+					let varContent = await context.interpolate(this.data.content);
+					try {
+						content = Buffer.from(varContent, 'base64').toString('utf-8');
 					} catch(e) {}
 				} else if(this.data.processing === 'searchreplace') {
 					let extra: { needle: string, regexp: boolean, global: boolean, ignorecase: boolean, replace: string } = { needle: '', regexp: false, global: false, ignorecase: false, replace: '' };

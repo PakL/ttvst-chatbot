@@ -15,6 +15,8 @@
 				<option value="join" selected={ processing === 'join' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Join')}</option>
 				<option value="enjson" selected={ processing === 'enjson' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Encode JSON')}</option>
 				<option value="dejson" selected={ processing === 'dejson' } if={ ['string', 'array', 'object'].indexOf(variableType) >= 0 }>{__('Decode JSON')}</option>
+				<option value="enbase64" selected={ processing === 'enbase64' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Encode Base64')}</option>
+				<option value="debase64" selected={ processing === 'debase64' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Decode Base64')}</option>
 				<option value="urlencode" selected={ processing === 'urlencode' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Encode for URI')}</option>
 				<option value="urldecode" selected={ processing === 'urldecode' } if={ ['string', 'object'].indexOf(variableType) >= 0 }>{__('Decode for URI')}</option>
 				<option value="append" selected={ processing === 'append' } if={ ['string', 'array', 'object'].indexOf(variableType) >= 0 }>{__('Append')}</option>
@@ -32,6 +34,8 @@
 				<template if={ processing == 'join' }>{__('Join a list into string by the glue below.')}</template>
 				<template if={ processing == 'enjson' }>{__('Encode an associative array or list into a JSON string. You can JSON escape strings too. Strings will be enclosed in double quotes (").')}</template>
 				<template if={ processing == 'dejson' }>{__('Decode a JSON string into a list or associative array. You can decode JSON escaped string too. Strings must be enclosed in double quotes (").')}</template>
+				<template if={ processing == 'enbase64' }>{__('Encode a string by base 64.')}</template>
+				<template if={ processing == 'debase64' }>{__('Decode a string from a base 64 encoding.')}</template>
 				<template if={ processing == 'urlencode' }>{__('Encode URI elements or associative arrays.')}</template>
 				<template if={ processing == 'urldecode' }>{__('Decode URI elements or associative arrays.')}</template>
 				<template if={ processing == 'append' }>{__('Append string/list to the end of a string/list. Associative arrays will be merged.')}</template>

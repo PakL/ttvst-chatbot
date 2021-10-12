@@ -607,5 +607,17 @@
 	},
 	"This step is just for documentation purposes and will be skipped in flow execution.": {
 		"de": "Dieser Schritt ist nur zu Dokumentationszwecken und wird bei Ablauf-Ausführung übersprungen"
+	},
+	"Encode Base64": {
+		"de": "In Base64 kodieren"
+	},
+	"Decode Base64": {
+		"de": "Aus Base64 dekodieren"
+	},
+	"Encode a string by base 64.": {
+		"de": "Kodiert einen Text mit Base 64."
+	},
+	"Decode a string from a base 64 encoding.": {
+		"de": "Dekodiert einen Text aus einer Base-64-Kodierung."
 	}
 }
