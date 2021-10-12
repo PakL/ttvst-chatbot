@@ -20,7 +20,8 @@ class FlowWebRequest {
 		this.data = data;
 	}
 	async execute(context: Context): Promise<{ [key: string]: any }> {
-		if(this.data.url.toLowerCase().startsWith('http://') || this.data.url.toLowerCase().startsWith('https://')) {
+		let url = await context.interpolate(this.data.url);
+		if(url.toLowerCase().startsWith('http://') || url.toLowerCase().startsWith('https://')) {
 			let options: {
 				method: 'HEAD'|'GET'|'POST'|'PUT'|'PATCH'|'DELETE'|'OPTIONS',
 				headers?: {[key: string]: string},
@@ -47,7 +48,7 @@ class FlowWebRequest {
 			}
 
 			try {
-				let response = await got(this.data.url, options);
+				let response = await got(url, options);
 				if(this.data.whattoresult.length > 0 && this.data.resultinto.length > 0) {
 					let data = '';
 					if(this.data.whattoresult === 'body') {
@@ -63,12 +64,12 @@ class FlowWebRequest {
 					}
 
 					await context.setValueOf(this.data.resultinto, data);
-					return { url: this.data.url, options, response: response.body, headers: response.headers, resultinto: this.data.resultinto, result: data };
+					return { url: url, options, response: response.body, headers: response.headers, resultinto: this.data.resultinto, result: data };
 				} else {
-					return { url: this.data.url, options, response: response.body, headers: response.headers };
+					return { url: url, options, response: response.body, headers: response.headers };
 				}
 			} catch(e){
-				return { url: this.data.url, options, error: e.message };
+				return { url: url, options, error: e.message };
 			}
 		} else {
 			return { msg: 'Invalid URL' };
