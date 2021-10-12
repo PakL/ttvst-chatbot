@@ -66,6 +66,7 @@ class FlowWebRequest {
 					await context.setValueOf(this.data.resultinto, data);
 					return { url: url, options, response: response.body, headers: response.headers, resultinto: this.data.resultinto, result: data };
 				} else {
+					await context.setValueOf(this.data.resultinto, '');
 					return { url: url, options, response: response.body, headers: response.headers };
 				}
 			} catch(e){
