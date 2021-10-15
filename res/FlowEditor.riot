@@ -13,7 +13,7 @@
 			</template>
 			<template if={ step.discriminator === 'FlowMath' }>
 				<i class="ms-Icon ms-Icon--CalculatorEqualTo"></i>
-				<span><span if={step.resultinto.length > 0}>{ step.resultinto } = </span>{ step.expression.replace(/\n/g,'⮐') }</span>
+				<span><span if={step.resultinto.length > 0}>{ step.resultinto } =</span> { step.expression.replace(/\n/g,'⮐') }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowMath } data-flow={ index }>{ __('Edit') }</button>
 					<button onclick={ onDebugStep } data-flow={ index }><i class="ms-Icon ms-Icon--BugSolid"></i></button>
@@ -22,7 +22,7 @@
 			</template>
 			<template if={ step.discriminator === 'FlowAction' }>
 				<i class="ms-Icon ms-Icon--Processing"></i>
-				<span><span if={step.resultinto.length > 0}>{ step.resultinto } = </span>{ __actionByChannel(step.channel) }</span>
+				<span><span if={step.resultinto.length > 0}>{ step.resultinto } =</span> { __actionByChannel(step.channel) }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowAction } data-flow={ index }>{ __('Edit') }</button>
 					<button onclick={ onDebugStep } data-flow={ index }><i class="ms-Icon ms-Icon--BugSolid"></i></button>
@@ -31,7 +31,7 @@
 			</template>
 			<template if={ step.discriminator === 'FlowVariable' }>
 				<i class="ms-Icon ms-Icon--Variable"></i>
-				<span>{ step.variable } ({ __(step.type) }) = { JSON.stringify(step.content) }</span>
+				<span style="overflow:hidden;word-wrap:break-word;;">{ step.variable } ({ __(step.type) }) = { JSON.stringify(step.content) }</span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowVariable } data-flow={ index }>{ __('Edit') }</button>
 					<button onclick={ onDebugStep } data-flow={ index }><i class="ms-Icon ms-Icon--BugSolid"></i></button>
@@ -66,12 +66,12 @@
 			</template>
 		</div>
 		<template if={ step.discriminator === 'FlowConditional' }>
-			<div class="subflow" if={ !isCollapsed(step) }>
+			<div class={ !isCollapsed(step) ? 'subflow' : 'subflow hidden' }>
 				<floweditor id={ 'chatbot_'+index+'_floweditor' } stepprefix={ state.stepprefix + '_' + index.toString() } ondebugclick={ props.ondebugclick } flow={ step.flow }></floweditor>
 			</div>
-			<template if={ !step.loop && !isCollapsed(step) }>
-				<div class="step else"><span>{ __('Else') }</span></div>
-				<div class="subflow">
+			<template if={ !step.loop }>
+				<div class={ !isCollapsed(step) ? 'step else' : 'step else hidden' }><span>{ __('Else') }</span></div>
+				<div class={ !isCollapsed(step) ? 'subflow' : 'subflow hidden' }>
 					<floweditor id={ 'chatbot_'+index+'_alt_floweditor' } stepprefix={ state.stepprefix + '_' + index.toString() + '_alt' } ondebugclick={ props.ondebugclick } flow={ step.elseflow }></floweditor>
 				</div>
 			</template>
@@ -106,6 +106,9 @@
 			margin-left: 5%;
 			border-left: 3px solid rgba(255, 255, 255, 0.3);
 		}
+		:host .subflow.hidden {
+			display: none;
+		}
 		:host .subflow > floweditor > div > .step {
 			border-left: 0px;
 			width: calc(100% - 21px);
@@ -117,9 +120,16 @@
 			padding: 5px 10px;
 			background: rgba(255,255,0, 0.1);
 		}
+		:host .step.else.hidden {
+			display: none;
+		}
 		:host .subflow > floweditor > div > .step.else {
 			width: calc(98% - 25px);
 			border-left: 1px solid rgba(255, 255, 255, 0.3);
+		}
+
+		:host .step .btngrp {
+			white-space: nowrap;
 		}
 
 		:host .step-FlowConditional {
