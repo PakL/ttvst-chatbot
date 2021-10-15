@@ -10,7 +10,6 @@
 	<div class={ processing !== 'disabled' ? 'visible' : 'hidden' }>
 		<label>{__('Processing')}<select class="processing" onchange={ onProcessingChange }>
 				<option value="none" selected={ processing === 'none' }>{__('None')}</option>
-				<option value="cast" selected={ processing === 'cast' } if={ ['string','number','boolean'].indexOf(variableType) >= 0 }>{__('Cast')}</option>
 				<option value="split" selected={ processing === 'split' } if={ ['array'].indexOf(variableType) >= 0 }>{__('Split')}</option>
 				<option value="join" selected={ processing === 'join' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Join')}</option>
 				<option value="enjson" selected={ processing === 'enjson' } if={ ['string'].indexOf(variableType) >= 0 }>{__('Encode JSON')}</option>
@@ -29,7 +28,6 @@
 			</select>
 			<small class="accent-light-font">{__('Process input below - select an option to see a description')}:&nbsp;
 				<template if={ processing == 'none' }>{__('No processing.')}</template>
-				<template if={ processing == 'cast' }>{__('Cast a from one type to another. Only works with strings, numbers and booleans. You can also use this to extract data from associative arrays or lists.')}</template>
 				<template if={ processing == 'split' }>{__('Split a string into a list by the splitter below.')}</template>
 				<template if={ processing == 'join' }>{__('Join a list into string by the glue below.')}</template>
 				<template if={ processing == 'enjson' }>{__('Encode an associative array or list into a JSON string. You can JSON escape strings too. Strings will be enclosed in double quotes (").')}</template>

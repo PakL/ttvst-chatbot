@@ -6,7 +6,7 @@ export interface IFlowVariable {
 	variable: string,
 	type: 'number'|'string'|'boolean'|'array'|'object',
 	content: number|string|boolean|Array<string|number>|{[key: string]: string},
-	processing: 'none'|'cast'|'split'|'join'|'enjson'|'dejson'|'enbase64'|'debase64'|'urlencode'|'urldecode'|'append'|'prepend'|'shift'|'pop'|'searchremove'|'searchreplace'|'substring',
+	processing: 'none'|'split'|'join'|'enjson'|'dejson'|'enbase64'|'debase64'|'urlencode'|'urldecode'|'append'|'prepend'|'shift'|'pop'|'searchremove'|'searchreplace'|'substring',
 	processingextra: string
 }
 
