@@ -1,4 +1,3 @@
-import { i } from 'mathjs';
 import Context from '../Context/Context';
 
 export interface IFlowVariable {

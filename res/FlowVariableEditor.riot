@@ -60,7 +60,7 @@
 		<label if={ processing == 'substring' }>{__('Length')}<input type="text" class="extraval" data-extra="length" onchange={ processExtrajson }><small class="accent-light-font">{__('Length of the cutout in number of characters. Any number below 1 will mean until the end of the text.')}</small></label>
 	</div>
 
-	<label class={ contentinput === 'boolean' ? 'win10-switch' : '' }>{__('Content')}
+	<label class={ contentinput === 'boolean' ? 'win10-switch inputblock' : '' }>{__('Content')}
 		<template if={ contentinput === 'simple' }>
 			<input type="string" class="variablecontent" value={ content }>
 		</template>
@@ -75,7 +75,7 @@
 			<button class="variablecontentremove" onclick={ onRemoveAssoc }>-</button>
 		</div>
 		<template if={ contentinput === 'boolean' }>
-			<input type="checkbox" class="variablecontent" checked={ content }>
+			<input type="checkbox" class="variablecontent" style="display:block;" checked={ content }>
 			<span class={langclass}></span>
 		</template>
 	</label>
