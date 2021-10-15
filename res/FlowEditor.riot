@@ -13,7 +13,7 @@
 			</template>
 			<template if={ step.discriminator === 'FlowMath' }>
 				<i class="ms-Icon ms-Icon--CalculatorEqualTo"></i>
-				<span><span if={step.resultinto.length > 0}>{ step.resultinto } =</span> { step.expression.replace(/\n/g,'⮐') }</span>
+				<span><span if={step.resultinto.length > 0}>{ step.resultinto } =</span>&nbsp;<span>{ step.expression.replace(/\n/g,'⮐') }</span></span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowMath } data-flow={ index }>{ __('Edit') }</button>
 					<button onclick={ onDebugStep } data-flow={ index }><i class="ms-Icon ms-Icon--BugSolid"></i></button>
@@ -22,7 +22,7 @@
 			</template>
 			<template if={ step.discriminator === 'FlowAction' }>
 				<i class="ms-Icon ms-Icon--Processing"></i>
-				<span><span if={step.resultinto.length > 0}>{ step.resultinto } =</span> { __actionByChannel(step.channel) }</span>
+				<span><span if={step.resultinto.length > 0}>{ step.resultinto } =</span>&nbsp;<span>{ __actionByChannel(step.channel) }</span></span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowAction } data-flow={ index }>{ __('Edit') }</button>
 					<button onclick={ onDebugStep } data-flow={ index }><i class="ms-Icon ms-Icon--BugSolid"></i></button>
@@ -49,7 +49,7 @@
 			</template>
 			<template if={ step.discriminator === 'FlowWebRequest' }>
 				<i class="ms-Icon ms-Icon--Globe"></i>
-				<span>{ step.method + ' ' + step.url }</span>
+				<span><span if={step.resultinto.length > 0}>{ step.resultinto } =</span>&nbsp;<span>{ step.method + ' ' + step.url }</span></span>
 				<div class="btngrp">
 					<button onclick={ onEditFlowWebRequest } data-flow={ index }>{ __('Edit') }</button>
 					<button onclick={ onDebugStep } data-flow={ index }><i class="ms-Icon ms-Icon--BugSolid"></i></button>
