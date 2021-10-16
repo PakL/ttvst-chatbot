@@ -619,5 +619,26 @@
 	},
 	"Decode a string from a base 64 encoding.": {
 		"de": "Dekodiert einen Text aus einer Base-64-Kodierung."
+	},
+	"Advanced comparison (negated)": {
+		"de": "Erweiterte Vergleichung (negiert)"
+	},
+	"does not contain": {
+		"de": "beinhaltet nicht"
+	},
+	"is not similar to": {
+		"de": "ähnelt nicht"
+	},
+	"not regex matches": {
+		"de": "gleicht RegEx nicht "
+	},
+	"not regex matches (ignore case)": {
+		"de": "gleicht RegEx (Gr./Kl.-schreibung ignorieren) nicht"
+	},
+	"is not like": {
+		"de": "ist nicht wie"
+	},
+	"has not": {
+		"de": "hat nicht"
 	}
 }

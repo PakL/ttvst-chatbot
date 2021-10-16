@@ -17,6 +17,14 @@
 			<option value="like" selected={ cond.condition.compare === 'like' }>{ __('is like') }</option>
 			<option value="has" selected={ cond.condition.compare === 'has' }>{ __('has') }</option>
 		</optgroup>
+		<optgroup label={ __('Advanced comparison (negated)') }>
+			<option value="notcontains" selected={ cond.condition.compare === 'notcontains' }>{ __('does not contain') }</option>
+			<option value="notsimilar" selected={ cond.condition.compare === 'notsimilar' }>{ __('is not similar to') }</option>
+			<option value="notmatch" selected={ cond.condition.compare === 'notmatch' }>{ __('not regex matches') }</option>
+			<option value="notmatchi" selected={ cond.condition.compare === 'notmatchi' }>{ __('not regex matches (ignore case)') }</option>
+			<option value="notlike" selected={ cond.condition.compare === 'notlike' }>{ __('is not like') }</option>
+			<option value="nothas" selected={ cond.condition.compare === 'nothas' }>{ __('has not') }</option>
+		</optgroup>
 		<optgroup label={ __('Special string comparison') }>
 			<option value="eqc" selected={ cond.condition.compare === 'eqc' }>{ __('equals (ignore case)') }</option>
 			<option value="notc" selected={ cond.condition.compare === 'notc' }>{ __('does not equal (ignore case)') }</option>

@@ -16,6 +16,13 @@ export enum IConditionCompare {
 	LIKE = 'like',
 	HAS = 'has',
 
+	NOT_CONTAINS = 'notcontains',
+	NOT_SIMILAR = 'notsimilar',
+	NOT_MATCH = 'notmatch',
+	NOT_MATCHI = 'notmatchi',
+	NOT_LIKE = 'notlike',
+	NOT_HAS = 'nothas',
+
 	EQUALS_NOCASE = 'eqc',
 	NOT_EQUAL_NOCASE = 'notc',
 	STARTS_WITH = 'starts',
@@ -38,11 +45,18 @@ const readableCompare: {[key: string]: string} = {
 	le: '<=',
 
 	contains: 'contains',
-	similar: 'similar to',
+	similar: 'is similar to',
 	match: 'matches regex',
 	matchi: 'matches regex(i)',
 	like: 'is like',
 	has: 'has',
+
+	notcontains: 'does not contain',
+	notsimilar: 'is not similar to',
+	notmatch: 'not matches regex',
+	notmatchi: 'not matches regex(i)',
+	notlike: 'is not like',
+	nothas: 'has not',
 	
 	eqc: '==(i)',
 	notc: '!=(i)',
@@ -141,6 +155,36 @@ class Conditional {
 				return left.match(new RegExp(right, 'i')) ? true : false;
 			case IConditionCompare.HAS:
 				return await this.has(context, right);
+
+			case IConditionCompare.NOT_CONTAINS:
+				return !(await this.contains(context, right));
+			case IConditionCompare.NOT_SIMILAR:
+				return stringSimilarity.compareTwoStrings(left, right) < 0.6;
+			case IConditionCompare.NOT_MATCH:
+				try {
+					let reg = new RegExp(right);
+					if(left.match(reg)) {
+						return false;
+					}
+				} catch(e){}
+				return true;
+			case IConditionCompare.NOT_MATCHI:
+				try {
+					let reg = new RegExp(right, 'i');
+					if(left.match(reg)) {
+						return false;
+					}
+				} catch(e){}
+				return true;
+			case IConditionCompare.NOT_LIKE:
+				right = right
+							.replace(/[\(\)\[\]\{\}\.\*\?\\\/\^\$\+\-]/g, '\\$&')
+							.replace(/%/g, '(.*?)')
+							.replace(/_/g, '.');
+				right = `^${right}$`;
+				return left.match(new RegExp(right, 'i')) ? false : true;
+			case IConditionCompare.NOT_HAS:
+				return !(await this.has(context, right));
 
 			case IConditionCompare.EQUALS_NOCASE:
 				return left.toLocaleLowerCase() === right.toLocaleLowerCase();
