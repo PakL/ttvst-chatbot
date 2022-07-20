@@ -594,41 +594,8 @@
 				}
 			},
 
-			async exportFlow(flow) {
-				if(flow === null) return null;
-
-				let data = Object.assign({}, flow.data);
-				data.type = 'Flow';
-				delete data.key;
-				delete data.superior;
-				delete data.path;
-				return data;
-			},
-
-			async exportFolder(folder) {
-				if(folder === null) return null;
-
-				let data = Object.assign({}, folder.data);
-
-				let subdata = [];
-				let subfolders = await Folder.getByIndex('superior', data.key);
-				for(let i = 0; i < subfolders.length; i++) {
-					subdata.push(await this.exportFolder(subfolders[i]));
-				}
-				let subflows = await Flow.getByIndex('superior', data.key);
-				for(let i = 0; i < subflows.length; i++) {
-					subdata.push(await this.exportFlow(subflows[i]));
-				}
-
-				data.type = 'Folder';
-				data.children = subdata;
-				delete data.key;
-				delete data.superior;
-				delete data.path;
-				return data;
-			},
-
 			async onExportClick() {
+				const ChatbotPage = require('../ChatbotPage');
 				let selected = this.getSelectedElements();
 				let data = [];
 				
@@ -638,20 +605,20 @@
 					}
 					let folders = await Folder.getByIndex('superior', -1);
 					for(let i = 0; i < folders.length; i++) {
-						data.push(await this.exportFolder(folders[i]));
+						data.push(await ChatbotPage.exportFolder(folders[i]));
 					}
 					let flows = await Flow.getByIndex('superior', -1);
 					for(let i = 0; i < flows.length; i++) {
-						data.push(await this.exportFlow(flows[i]));
+						data.push(await ChatbotPage.exportFlow(flows[i]));
 					}
 				} else {
 					for(let i = 0; i < selected.length; i++) {
 						if(selected[i].dataset.type == 'folder') {
 							let id = parseInt(selected[i].dataset.folder);
-							data.push(await this.exportFolder(await Folder.get(id)));
+							data.push(await ChatbotPage.exportFolder(await Folder.get(id)));
 						} else if(selected[i].dataset.type == 'flow') {
 							let id = parseInt(selected[i].dataset.flow);
-							data.push(await this.exportFlow(await Flow.get(id)));
+							data.push(await ChatbotPage.exportFlow(await Flow.get(id)));
 						}
 					}
 				}
@@ -735,13 +702,15 @@
 				let f = null;
 				let folders = await Folder.getByIndex('superior', (superior !== null ? superior.key : -1));
 				for(let i = 0; i < folders.length; i++) {
-					if(overwrite) {
-						f = folders[i];
-						Object.assign(f.data, folder, { lastModified: new Date(folder.lastModified) });
-					} else {
-						folder.name = folder.name + ' (Import '+TTVST.DateFormat(new Date(), 'isoDateTime')+')';
+					if(folders[i].name === folder.name) {
+						if(overwrite) {
+							f = folders[i];
+							Object.assign(f.data, folder, { lastModified: new Date(folder.lastModified) });
+						} else {
+							folder.name = folder.name + ' (Import '+TTVST.DateFormat(new Date(), 'isoDateTime')+')';
+						}
+						break;
 					}
-					break;
 				}
 				if(f === null) {
 					f = Folder.factory(Object.assign(folder, {

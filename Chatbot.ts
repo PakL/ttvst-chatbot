@@ -1,5 +1,7 @@
-import { ipcMain, Menu, MenuItem, MenuItemConstructorOptions, dialog } from 'electron';
+import { ipcMain, Menu, MenuItem, MenuItemConstructorOptions, dialog, app } from 'electron';
 import fs from 'fs';
+import fsPromise from 'fs/promises';
+import Path from 'path';
 import winston from 'winston';
 
 import Flow from './lib/Flow';
@@ -37,6 +39,7 @@ class Chatbot {
 		
 		this.onExportData = this.onExportData.bind(this);
 		this.onImportData = this.onImportData.bind(this);
+		this.onBackupData = this.onBackupData.bind(this);
 
 		TTVST.startpage.broadcastStatus({ key: 'app.ttvst.chatbot', icon: 'ChatBot', status: 'error', title: 'Chatbot', info: 'Waiting for interface', buttons: [] });
 		ipcMain.on('app.ttvst.chatbot.registerFlows', this.registerFlow);
@@ -48,6 +51,7 @@ class Chatbot {
 
 		ipcMain.handle('app.ttvst.chatbot.exportdata', this.onExportData);
 		ipcMain.handle('app.ttvst.chatbot.importdata', this.onImportData);
+		ipcMain.handle('app.ttvst.chatbot.backupdata', this.onBackupData);
 	}
 
 	private async registerFlow() {
@@ -338,6 +342,42 @@ class Chatbot {
 			}
 		}
 		return null;
+	}
+
+	private async onBackupData(event: Electron.IpcMainInvokeEvent, data: string) {
+		let userData = app.getPath('userData');
+		let chatbotFolder = Path.join(userData, 'chatbot');
+		try {
+			await fsPromise.access(chatbotFolder);
+		} catch(e) {
+			try {
+				await fsPromise.mkdir(chatbotFolder);
+			} catch(er) {
+				logger.error(er);
+				return;
+			}
+		}
+
+		try {
+			let folderFiles = await fsPromise.readdir(chatbotFolder);
+			let backups: string[] = [];
+
+			for(let i = 0; i < folderFiles.length; i++) {
+				if(folderFiles[i].match(/^backup_[0-9]{4}-[0-9]{2}-[0-9]{2}\.json$/i)) {
+					backups.push(folderFiles[i]);
+				}
+			}
+
+			while(backups.length >= 30) {
+				let rm = backups.shift();
+				await fsPromise.unlink(Path.join(chatbotFolder, rm));
+			}
+
+			let now = new Date();
+			await fsPromise.writeFile(Path.join(chatbotFolder, 'backup_' + now.getFullYear().toString() + '-' + (now.getMonth()+1).toString().padStart(2, '0') + '-' + now.getDate().toString().padStart(2, '0') + '.json'), data);
+		} catch(e) {
+			logger.error(e);
+		}
 	}
 
 	private async onGetDebug(event: Electron.IpcMainInvokeEvent, flow: number, step: string): Promise<FlowDebugData> {
