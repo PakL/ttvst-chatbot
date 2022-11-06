@@ -40,6 +40,7 @@
 			<select if={ flowrewardselection === null } data-flowprop="pointreward" disabled><option value={ flowmode.props.pointreward }>{ __('Please wait') }</option></select>
 			<select if={ flowrewardselection !== null } data-flowprop="pointreward" onchange={ onFlowpropChange }>
 				<option if={ flowrewardselection.length == 0 } value={ flowmode.props.pointreward }>{ __(flowrewarderror) }</option>
+				<option if={ flowrewardselection.length > 0 } value="">{ __('Please select a reward') }</option>
 				<option each={ reward in flowrewardselection } value={ reward.id } selected={ flowmode.props.pointreward == reward.id }>{ reward.title }</option>
 			</select>
 			<small class="accent-light-font">{ __('Select the reward that triggers this flow.') }</small>

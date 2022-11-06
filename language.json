@@ -640,5 +640,8 @@
 	},
 	"has not": {
 		"de": "hat nicht"
+	},
+	"Please select a reward": {
+		"de": "Bitte eine Belohnung auswählen"
 	}
 }
