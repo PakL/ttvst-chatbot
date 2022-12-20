@@ -17,6 +17,7 @@ import FlowDebug, { FlowDebugData } from './lib/FlowDebug';
 
 import { IBroadcastArgument } from '../../dist/dev.pakl.ttvst/main/BroadcastMain';
 import TTVSTMain from '../../dist/dev.pakl.ttvst/main/TTVSTMain';
+import ExecutionScheduler from './lib/ExecutionScheduler';
 
 declare var TTVST: TTVSTMain;
 declare var logger: winston.Logger;
@@ -30,7 +31,11 @@ class Chatbot {
 	lastExecution: { [flowkey: string]: number } = {};
 	debugData: { [flow: string]: FlowDebug } = {};
 
+	executionScheduler: ExecutionScheduler;
+
 	constructor() {
+		this.executionScheduler = new ExecutionScheduler(this);
+
 		this.registerFlow = this.registerFlow.bind(this);
 		this.openContextMenu = this.openContextMenu.bind(this);
 		this.onGetChannelPointRewards = this.onGetChannelPointRewards.bind(this);
@@ -191,24 +196,7 @@ class Chatbot {
 		const self = this;
 		return async (... args: any[]) => {
 			let context = await self.createContext(flow, ...args);
-
-			let path = await flow.getAbsolutePath();
-			for(let i = 0; i < path.length; i++) {
-				if(!await path[i].conditionals.meets(context)) {
-					return;
-				}
-			}
-			
-			if(await flow.conditionals.meets(context)) {
-				this.lastExecution[flow.key.toString()] = new Date().getTime();
-				let condDebug = await flow.conditionals.debug(context);
-				let argobj: any = args;
-				if(TTVST.BroadcastMain.getTrigger({ channel: flow.trigger }).length > 0) {
-					argobj = TTVST.BroadcastMain.argumentsToObject(flow.trigger, ...args);
-				}
-				context.pushDebug('_-1', JSON.parse(JSON.stringify({ conditionals: condDebug, trigger: flow.trigger, args: argobj })));
-				flow.execute(context);
-			}
+			this.executionScheduler.schedule(flow, context, args);
 		};
 	}
 
